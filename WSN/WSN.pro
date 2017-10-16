@@ -13,8 +13,15 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+    sensorwindow.cpp \
+    dragwidget.cpp \
+    sensorwidget.cpp \
+    clusterwidget.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += \
+    sensorwindow.h \
+    dragwidget.h \
+    sensorwidget.h \
+    clusterwidget.h
 
-FORMS    += mainwindow.ui
+FORMS    +=
