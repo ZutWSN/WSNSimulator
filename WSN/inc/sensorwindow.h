@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QWidget>
-#include <QLabel>
 #include "sensorwidget.h"
 #include "clusterwidget.h"
 
@@ -23,7 +22,7 @@ private:
     bool initializeUiWidgets();
 private:
     QVector<DragWidget*> m_dragWidgets;
-    QVector<QWidget*> m_widgets;
+    QWidget *m_pressButton;
 };
 
 #endif // SENSORWINDOW_H

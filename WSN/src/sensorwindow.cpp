@@ -3,6 +3,9 @@
 #include <QPushButton>
 #include "widgetfactory.h"
 #include "NodeConfiguration.h"
+#include <QDrag>
+
+const QString MIME_DATA_FORMAT = "text/plain";
 
 SensorWindow::SensorWindow(QWidget *parent) :
     QMainWindow(parent)
@@ -61,22 +64,22 @@ void SensorWindow::dragMoveEvent(QDragMoveEvent *event)
 
 void SensorWindow::dropEvent(QDropEvent *event)
 {
-    if (event->mimeData()->hasFormat("text/plain"))
+    if (event->mimeData()->hasFormat(MIME_DATA_FORMAT))
     {
-        QByteArray itemData = event->mimeData()->data("text/plain");
+        QByteArray itemData = event->mimeData()->data(MIME_DATA_FORMAT);
         QDataStream dataStream(&itemData, QIODevice::ReadOnly);
 
-        QString text;
-        QPoint offset;
-        dataStream >> text >> offset;
+        QString text = nullptr;
+        QPoint offset = nullptr;
+        QString imgName = nullptr;
+        dataStream >> text >> offset >> imgName;
 
-        QLabel *newIcon = new QLabel(this);
-        newIcon->setText(text);
-        newIcon->move(event->pos() - offset);
-        newIcon->show();
-        newIcon->setAttribute(Qt::WA_DeleteOnClose);
-        std::cout << "Drop Event position :  pos : x " << event->pos().x() << " y: " << event->pos().y() << "\n";
-        std::cout << "Old position : x " << offset.x() << " y: " << offset.y() << "\n";
+        DragWidget *newWidget = new DragWidget(this);
+        newWidget->setWidgetImage(imgName);
+        newWidget->setText(text);
+        newWidget->move(event->pos() - offset);
+        newWidget->show();
+        newWidget->setAttribute(Qt::WA_DeleteOnClose);
 
         if (event->source() == this)
         {
@@ -96,24 +99,25 @@ void SensorWindow::dropEvent(QDropEvent *event)
 
 void SensorWindow::mousePressEvent(QMouseEvent *event)
 {
-    QLabel *child = static_cast<QLabel*>(childAt(event->pos()));
+    DragWidget *child = static_cast<DragWidget*>(childAt(event->pos()));
     if (child)
     {
         QByteArray itemData;
         QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-        std::cout << "Drag widgtet text : " << child->text().toStdString() << " pos : x " << child->pos().x() << " y: " << child->pos().y() << "\n";
-        std::cout << "Press Event position :  pos : x " << event->pos().x() << " y: " << event->pos().y() << "\n";
-        dataStream << child->text() << QPoint(event->pos() - child->pos());
 
+        dataStream << child->text() << QPoint(event->pos() - child->pos()) << child->getImageName();
+
+        //change definition of mime data to be a drag widget getter
         QMimeData *mimeData = new QMimeData;
-        mimeData->setData("text/plain", itemData);
+        mimeData->setData(MIME_DATA_FORMAT, itemData);
 
         QDrag *drag = new QDrag(this);
+        drag->setPixmap(child->pixmap()); //for drag to show temp object
         drag->setMimeData(mimeData);
         drag->setHotSpot(event->pos() - child->pos());
 
         //save old widget
-        QLabel *oldIcon = new QLabel(this);
+        DragWidget *oldIcon = new DragWidget(this);
         oldIcon->setText(child->text());
         oldIcon->move(child->pos());
         oldIcon->show();
@@ -129,7 +133,18 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
 
 void SensorWindow::pressedButton()
 {
-
+    QPushButton *button = static_cast<QPushButton*>(m_pressButton);
+    if(button)
+    {
+        if(button->text() == "Press")
+        {
+            button->setText("Pressed");
+        }
+        else
+        {
+            button->setText("Press");
+        }
+    }
 }
 
 bool SensorWindow::initializeUiWidgets()
@@ -139,28 +154,26 @@ bool SensorWindow::initializeUiWidgets()
     WidgetFactory wFactory;
 
     DragWidget *sensor = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor, this);
-    QPixmap sensorImg(SENSOR_IMG_FILE);
     sensor->setText("Sensor");
-    sensor->setPixmap(sensorImg);
+    sensor->setWidgetImage(SENSOR_IMG_FILE);
     sensor->move(10, 10);
     sensor->show();
     m_dragWidgets.push_back(sensor);
 
     DragWidget *cluster = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Cluster, this);
-    QPixmap clusterImg(CLUSTER_IMG_FILE);
-    cluster->setPixmap(clusterImg);
     cluster->setText("Cluster");
+    sensor->setWidgetImage(CLUSTER_IMG_FILE);
     cluster->move(100, 10);
     sensor->show();
     m_dragWidgets.push_back(cluster);
 
     //add other widgets for network configuration and user input
-    QPushButton *button = new QPushButton("Press", this);
-    button->setBaseSize(10, 10);
-    button->move(10, 100);
-    button->show();
-    button->setAttribute(Qt::WA_DeleteOnClose);
-    connect(button, SIGNAL(released()),this, SLOT(pressedButton()));
+    m_pressButton = new QPushButton("Press", this);
+    m_pressButton->setBaseSize(10, 10);
+    m_pressButton->move(10, 100);
+    m_pressButton->show();
+    m_pressButton->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_pressButton, SIGNAL(released()),this, SLOT(pressedButton()));
 }
 
 

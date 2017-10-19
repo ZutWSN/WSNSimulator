@@ -1,6 +1,6 @@
-#include "sensorconfiguration.h"
+#include "NodeConfiguration.h".h"
 
-SensorConfiguration::SensorConfiguration()
+NodeConfiguration::NodeConfiguration()
 {
 
 }

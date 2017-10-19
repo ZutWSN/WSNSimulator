@@ -1,5 +1,6 @@
 #ifndef SENSORCONFIGURATION_H
 #define SENSORCONFIGURATION_H
+#include <QString>
 /*
  * Sensor configuration which defines:
  * power consumption
