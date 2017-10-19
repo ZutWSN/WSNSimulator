@@ -6,11 +6,13 @@
  * range
  * vendor name and additional information
  */
+const QString SENSOR_IMG_FILE = "sensor.jpg";
+const QString CLUSTER_IMG_FILE = "cluster.jpg";
 
-class SensorConfiguration
+class NodeConfiguration
 {
 public:
-    SensorConfiguration();
+    NodeConfiguration();
 };
 
 #endif // SENSORCONFIGURATION_H

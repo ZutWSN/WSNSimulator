@@ -4,8 +4,9 @@
 
 class ClusterWidget : public DragWidget
 {
+    Q_OBJECT
 public:
-    ClusterWidget(const QString imgFile, QWidget *parent = 0);
+    ClusterWidget( QWidget *parent = 0);
     ~ClusterWidget();
 };
 

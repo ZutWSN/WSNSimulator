@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QWidget>
 #include <QLabel>
+#include "sensorwidget.h"
+#include "clusterwidget.h"
 
 class SensorWindow : public QMainWindow
 {
@@ -15,9 +17,13 @@ protected:
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+private slots:
+    void pressedButton();
 private:
-    QDockWidget *m_dockWidget;
-    QLabel *m_label;
+    bool initializeUiWidgets();
+private:
+    QVector<DragWidget*> m_dragWidgets;
+    QVector<QWidget*> m_widgets;
 };
 
 #endif // SENSORWINDOW_H

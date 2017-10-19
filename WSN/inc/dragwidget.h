@@ -6,11 +6,16 @@
 
 class DragWidget : public QLabel
 {
+    Q_OBJECT
 public:
-    DragWidget(const QString imgFile, QWidget *parent = 0);
+    DragWidget(QWidget *parent = 0);
     virtual ~DragWidget();
-protected:
-    void mousePressEvent(QMouseEvent *event);
+
+    enum DragWidgetType
+    {
+        Sensor = 0,
+        Cluster = 1
+    };
 };
 
 #endif // DRAGWIDGET_H

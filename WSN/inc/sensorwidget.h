@@ -4,8 +4,9 @@
 
 class SensorWidget : public DragWidget
 {
+    Q_OBJECT
 public:
-    SensorWidget(const QString imgFile, QWidget *parent = 0);
+    SensorWidget(QWidget *parent = 0);
     ~SensorWidget();
 };
 

@@ -15,15 +15,18 @@ VPATH += ./src \
          ./inc
 INCLUDEPATH += ./inc
 SOURCES += main.cpp\
-    sensorwindow.cpp \
-    dragwidget.cpp \
-    sensorwidget.cpp \
-    clusterwidget.cpp \
-    sensorconfiguration.cpp
+    SensorWindow.cpp \
+    DragWidget.cpp \
+    SensorWidget.cpp \
+    ClusterWidget.cpp \
+    NodeConfiguration.cpp \
+    WidgetFactory.cpp
 
 HEADERS  += \
-    sensorwindow.h \
-    dragwidget.h \
-    sensorwidget.h \
-    clusterwidget.h \
-    sensorconfiguration.h
+    SensorWindow.h \
+    DragWidget.h \
+    SensorWidget.h \
+    ClusterWidget.h \
+    SensorConfiguration.h \
+    WidgetFactory.h \
+    NodeConfiguration.h
