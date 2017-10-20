@@ -30,3 +30,5 @@ HEADERS  += \
     SensorConfiguration.h \
     WidgetFactory.h \
     NodeConfiguration.h
+
+RESOURCES += WSN.qrc

@@ -1,4 +1,4 @@
-#include "NodeConfiguration.h".h"
+#include "NodeConfiguration.h"
 
 NodeConfiguration::NodeConfiguration()
 {

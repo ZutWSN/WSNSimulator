@@ -6,7 +6,7 @@ class SensorWidget : public DragWidget
 {
     Q_OBJECT
 public:
-    SensorWidget(QWidget *parent = 0);
+    SensorWidget(QWidget *parent = 0, bool rootWidget = false);
     ~SensorWidget();
 };
 

@@ -7,26 +7,16 @@ WidgetFactory::WidgetFactory()
 
 }
 
-WidgetFactory::WidgetFactory(const WidgetFactory &other)
-{
-
-}
-
-WidgetFactory &WidgetFactory::operator=(const WidgetFactory &other)
-{
-
-}
-
-DragWidget *WidgetFactory::getNewDragWidget(DragWidget::DragWidgetType type, QWidget *parent)
+DragWidget *WidgetFactory::getNewDragWidget(DragWidget::DragWidgetType type, QWidget *parent, bool rootWidget)
 {
     DragWidget *newWidget = nullptr;
     switch(type)
     {
     case DragWidget::DragWidgetType::Sensor :
-        newWidget = new SensorWidget(parent);
+        newWidget = new SensorWidget(parent, rootWidget);
         break;
     case DragWidget::DragWidgetType::Cluster :
-        newWidget = new ClusterWidget(parent);
+        newWidget = new ClusterWidget(parent, rootWidget);
         break;
     }
 

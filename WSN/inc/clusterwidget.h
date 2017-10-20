@@ -6,7 +6,7 @@ class ClusterWidget : public DragWidget
 {
     Q_OBJECT
 public:
-    ClusterWidget( QWidget *parent = 0);
+    ClusterWidget( QWidget *parent = 0, bool rootWidget = false);
     ~ClusterWidget();
 };
 

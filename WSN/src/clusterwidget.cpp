@@ -1,7 +1,7 @@
 #include "clusterwidget.h"
 
-ClusterWidget::ClusterWidget(QWidget *parent):
-    DragWidget(parent)
+ClusterWidget::ClusterWidget(QWidget *parent, bool rootWidget):
+    DragWidget(parent, rootWidget)
 {
 
 }
