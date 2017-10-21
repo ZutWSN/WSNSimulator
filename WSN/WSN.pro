@@ -6,26 +6,23 @@
 
 QT       += core gui
 
+CONFIG += c++11
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = WSN
 TEMPLATE = app
 
-VPATH += ./src \
-         ./inc
-VPATH +=    ./src/algorithms \
-            ./src/algorithms \
-            ./src/network \
-            ./src/widgets \
-			./inc/algorithms \
-            ./inc/algorithms \
-            ./inc/network \
-            ./inc/widgets 
+VPATH += ./pkg
+VPATH +=    ./pkg/algorithms \
+            ./pkg/algorithms \
+            ./pkg/network \
+            ./pkg/widgets
 
-INCLUDEPATH +=  ./inc \
-                ./inc/algorithms \
-                ./inc/network \
-                ./inc/widgets 
+INCLUDEPATH +=  ./pkg \
+                ./pkg/algorithms \
+                ./pkg/network \
+                ./pkg/widgets
 
 SOURCES +=  main.cpp\
             SensorWindow.cpp \
@@ -33,14 +30,23 @@ SOURCES +=  main.cpp\
             SensorWidget.cpp \
             ClusterWidget.cpp \
             NodeConfiguration.cpp \
-            WidgetFactory.cpp
+            WidgetFactory.cpp \
+            NetworkNode.cpp \
+    pkg/network/SensorNode.cpp \
+    pkg/network/ClusterNode.cpp \
+    pkg/network/sinknode.cpp \
+    pkg/network/NetworkLayer.cpp \
 
 HEADERS  += SensorWindow.h \
             DragWidget.h \
             SensorWidget.h \
             ClusterWidget.h \
-            SensorConfiguration.h \
             WidgetFactory.h \
-            NodeConfiguration.h
+            NodeConfiguration.h \
+            NetworkNode.h \
+    pkg/network/SensorNode.h \
+    pkg/network/ClusterNode.h \
+    pkg/network/sinknode.h \
+    pkg/network/NetworkLayer.h \
 
 RESOURCES += WSN.qrc

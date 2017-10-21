@@ -71,4 +71,4 @@ Thumbs.db
 *.exe
 
 #Binaries directory
-build-WSN-Desktop_Qt_5_9_2_MinGW_32bit-Debug/
+build-WSN*
