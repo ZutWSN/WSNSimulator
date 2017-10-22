@@ -26,7 +26,7 @@ INCLUDEPATH +=  ../WSN/pkg \
                 ../WSN/pkg/algorithms \
                 ../WSN/pkg/network \
                 ../WSN/pkg/widgets
-
+#Later on don't add the sources just the headers, maybe just use dll or object files
 SOURCES += \
             Test_NetworkNodes.cpp \
             SensorWindow.cpp \
@@ -40,7 +40,8 @@ SOURCES += \
             ClusterNode.cpp \
             sinknode.cpp \
             NetworkLayer.cpp \
-    testmain.cpp
+            DataFrame.cpp \
+            testmain.cpp
 
 
 HEADERS  += SensorWindow.h \
@@ -54,6 +55,7 @@ HEADERS  += SensorWindow.h \
             ClusterNode.h \
             sinknode.h \
             NetworkLayer.h \
+            DataFrame.h \
             Test_NetworkNodes.h
 
 RESOURCES += WSN.qrc

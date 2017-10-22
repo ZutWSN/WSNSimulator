@@ -20,7 +20,7 @@ public slots:
     void pressedButton();
 private:
     void initializeUiWidgets();
-private:
+protected:
     QVector<DragWidget*> m_dragWidgets;
     QWidget *m_pressButton;
 };

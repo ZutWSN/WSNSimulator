@@ -15,6 +15,10 @@
 #include <QMimeData>
 
 const QString MIME_DATA_FORMAT = "text/plain";
+//Define widgets position - later create separate file containing wigets position configuration
+const QPoint SENSOR_WIDGET_POS = QPoint(10, 10);
+const QPoint CLUSTER_WIDGET_POS = QPoint(10, 100);
+const QPoint BUTTON_POS = QPoint(500, 500);
 
 SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
     QMainWindow(parent),
@@ -166,21 +170,21 @@ void SensorWindow::initializeUiWidgets()
 
     DragWidget *sensor = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor, this, true);
     sensor->setWidgetImage(SENSOR_IMG_FILE);
-    sensor->move(10, 10);
+    sensor->move(SENSOR_WIDGET_POS);
     sensor->show();
     sensor->setAttribute(Qt::WA_DeleteOnClose);
     m_dragWidgets.push_back(sensor);
 
     DragWidget *cluster = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Cluster, this, true);
     cluster->setWidgetImage(CLUSTER_IMG_FILE);
-    cluster->move(10, 100);
+    cluster->move(CLUSTER_WIDGET_POS);
     cluster->show();
     cluster->setAttribute(Qt::WA_DeleteOnClose);
     m_dragWidgets.push_back(cluster);
 
     //add other widgets for network configuration and user input
     m_pressButton = new QPushButton("Press", this);
-    m_pressButton->move(500, 500);
+    m_pressButton->move(BUTTON_POS);
     m_pressButton->show();
     m_pressButton->setAttribute(Qt::WA_DeleteOnClose);
     connect(m_pressButton, SIGNAL(pressed()), this, SLOT(pressedButton()));
