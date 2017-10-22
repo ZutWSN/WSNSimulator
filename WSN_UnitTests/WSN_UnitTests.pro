@@ -41,6 +41,7 @@ SOURCES += \
             sinknode.cpp \
             NetworkLayer.cpp \
             DataFrame.cpp \
+            SinkWidget.cpp \
             testmain.cpp
 
 
@@ -56,6 +57,7 @@ HEADERS  += SensorWindow.h \
             sinknode.h \
             NetworkLayer.h \
             DataFrame.h \
+            SinkWidget.h \
             Test_NetworkNodes.h
 
 RESOURCES += WSN.qrc

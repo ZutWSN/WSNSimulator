@@ -10,8 +10,10 @@ class DragWidget : public QLabel
 public:
     enum DragWidgetType
     {
-        Sensor = 0,
-        Cluster = 1
+        NoType  = 0,
+        Sensor  = 1,
+        Cluster = 2,
+        Sink    = 3,
     };
 
     DragWidget(QWidget *parent = 0, bool rootWidget = false);
@@ -20,6 +22,7 @@ public:
     void setAsRootWidget();
 
     bool isRootWidget() const;
+    virtual DragWidget::DragWidgetType getWidgetType() const;
     QString getImageName() const;
 private:
     QString m_imgName;

@@ -26,6 +26,11 @@ bool DragWidget::isRootWidget() const
     return m_rootWidget;
 }
 
+DragWidget::DragWidgetType DragWidget::getWidgetType() const
+{
+    return DragWidgetType::NoType;
+}
+
 QString DragWidget::getImageName() const
 {
     return m_imgName;

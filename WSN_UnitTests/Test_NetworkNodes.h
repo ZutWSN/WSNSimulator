@@ -10,6 +10,7 @@ private slots:
     void initTestCase();
     void test_sendData();
     void test_connectToNode();
+    void test_WidgetFactory();
     void cleanupTestCase();
 };
 

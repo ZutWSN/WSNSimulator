@@ -7,7 +7,8 @@ class SensorWidget : public DragWidget
     Q_OBJECT
 public:
     SensorWidget(QWidget *parent = 0, bool rootWidget = false);
-    ~SensorWidget();
+
+    DragWidget::DragWidgetType getWidgetType() const;
 };
 
 #endif // SENSORWIDGET_H

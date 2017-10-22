@@ -2,5 +2,6 @@
 <qresource>
     <file>res/sensor.jpg</file>
     <file>res/cluster.jpg</file>
+	<file>res/sink.jpg</file>
 </qresource>
 </RCC>

@@ -9,6 +9,7 @@
  */
 const QString SENSOR_IMG_FILE = ":/res/sensor.jpg";
 const QString CLUSTER_IMG_FILE = ":/res/cluster.jpg";
+const QString SINK_IMG_FILE = ":/res/sink.jpg";
 
 class NodeConfiguration
 {

@@ -6,7 +6,9 @@ SensorWidget::SensorWidget(QWidget *parent, bool rootWidget):
 
 }
 
-SensorWidget::~SensorWidget()
+DragWidget::DragWidgetType SensorWidget::getWidgetType() const
 {
-
+    return DragWidgetType::Sensor;
 }
+
+

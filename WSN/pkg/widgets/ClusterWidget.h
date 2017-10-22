@@ -6,8 +6,9 @@ class ClusterWidget : public DragWidget
 {
     Q_OBJECT
 public:
-    ClusterWidget( QWidget *parent = 0, bool rootWidget = false);
-    ~ClusterWidget();
+    ClusterWidget(QWidget *parent = 0, bool rootWidget = false);
+
+    DragWidget::DragWidgetType getWidgetType() const;
 };
 
 #endif // CLUSTERWIDGET_H

@@ -23,6 +23,7 @@ private:
 protected:
     QVector<DragWidget*> m_dragWidgets;
     QWidget *m_pressButton;
+    bool m_sinkCreated;
 };
 
 #endif // SENSORWINDOW_H

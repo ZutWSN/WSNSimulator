@@ -6,7 +6,8 @@ ClusterWidget::ClusterWidget(QWidget *parent, bool rootWidget):
 
 }
 
-ClusterWidget::~ClusterWidget()
+DragWidget::DragWidgetType ClusterWidget::getWidgetType() const
 {
-
+    return DragWidgetType::Cluster;
 }
+

@@ -6,7 +6,7 @@ class WidgetFactory
 {
 public:
     WidgetFactory();
-    DragWidget* getNewDragWidget(DragWidget::DragWidgetType type, QWidget *parent = 0, bool rootWidget = false);
+    DragWidget* getNewDragWidget(DragWidget::DragWidgetType type, QWidget *parent = 0, bool rootWidget = false) const;
 };
 
 #endif // WIDGETFACTORY_H
