@@ -18,9 +18,11 @@ public:
 
     void setMsg(const QByteArray &msg);
     void setMsgType(DataFrame::RxData type);
+    void setDestination(quint16 node_id);
 
     QByteArray getMsg() const;
     DataFrame::RxData getMsgType() const;
+    quint16 getDestination() const;
 
     bool frameEmpty() const;
 
@@ -28,6 +30,7 @@ public:
 private:
     QByteArray m_Msg;
     DataFrame::RxData m_Type;
+    quint16 m_desination_id;
 };
 
 Q_DECLARE_METATYPE(DataFrame)

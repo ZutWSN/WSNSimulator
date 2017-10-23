@@ -26,6 +26,11 @@ void DataFrame::setMsgType(DataFrame::RxData type)
     m_Type = type;
 }
 
+void DataFrame::setDestination(quint16 node_id)
+{
+    m_desination_id = node_id;
+}
+
 QByteArray DataFrame::getMsg() const
 {
     return m_Msg;
@@ -34,6 +39,11 @@ QByteArray DataFrame::getMsg() const
 DataFrame::RxData DataFrame::getMsgType() const
 {
     return m_Type;
+}
+
+quint16 DataFrame::getDestination() const
+{
+    return m_desination_id;
 }
 
 bool DataFrame::frameEmpty() const

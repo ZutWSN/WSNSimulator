@@ -1,19 +1,19 @@
 #include "Test_NetworkNodes.h"
-#include "widgetfactory.h"
-#include "NetworkNode.h"
-#include "SensorNode.h"
-#include "ClusterNode.h"
-#include "SinkWidget.h"
-#include "SensorWidget.h"
-#include "ClusterWidget.h"
-#include "SinkNode.h"
 #include <QByteArray>
 #include <QDebug>
 #include <QSignalSpy>
+#include "NetworkLayer.h"
+#include "NetworkNode.h"
+
 
 void Test_NetworkNodes::initTestCase()
 {
     qDebug("\nStart Network Unit Tests!\n");
+}
+
+void Test_NetworkNodes::test_addToLayer()
+{
+
 }
 
 void Test_NetworkNodes::test_sendData()
@@ -33,11 +33,37 @@ void Test_NetworkNodes::test_sendData()
     QCOMPARE(spy.count(), 1);
 }
 
-
 void Test_NetworkNodes::test_connectToNode()
 {
-
+    NetworkNode sender(0);
+    NetworkNode receiver(1);
+    NetworkLayer layer;
+    layer.addNode(&sender);
+    layer.addNode(&receiver);
+    QCOMPARE(sender.connectToNode(&receiver), true);
 }
+
+void Test_NetworkNodes::test_onReceivedData()
+{
+    NetworkNode sender, receiver;
+    sender.connectToNode(&receiver);
+    qRegisterMetaType<DataFrame>();
+    //register for signals and store count
+    QSignalSpy spy(&sender, SIGNAL(dataSend(const DataFrame&)));
+    QCOMPARE(spy.count(), 0);
+    //test case RECEIVED DATA
+    DataFrame frame1;
+    frame1.setMsg(QByteArray("Here's Johnny!"));
+    frame1.setMsgType(DataFrame::RxData::RECEIVED_DATA);
+    sender.sendData(frame1);
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(receiver.getSendDataReceived(), true);
+    //test case NEW DATA
+
+    DataFrame frame2;
+}
+
+
 
 void Test_NetworkNodes::test_WidgetFactory()
 {
