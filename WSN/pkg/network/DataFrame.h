@@ -6,15 +6,16 @@
 class DataFrame
 {
 public:
-    DataFrame();
-    DataFrame(const DataFrame &other);
-    ~DataFrame();
-
     enum RxData
     {
-        NEW_DATA =   0,
-        RECEIVED_DATA =   1
+        NEW_DATA = 0,
+        RECEIVED_DATA = 1
     };
+
+    DataFrame();
+    DataFrame(const QByteArray &msg, DataFrame::RxData type, quint16 destination_id);
+    DataFrame(const DataFrame &other);
+    ~DataFrame();
 
     void setMsg(const QByteArray &msg);
     void setMsgType(DataFrame::RxData type);

@@ -1,8 +1,8 @@
 #ifndef DRAGWIDGET_H
 #define DRAGWIDGET_H
-
 #include <QWidget>
 #include <QLabel>
+#include "DataFrame.h"
 
 class DragWidget : public QLabel
 {
@@ -24,6 +24,8 @@ public:
     bool isRootWidget() const;
     virtual DragWidget::DragWidgetType getWidgetType() const;
     QString getImageName() const;
+public slots:
+    void onNodeReceivedData(const DataFrame &data);
 private:
     QString m_imgName;
     bool m_rootWidget;

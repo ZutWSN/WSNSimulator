@@ -36,6 +36,11 @@ QString DragWidget::getImageName() const
     return m_imgName;
 }
 
+void DragWidget::onNodeReceivedData(const DataFrame &data)
+{
+    //handle node received new data;
+}
+
 
 
 

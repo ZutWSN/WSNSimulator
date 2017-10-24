@@ -1,7 +1,13 @@
 #include "NetworkLayer.h"
 #include "NetworkNode.h"
 
-NetworkLayer::NetworkLayer()
+NetworkLayer::NetworkLayer(qint16 layer_id):
+    m_layer_id(layer_id)
+{
+
+}
+
+NetworkLayer::~NetworkLayer()
 {
 
 }
@@ -24,10 +30,16 @@ bool NetworkLayer::removeNode(NetworkNode *node)
     qint16 node_idx = checkIfHasNode(node->getNodeID());
     if(0 <= node_idx)
     {
+        node->setLayer(-1);
         m_nodes.remove(node_idx);
         removedNode = true;
     }
     return removedNode;
+}
+
+qint16 NetworkLayer::getLayerId() const
+{
+    return m_layer_id;
 }
 
 qint16 NetworkLayer::checkIfHasNode(quint16 node_id) const

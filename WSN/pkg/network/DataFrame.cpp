@@ -5,6 +5,14 @@ DataFrame::DataFrame()
 
 }
 
+DataFrame::DataFrame(const QByteArray &msg, DataFrame::RxData type, quint16 destination_id):
+    m_Msg(msg),
+    m_Type(type),
+    m_desination_id(destination_id)
+{
+
+}
+
 DataFrame::DataFrame(const DataFrame &other)
 {
     m_Msg = other.m_Msg;

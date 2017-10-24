@@ -13,6 +13,7 @@ private slots:
     void test_sendData();
     void test_onReceivedData();
     void test_addToLayer();
+    void test_removeFromLayer();
     void test_connectToNode();
 
     //widget tests
