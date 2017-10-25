@@ -37,6 +37,11 @@ bool NetworkNode::connectToNodeWidget(DragWidget *widget)
     return success;
 }
 
+void NetworkNode::setNodePosition(const QPoint &position)
+{
+    m_node_position = position;
+}
+
 quint16 NetworkNode::getNodeID() const
 {
     return m_node_id;
@@ -45,6 +50,11 @@ quint16 NetworkNode::getNodeID() const
 qint16 NetworkNode::getNodeLayer() const
 {
     return m_layer_id;
+}
+
+QPoint NetworkNode::getNodePostion() const
+{
+    return m_node_position;
 }
 
 bool NetworkNode::connectToNode(NetworkNode *node)

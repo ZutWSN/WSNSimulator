@@ -6,36 +6,6 @@
 #include "NetworkLayer.h"
 #include "NetworkNode.h"
 
-
-void Test_NetworkNodes::initTestCase()
-{
-    qDebug("\nStart Network Unit Tests!\n");
-}
-
-void Test_NetworkNodes::test_addToLayer()
-{
-    NetworkNode sender(0);
-    NetworkNode receiver(1);
-    NetworkLayer layer(0);
-    layer.addNode(&sender);
-    layer.addNode(&receiver);
-    QCOMPARE(sender.getNodeLayer(), layer.getLayerId());
-    QCOMPARE(receiver.getNodeLayer(), layer.getLayerId());
-}
-
-void Test_NetworkNodes::test_removeFromLayer()
-{
-    NetworkNode sender(0);
-    NetworkNode receiver(1);
-    NetworkLayer layer(0);
-    layer.addNode(&sender);
-    layer.addNode(&receiver);
-    layer.removeNode(&sender);
-    layer.removeNode(&receiver);
-    QCOMPARE(sender.getNodeLayer() == layer.getLayerId(), false);
-    QCOMPARE(receiver.getNodeLayer() == layer.getLayerId(), false);
-}
-
 void Test_NetworkNodes::test_sendData()
 {
     NetworkNode sensor;
@@ -106,35 +76,3 @@ void Test_NetworkNodes::test_onReceivedData()
     QCOMPARE(dataSendMonitor.count(), 2);
     QCOMPARE(receivedNewDataMonitor.count(), 1);
 }
-
-
-
-void Test_NetworkNodes::test_WidgetFactory()
-{
-    WidgetFactory wFactory;
-
-    DragWidget *sensor = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor);
-    DragWidget *cluster = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Cluster);
-    DragWidget *sink = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sink);
-
-    bool sensorCreated = (sensor->getWidgetType() == DragWidget::DragWidgetType::Sensor);
-    bool clusterCreated = (cluster->getWidgetType() == DragWidget::DragWidgetType::Cluster);
-    bool sinkCreated = (sink->getWidgetType() == DragWidget::DragWidgetType::Sink);
-
-    qDebug("\nTest widgets creation if returns proper widget type\n");
-
-    QVERIFY(sensorCreated == true);
-    QVERIFY(clusterCreated == true);
-    QVERIFY(sinkCreated == true);
-
-    qDebug("\nTest returning wrong widget\n");
-    DragWidget *widget = wFactory.getNewDragWidget(static_cast<DragWidget::DragWidgetType>(10));
-    QVERIFY(widget == nullptr);
-
-}
-
-void Test_NetworkNodes::cleanupTestCase()
-{
-    qDebug("\nNetwork Unit Tests Finished!\n");
-}
-

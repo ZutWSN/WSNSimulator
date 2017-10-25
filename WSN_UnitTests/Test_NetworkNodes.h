@@ -7,19 +7,10 @@ class Test_NetworkNodes : public QObject
 {
     Q_OBJECT
 private slots:
-    void initTestCase();
-
-    //network nodes tests
+    //NetworkNode tests
     void test_sendData();
     void test_onReceivedData();
-    void test_addToLayer();
-    void test_removeFromLayer();
     void test_connectToNode();
-
-    //widget tests
-    void test_WidgetFactory();
-
-    void cleanupTestCase();
 };
 
 #endif // TEST_NETWORKNODES_H

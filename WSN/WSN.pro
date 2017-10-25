@@ -37,7 +37,9 @@ SOURCES +=  main.cpp\
     pkg/network/sinknode.cpp \
     pkg/network/NetworkLayer.cpp \
     pkg/network/DataFrame.cpp \
-    pkg/widgets/SinkWidget.cpp
+    pkg/widgets/SinkWidget.cpp \
+    pkg/network/SensorNetwork.cpp \
+    pkg/network/NetworkManager.cpp
 
 HEADERS  += SensorWindow.h \
             DragWidget.h \
@@ -51,6 +53,8 @@ HEADERS  += SensorWindow.h \
     pkg/network/sinknode.h \
     pkg/network/NetworkLayer.h \
     pkg/network/DataFrame.h \
-    pkg/widgets/SinkWidget.h
+    pkg/widgets/SinkWidget.h \
+    pkg/network/SensorNetwork.h \
+    pkg/network/NetworkManager.h
 
 RESOURCES += WSN.qrc
