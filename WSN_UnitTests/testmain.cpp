@@ -3,17 +3,32 @@
 #include <iostream>
 #include <QStringList>
 #include <QString>
-
-int main(int argc, char *argv[])
+//add reading test config from file, saves compile time to setup which tests will be performed
+inline void runNetworkNodesTest(bool report = false)
 {
     Test_NetworkNodes test_nodes;
     QStringList log;
-    QApplication a(argc, argv);
-    log << "-o" << "TestNodes_report.txt";
-    QTest::qExec(&test_nodes, a.arguments());
+    if(report)
+    {
+        log << "-o" << "NodesTest.txt,txt";
+    }
+    QTest::qExec(&test_nodes, log);
+}
+
+inline void runWidgetsTest(bool report = false)
+{
     Test_Widgets test_widgets;
-    log.clear();
-    log << "-o" << "WidgetsTest.txt,txt";
+    QStringList log;
+    if(report)
+    {
+        log << "-o" << "WidgetsTest.txt,txt";
+    }
     QTest::qExec(&test_widgets, log);
+}
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    runNetworkNodesTest();
     return 0;
 }

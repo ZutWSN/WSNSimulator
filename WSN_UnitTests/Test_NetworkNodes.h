@@ -11,6 +11,7 @@ private slots:
     void test_sendData();
     void test_onReceivedData();
     void test_connectToNode();
+    void test_connectToNodeWidget();
 };
 
 #endif // TEST_NETWORKNODES_H

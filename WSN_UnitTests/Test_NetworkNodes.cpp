@@ -5,6 +5,7 @@
 #include <widgetfactory.h>
 #include "NetworkLayer.h"
 #include "NetworkNode.h"
+#include <QScopedPointer>
 
 void Test_NetworkNodes::test_sendData()
 {
@@ -42,6 +43,15 @@ void Test_NetworkNodes::test_connectToNode()
     layer2.addNode(&receiver);
     QCOMPARE(sender.connectToNode(&receiver), false);
 
+}
+
+void Test_NetworkNodes::test_connectToNodeWidget()
+{
+    NetworkNode node;
+    WidgetFactory wFactory;
+    QScopedPointer<DragWidget> widgetPtr(wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor));
+    QCOMPARE(node.connectToNodeWidget(widgetPtr.data()), true);
+    QCOMPARE(node.connectToNodeWidget(nullptr), false);
 }
 
 void Test_NetworkNodes::test_onReceivedData()

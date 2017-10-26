@@ -28,40 +28,43 @@ INCLUDEPATH +=  ../WSN/pkg \
                 ../WSN/pkg/widgets
 #Later on don't add the sources just the headers, maybe just use dll or object files
 SOURCES += \
-            Test_NetworkNodes.cpp \
-            SensorWindow.cpp \
-            DragWidget.cpp \
-            SensorWidget.cpp \
-            ClusterWidget.cpp \
-            NodeConfiguration.cpp \
-            WidgetFactory.cpp \
-            NetworkNode.cpp \
-            SensorNode.cpp \
-            ClusterNode.cpp \
-            sinknode.cpp \
-            NetworkLayer.cpp \
-            DataFrame.cpp \
-            SinkWidget.cpp \
-            testmain.cpp \
+    Test_NetworkNodes.cpp \
+    SensorWindow.cpp \
+    DragWidget.cpp \
+    SensorWidget.cpp \
+    ClusterWidget.cpp \
+    NodeConfiguration.cpp \
+    WidgetFactory.cpp \
+    SensorNetwork.cpp \
+    NetworkNode.cpp \
+    SensorNode.cpp \
+    ClusterNode.cpp \
+    sinknode.cpp \
+    NetworkLayer.cpp \
+    DataFrame.cpp \
+    SinkWidget.cpp \
+    testmain.cpp \
     Test_Widgets.cpp \
     test_NetworkLayer.cpp \
     Test_SensorNetwork.cpp
 
 
-HEADERS  += SensorWindow.h \
-            DragWidget.h \
-            SensorWidget.h \
-            ClusterWidget.h \
-            WidgetFactory.h \
-            NodeConfiguration.h \
-            NetworkNode.h \
-            SensorNode.h \
-            ClusterNode.h \
-            sinknode.h \
-            NetworkLayer.h \
-            DataFrame.h \
-            SinkWidget.h \
-            Test_NetworkNodes.h \
+HEADERS  += \
+    SensorWindow.h \
+    DragWidget.h \
+    SensorWidget.h \
+    ClusterWidget.h \
+    WidgetFactory.h \
+    NodeConfiguration.h \
+    NetworkNode.h \
+    SensorNode.h \
+    ClusterNode.h \
+    sinknode.h \
+    NetworkLayer.h \
+    DataFrame.h \
+    SinkWidget.h \
+    SensorNetwork.h \
+    Test_NetworkNodes.h \
     Test_Widgets.h \
     test_NetworkLayer.h \
     Test_SensorNetwork.h

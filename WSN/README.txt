@@ -1,4 +1,4 @@
-LEACH Protocol simulator, maybe later add new ones like APTEEN and PEGASUS
+Multi hop Cluster WSN Protocol simulator, maybe later add new ones like APTEEN and PEGASUS
 
 Requirements:
 
@@ -15,8 +15,11 @@ sink.
 the map can be scrolled vertically and horizontally so that it can contain more sensors and display them better.
 10. Data frames will be divided by time slots according to TDMA
 
---------------------------------------------------------------------------------------------------------------
-Details :
+11.Path of information will be decided by minimum energy consumption path - the shortest path 
+in distance in easiest case, it may change when clusters have different energy consumption.
+Maybe show 2 possible paths choose one criterium by default and let the user choose different one.
 
-For network objects factory design pattern, even though 
-will define only one network type - LEACH. 
+--------------------------------------------------------------------------------------------------------------
+
+Gateway nodes - on border of 2 clusters allow communication between them.
+Will be maybe added in future, for now clusters have to be in range
