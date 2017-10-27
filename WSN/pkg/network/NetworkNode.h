@@ -10,6 +10,7 @@ class NetworkNode : public QObject
     Q_OBJECT
 public:
     NetworkNode(quint16 node_id = 0);
+    virtual ~NetworkNode();
 
     bool sendData(const DataFrame &txData);   
     bool connectToNode(NetworkNode *node);

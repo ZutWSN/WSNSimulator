@@ -9,6 +9,11 @@ NetworkNode::NetworkNode(quint16 node_id) :
 
 }
 
+NetworkNode::~NetworkNode()
+{
+
+}
+
 bool NetworkNode::sendData(const DataFrame &txData)
 {
     bool result = false;

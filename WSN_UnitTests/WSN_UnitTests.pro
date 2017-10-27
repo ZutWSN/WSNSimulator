@@ -67,6 +67,7 @@ HEADERS  += \
     Test_NetworkNodes.h \
     Test_Widgets.h \
     test_NetworkLayer.h \
-    Test_SensorNetwork.h
+    Test_SensorNetwork.h \
+    testconfig.h
 
 RESOURCES += WSN.qrc
