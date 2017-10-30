@@ -15,7 +15,7 @@ public:
 private:
     quint16 m_layer_counter;
     QVector<NetworkLayer*> m_layers;
-    QVector<QScopedPointer<NetworkNode> > m_nodes;
+    QVector<NetworkNode*> m_nodes;
 };
 
 #endif // SENSORNETWORK_H

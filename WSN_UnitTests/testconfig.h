@@ -8,7 +8,7 @@
 #include "Test_SensorNetwork.h"
 #include "Test_NetworkNodes.h"
 #include "Test_DataFrame.h"
-#include <iostream>
+#include <QDebug>
 #include <functional>
 
 using namespace std::placeholders;
@@ -53,7 +53,7 @@ public:
                                         xmlReader.readNext();
                                         if(xmlReader.isStartElement() && (xmlReader.name().toString() == TEST_NAME_NODE))
                                         {
-                                            xmlReader.readNext();
+                                            xmlReader.readNext(); 
                                             if(xmlReader.isCharacters())
                                             {
                                                 testCaseFound = getTestFunction(testFunction, xmlReader.text().toString());
@@ -75,12 +75,12 @@ public:
                                                 reportFile = xmlReader.text().toString();
                                             }
                                         }
-                                        //call test function
-                                        if(testCaseFound)
-                                        {
-                                            testFunction(reportFile, saveReport);
-                                            testCaseFound = false;
-                                        }
+                                    }
+                                    //call test function
+                                    if(testCaseFound)
+                                    {
+                                        testFunction(reportFile, saveReport);
+                                        testCaseFound = false;
                                     }
                                 }
                             }
@@ -100,7 +100,7 @@ private:
         QStringList log;
         if(report)
         {
-            log << "-o" << reportFile;
+            log << "." << "-o" << reportFile;
         }
         QTest::qExec(&test_nodes, log);
     }
@@ -111,7 +111,7 @@ private:
         QStringList log;
         if(report)
         {
-            log << "-o" << reportFile;
+            log << "." <<"-o" << reportFile;
         }
         QTest::qExec(&test_widgets, log);
     }
