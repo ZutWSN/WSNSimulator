@@ -1,8 +1,8 @@
 #ifndef CLUSTERNODE_H
 #define CLUSTERNODE_H
+#include "NetworkNode.h"
 
-
-class ClusterNode
+class ClusterNode : public NetworkNode
 {
 public:
     ClusterNode();

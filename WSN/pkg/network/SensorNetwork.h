@@ -1,21 +1,25 @@
 #ifndef SENSORNETWORK_H
 #define SENSORNETWORK_H
-#include <QScopedPointer>
 #include "NetworkLayer.h"
-#include "NetworkNode.h"
 
 class SensorNetwork
 {
 public:
     SensorNetwork();
+    ~SensorNetwork();
+    SensorNetwork(const SensorNetwork &other);
+    SensorNetwork(SensorNetwork &&other);
+    SensorNetwork& operator=(const SensorNetwork &other);
+    SensorNetwork& operator=(SensorNetwork &&other);
 
-    void addLayer();
+    bool addLayer(qint16 layer_id);
 
     quint16 getNumberOfLayers() const;
+    NetworkLayer* getLayer(qint16 layer_id) const;
 private:
-    quint16 m_layer_counter;
+    bool checkIfHasLayer(qint16 layer_id) const;
+private:
     QVector<NetworkLayer*> m_layers;
-    QVector<NetworkNode*> m_nodes;
 };
 
 #endif // SENSORNETWORK_H

@@ -9,6 +9,14 @@ class NetworkNode : public QObject
 {
     Q_OBJECT
 public:
+    enum NodeType
+    {
+        NoType  =   0,
+        Sensor =    1,
+        Cluster =   2,
+        Sink =      3
+    };
+
     NetworkNode(quint16 node_id = 0);
     virtual ~NetworkNode();
 
@@ -24,6 +32,7 @@ public:
     qint16 getNodeLayer() const;
     QPoint getNodePostion() const;
     bool getSendDataReceived() const;
+    virtual NetworkNode::NodeType getNodeType() const;
 public slots:
     void onReceivedData(const DataFrame &rxData);
 signals:

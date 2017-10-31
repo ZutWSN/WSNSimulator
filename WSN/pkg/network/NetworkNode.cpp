@@ -84,6 +84,11 @@ bool NetworkNode::getSendDataReceived() const
     return m_sendDataReceived;
 }
 
+NetworkNode::NodeType NetworkNode::getNodeType() const
+{
+    return NodeType::NoType;
+}
+
 void NetworkNode::setNodeID(quint16 node_id)
 {
     m_node_id = node_id;
