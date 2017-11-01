@@ -26,22 +26,19 @@ void Test_NetworkNodes::test_sendData()
 
 void Test_NetworkNodes::test_connectToNode()
 {
-    NetworkNode sender(0);
-    NetworkNode receiver(1);
     NetworkLayer layer(0);
-    layer.addNode(&sender);
-    layer.addNode(&receiver);
+    qRegisterMetaType<DataFrame>();
+    NetworkNode *sender = layer.createNode(NetworkNode::NodeType::Sensor, 0);
+    NetworkNode *receiver = layer.createNode(NetworkNode::NodeType::Cluster, 1);
     //test nodes on the same layer
-    QCOMPARE(sender.connectToNode(&receiver), true);
+    QCOMPARE(sender->connectToNode(receiver), true);
     //test nodes same id error
-    receiver.setNodeID(0);
-    QCOMPARE(sender.connectToNode(&receiver), false);
+    receiver->setNodeID(0);
+    QCOMPARE(sender->connectToNode(receiver), false);
     //test nodes on different layers
     NetworkLayer layer2(1);
-    receiver.setNodeID(1);
-    layer.removeNode(&receiver);
-    layer2.addNode(&receiver);
-    QCOMPARE(sender.connectToNode(&receiver), false);
+    NetworkNode *receiver1 = layer2.createNode(NetworkNode::NodeType::Cluster, 1);
+    QCOMPARE(sender->connectToNode(receiver1), false);
 
 }
 
@@ -56,33 +53,42 @@ void Test_NetworkNodes::test_connectToNodeWidget()
 
 void Test_NetworkNodes::test_onReceivedData()
 {
-    NetworkNode sender(0);
-    NetworkNode receiver(0);
     NetworkLayer layer(0);
     qRegisterMetaType<DataFrame>();
-    QSignalSpy dataSendMonitor(&sender, SIGNAL(dataSend(const DataFrame&)));
-    layer.addNode(&sender);
-    layer.addNode(&receiver);
+    //test if not added to layer
+    NetworkNode *sender = layer.createNode(NetworkNode::NodeType::Sensor, 0);
+    QVERIFY(sender != nullptr);
+    NetworkNode *receiver = layer.createNode(NetworkNode::NodeType::Cluster, 0);
+    QVERIFY(receiver == nullptr);
+    QSignalSpy senderSendMonitor(sender, SIGNAL(dataSend(const DataFrame&)));
+
+
+    QCOMPARE(senderSendMonitor.count(), 0);
     //test receiver not present on layer
-    QCOMPARE(sender.connectToNode(&receiver), false);
-    QCOMPARE(dataSendMonitor.count(), 0);
-    //test case RECEIVED DATA
-    receiver.setNodeID(1);
-    layer.addNode(&receiver);
-    QCOMPARE(sender.connectToNode(&receiver), true);
-    DataFrame frame1;
-    frame1.setMsg(QByteArray("Here's Johnny!"));
-    frame1.setMsgType(DataFrame::RxData::RECEIVED_DATA);
-    sender.sendData(frame1);
-    QCOMPARE(dataSendMonitor.count(), 1);
-    QCOMPARE(receiver.getSendDataReceived(), true);
+    QCOMPARE(sender->connectToNode(receiver), false);
+
     //test case NEW DATA
-    QSignalSpy receivedNewDataMonitor(&receiver, SIGNAL(receivedNewData(DataFrame)));
-    DataFrame frame2;
-    frame2.setMsg(QByteArray("I'am your father"));
-    frame2.setMsgType(DataFrame::RxData::NEW_DATA);
+    receiver = layer.createNode(NetworkNode::NodeType::Cluster, 1);
+    QVERIFY(receiver != nullptr);
+    QCOMPARE(sender->connectToNode(receiver), true);
+    QSignalSpy receivedNewDataMonitor(receiver, SIGNAL(receivedNewData(const DataFrame&)));
+    DataFrame frame1;
+    frame1.setMsg(QByteArray("I'am your father"));
+    frame1.setMsgType(DataFrame::RxData::NEW_DATA);
     QCOMPARE(receivedNewDataMonitor.count(), 0);
-    sender.sendData(frame2);
-    QCOMPARE(dataSendMonitor.count(), 2);
+    sender->sendData(frame1);
+    QCOMPARE(senderSendMonitor.count(), 1);
     QCOMPARE(receivedNewDataMonitor.count(), 1);
+
+    //test case RECEIVED DATA - receiver sends back to sender that it received and processed data
+    QSignalSpy receiverSendMonitor(receiver, SIGNAL(dataSend(const DataFrame&)));
+    DataFrame frame2;
+    frame2.setMsg(QByteArray("No it's impossible!"));
+    frame2.setMsgType(DataFrame::RxData::RECEIVED_DATA);
+    QCOMPARE(receiverSendMonitor.count(), 0);
+    QCOMPARE(sender->getSendDataReceived(), false);
+    receiver->sendData(frame2);
+    QCOMPARE(receiverSendMonitor.count(), 1);
+    QCOMPARE(receivedNewDataMonitor.count(), 1);
+    QCOMPARE(sender->getSendDataReceived(), true);
 }

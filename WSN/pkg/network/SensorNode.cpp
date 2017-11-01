@@ -1,6 +1,7 @@
 #include "SensorNode.h"
 
-SensorNode::SensorNode()
+SensorNode::SensorNode(quint16 node_id):
+    NetworkNode(node_id)
 {
 
 }

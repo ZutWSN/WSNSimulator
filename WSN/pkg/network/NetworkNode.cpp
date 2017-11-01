@@ -4,9 +4,37 @@ NetworkNode::NetworkNode(quint16 node_id) :
     m_sendDataReceived(false),
     m_connectedToWidget(false),
     m_node_id(node_id),
-    m_layer_id(-1)
+    m_layer_id(-1),
+    m_Widget(nullptr)
 {
 
+}
+
+NetworkNode::NetworkNode(const NetworkNode &other)
+{
+    if(this != &other)
+    {
+        m_layer_id = other.m_layer_id;
+        m_node_id = other.m_node_id;
+        m_node_position = other.m_node_position;
+        m_connectedToWidget = connectToNodeWidget(other.m_Widget);
+        m_Widget = (m_connectedToWidget) ? other.m_Widget : nullptr;
+        m_sendDataReceived = (m_connectedToWidget) ? other.m_sendDataReceived : false;
+    }
+}
+
+NetworkNode& NetworkNode::operator=(const NetworkNode &other)
+{
+    if(this != &other)
+    {
+        m_layer_id = other.m_layer_id;
+        m_node_id = other.m_node_id;
+        m_node_position = other.m_node_position;
+        m_connectedToWidget = connectToNodeWidget(other.m_Widget);
+        m_Widget = (m_connectedToWidget) ? other.m_Widget : nullptr;
+        m_sendDataReceived = (m_connectedToWidget) ? other.m_sendDataReceived : false;
+    }
+    return *this;
 }
 
 NetworkNode::~NetworkNode()
@@ -37,6 +65,7 @@ bool NetworkNode::connectToNodeWidget(DragWidget *widget)
     if(widget)
     {
         success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), widget, SLOT(onNodeReceivedData(DataFrame))));
+
     }
     m_connectedToWidget = success;
     return success;
@@ -65,14 +94,17 @@ QPoint NetworkNode::getNodePostion() const
 bool NetworkNode::connectToNode(NetworkNode *node)
 {
     bool connected = false;
-    if(m_layer_id >= 0)
+    if(node)
     {
-        if(node->getNodeLayer() == m_layer_id)
+        if(m_layer_id >= 0)
         {
-            if(node->getNodeID() != m_node_id)
+            if(node->getNodeLayer() == m_layer_id)
             {
-                connected = static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), node, SLOT(onReceivedData(DataFrame))));
-                connected &= static_cast<bool>(connect(node, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedData(DataFrame))));
+                if(node->getNodeID() != m_node_id)
+                {
+                    connected = static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), node, SLOT(onReceivedData(DataFrame))));
+                    connected &= static_cast<bool>(connect(node, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedData(DataFrame))));
+                }
             }
         }
     }
@@ -102,7 +134,7 @@ void NetworkNode::onReceivedData(const DataFrame &rxData)
         case DataFrame::RxData::NEW_DATA : // received new data, later add checking it and sending back info that it was recived sucessfully
             processData(rxData);
             break;
-        case DataFrame::RxData::RECEIVED_DATA :
+        case DataFrame::RxData::RECEIVED_DATA : //receiver notification that last send data was accepted
             m_sendDataReceived = true; // later create send data received successfull by target data pool, which will be changed and checked with send was acknowledged
             break;
         default:

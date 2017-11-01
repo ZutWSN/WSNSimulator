@@ -5,7 +5,8 @@
 class ClusterNode : public NetworkNode
 {
 public:
-    ClusterNode();
+    ClusterNode(quint16 node_id);
+    NetworkNode::NodeType getNodeType() const;
 };
 
 #endif // CLUSTERNODE_H

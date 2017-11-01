@@ -13,11 +13,12 @@ public:
     {
         NoType  =   0,
         Sensor =    1,
-        Cluster =   2,
-        Sink =      3
+        Cluster =   2
     };
 
     NetworkNode(quint16 node_id = 0);
+    NetworkNode(const NetworkNode &other);
+    NetworkNode& operator=(const NetworkNode &rhs);
     virtual ~NetworkNode();
 
     bool sendData(const DataFrame &txData);   
@@ -38,6 +39,7 @@ public slots:
 signals:
     void dataSend(const DataFrame &txData);
     void receivedNewData(const DataFrame &rxData);
+    void changedNodeID(quint16 id);
 private:
     virtual void processData(const DataFrame &rxData);
 private:
@@ -46,6 +48,7 @@ private:
     quint16 m_node_id;
     qint16 m_layer_id;
     QPoint m_node_position;
+    DragWidget *m_Widget;
 };
 
 #endif // NETWORKNODE_H

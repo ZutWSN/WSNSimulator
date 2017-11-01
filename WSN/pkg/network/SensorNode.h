@@ -5,7 +5,7 @@
 class SensorNode : public NetworkNode
 {
 public:
-    SensorNode();
+    SensorNode(quint16 node_id);
 
     NetworkNode::NodeType getNodeType() const;
 };

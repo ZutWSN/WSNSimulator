@@ -16,7 +16,7 @@ SensorNetwork::~SensorNetwork()
 
 SensorNetwork::SensorNetwork(const SensorNetwork &other)
 {
-    if(this != other)
+    if(this != &other)
     {
         if(!m_layers.empty())
         {
@@ -39,7 +39,7 @@ SensorNetwork::SensorNetwork(const SensorNetwork &other)
 
 SensorNetwork::SensorNetwork(SensorNetwork &&other)
 {
-    if(this != other)
+    if(this != &other)
     {
         if(!m_layers.empty())
         {
@@ -51,7 +51,7 @@ SensorNetwork::SensorNetwork(SensorNetwork &&other)
         }
         for(NetworkLayer *layer : other.m_layers)
         {
-            NetworkLayer *new_layer = *layer;
+            NetworkLayer *new_layer = layer;
             if(new_layer != nullptr)
             {
                 m_layers.push_back(new_layer);
@@ -63,7 +63,7 @@ SensorNetwork::SensorNetwork(SensorNetwork &&other)
 
 SensorNetwork& SensorNetwork::operator=(const SensorNetwork &other)
 {
-    if(this != other)
+    if(this != &other)
     {
         if(!m_layers.empty())
         {
@@ -87,7 +87,7 @@ SensorNetwork& SensorNetwork::operator=(const SensorNetwork &other)
 
 SensorNetwork& SensorNetwork::operator=(SensorNetwork &&other)
 {
-    if(this != other)
+    if(this != &other)
     {
         if(!m_layers.empty())
         {
@@ -142,7 +142,7 @@ bool SensorNetwork::checkIfHasLayer(qint16 layer_id) const
     return hasLayer;
 }
 
-NetworkLayer *SensorNetwork::getLayer(qint16 layer_id)
+NetworkLayer* SensorNetwork::getLayer(qint16 layer_id) const
 {
     NetworkLayer* layerPtr = nullptr;
     for(NetworkLayer *layer : m_layers)
