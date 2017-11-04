@@ -1,4 +1,5 @@
 #include "NetworkNode.h"
+#include "DragWidget.h"
 
 NetworkNode::NetworkNode(quint16 node_id) :
     m_sendDataReceived(false),
@@ -59,15 +60,24 @@ void NetworkNode::setLayer(qint16 layer_id)
     m_layer_id = layer_id;
 }
 
-bool NetworkNode::connectToNodeWidget(DragWidget *widget)
+bool NetworkNode::connectToNodeWidget(QWidget *widget)
 {
     bool success = false;
-    if(widget)
+    DragWidget *dragWidget = static_cast<DragWidget*>(widget);
+    if(dragWidget)
     {
-        success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), widget, SLOT(onNodeReceivedData(DataFrame))));
-
+        if(m_connectedToWidget)
+        {
+            if(disconnect(this, 0, 0, 0))
+            {
+                m_Widget = nullptr;
+                m_connectedToWidget = false;
+            }
+        }
+        success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
     }
     m_connectedToWidget = success;
+    if(m_connectedToWidget) {m_Widget = widget; }
     return success;
 }
 

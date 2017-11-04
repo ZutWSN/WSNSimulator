@@ -1,7 +1,6 @@
 #ifndef NETWORKNODE_H
 #define NETWORKNODE_H
 #include "DataFrame.h"
-#include "DragWidget.h"
 #include <QObject>
 #include <QPoint>
 
@@ -26,7 +25,7 @@ public:
 
     void setNodeID(quint16 node_id);
     void setLayer(qint16 layer_id);
-    bool connectToNodeWidget(DragWidget *widget);
+    bool connectToNodeWidget(QWidget *widget);
     void setNodePosition(const QPoint &position);
 
     quint16 getNodeID() const;
@@ -48,7 +47,7 @@ private:
     quint16 m_node_id;
     qint16 m_layer_id;
     QPoint m_node_position;
-    DragWidget *m_Widget;
+    QWidget *m_Widget;
 };
 
 #endif // NETWORKNODE_H

@@ -13,14 +13,15 @@ public:
     NetworkLayer& operator=(const NetworkLayer &other);
     NetworkLayer& operator=(NetworkLayer &&other);
 
-    NetworkNode* createNode(NetworkNode::NodeType nodeType, quint16 node_id);
-    bool removeNode(NetworkNode *node);
+    bool createNode(NetworkNode::NodeType nodeType, quint16 node_id);
+    bool connectNodes(quint16 first_node, quint16 second_node);
+    bool connectNodeWidget(quint16 node_id, QWidget* widget);
+    bool removeNode(quint16 node_id);
 
     void setLayerId(quint16);
     qint16 getLayerId() const;
-    NetworkNode* getNetworkNode(quint16 node_id) const;
 private:
-    bool checkIfHasNode(quint16 node_id) const;
+    qint16 checkIfHasNode(quint16 node_id) const;
     NetworkNode* copyNetworkNode(const NetworkNode *node) const;
 private:
     QVector<NetworkNode*> m_nodes;

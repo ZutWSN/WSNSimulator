@@ -114,28 +114,16 @@ NetworkLayer& NetworkLayer::operator=(NetworkLayer &&other)
     return *this;
 }
 
-bool NetworkLayer::removeNode(NetworkNode *node)
-{
-    bool removedNode = false;
-    qint16 node_idx = checkIfHasNode(node->getNodeID());
-    if(0 <= node_idx)
-    {
-        node->setLayer(-1);
-        m_nodes.remove(node_idx);
-        removedNode = true;
-    }
-    return removedNode;
-}
-
 qint16 NetworkLayer::getLayerId() const
 {
     return m_layer_id;
 }
 
-NetworkNode* NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
+bool NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
 {
     NetworkNode *new_node = nullptr;
-    if(!checkIfHasNode(node_id))
+    bool addedNode = false;
+    if(checkIfHasNode(node_id) < 0)
     {      
         switch(nodeType)
         {
@@ -150,33 +138,64 @@ NetworkNode* NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 no
         {
             new_node->setLayer(m_layer_id);
             m_nodes.push_back(new_node);
+            addedNode = true;
         }
     }
-    return new_node;
+    return addedNode;
 }
 
-NetworkNode* NetworkLayer::getNetworkNode(quint16 node_id) const
+bool NetworkLayer::connectNodes(quint16 first_node, quint16 second_node)
 {
-    NetworkNode *node = nullptr;
-    if(checkIfHasNode(node_id))
+    bool connected = false;
+    if(first_node != second_node)
     {
-        node = m_nodes[node_id];
+        qint16 fNode_idx = checkIfHasNode(first_node);
+        qint16 sNode_idx = checkIfHasNode(second_node);
+        if(fNode_idx >=0 && sNode_idx >= 0)
+        {
+            connected = m_nodes[fNode_idx]->connectToNode(m_nodes[sNode_idx]);
+        }
     }
-    return node;
+    return connected;
 }
 
-bool NetworkLayer::checkIfHasNode(quint16 node_id) const
+bool NetworkLayer::connectNodeWidget(quint16 node_id, QWidget *widget)
 {
-    bool hasNode = false;
+    bool connected = false;
+    qint16 node_idx = checkIfHasNode(node_id);
+    if(node_idx >= 0)
+    {
+        connected = m_nodes[node_idx]->connectToNodeWidget(widget);
+    }
+    return connected;
+}
+
+bool NetworkLayer::removeNode(quint16 node_id)
+{
+    bool removedNode = false;
+    qint16 node_idx = checkIfHasNode(node_id);
+    if(node_idx >= 0)
+    {
+        m_nodes.remove(node_id);
+        removedNode = true;
+    }
+    return removedNode;
+}
+
+qint16 NetworkLayer::checkIfHasNode(quint16 node_id) const
+{
+    qint16 node_idx = -1;
+    qint16 i = 0;
     for(auto & node : m_nodes)
     {
         if(node->getNodeID() == node_id)
         {
-            hasNode = true;
+            node_id = i;
             break;
         }
+        ++i;
     }
-    return hasNode;
+    return node_idx;
 }
 
 NetworkNode* NetworkLayer::copyNetworkNode(const NetworkNode *node) const
