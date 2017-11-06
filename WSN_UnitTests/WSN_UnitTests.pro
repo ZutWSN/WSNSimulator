@@ -46,7 +46,8 @@ SOURCES += \
     testmain.cpp \
     Test_Widgets.cpp \
     test_NetworkLayer.cpp \
-    Test_SensorNetwork.cpp
+    Test_SensorNetwork.cpp \
+    Test_DataFrame.cpp \
 
 
 HEADERS  += \
@@ -68,6 +69,7 @@ HEADERS  += \
     Test_Widgets.h \
     test_NetworkLayer.h \
     Test_SensorNetwork.h \
-    testconfig.h
+    testconfig.h \
+    Test_DataFrame.h \
 
 RESOURCES += WSN.qrc

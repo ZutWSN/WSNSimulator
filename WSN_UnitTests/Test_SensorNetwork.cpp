@@ -11,12 +11,11 @@ void Test_SensorNetwork::test_addLayer()
     QCOMPARE(network.getNumberOfLayers(), static_cast<quint16>(1));
 }
 
-void Test_SensorNetwork::test_connectNodes()
+void Test_SensorNetwork::test_getLayer()
 {
-
+    SensorNetwork network;
+    network.addLayer(0);
+    QVERIFY(network.getLayer(0) != nullptr);
+    QCOMPARE(network.getLayer(1), nullptr);
 }
 
-void Test_SensorNetwork::test_findBestPath()
-{
-
-}

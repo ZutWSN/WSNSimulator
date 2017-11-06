@@ -105,6 +105,39 @@ private:
         QTest::qExec(&test_nodes, log);
     }
 
+    void runNetworkLayerTest(const QString &reportFile, bool report)
+    {
+        Test_NetworkLayer test_layer;
+        QStringList log;
+        if(report)
+        {
+            log << "." << "-o" << reportFile;
+        }
+        QTest::qExec(&test_layer, log);
+    }
+
+    void runSensorNetworkTest(const QString &reportFile, bool report)
+    {
+        Test_SensorNetwork test_network;
+        QStringList log;
+        if(report)
+        {
+            log << "." << "-o" << reportFile;
+        }
+        QTest::qExec(&test_network, log);
+    }
+
+    void runDataFrameTest(const QString &reportFile, bool report)
+    {
+        Test_DataFrame test_frame;
+        QStringList log;
+        if(report)
+        {
+            log << "." << "-o" << reportFile;
+        }
+        QTest::qExec(&test_frame, log);
+    }
+
     void runWidgetsTest(const QString &reportFile, bool report)
     {
         Test_Widgets test_widgets;
@@ -126,6 +159,18 @@ private:
         else if(testName == "WidgetsTest")
         {
             testFunction = std::bind(&WSN_UnitTests_Config::Test::runWidgetsTest, this, _1, _2);
+        }
+        else if(testName == "NetworkLayerTest")
+        {
+            testFunction = std::bind(&WSN_UnitTests_Config::Test::runNetworkLayerTest, this, _1, _2);
+        }
+        else if(testName == "SensorNetworkTest")
+        {
+            testFunction = std::bind(&WSN_UnitTests_Config::Test::runSensorNetworkTest, this, _1, _2);
+        }
+        else if(testName == "DataFrameTest")
+        {
+            testFunction = std::bind(&WSN_UnitTests_Config::Test::runDataFrameTest, this, _1, _2);
         }
         else
         {

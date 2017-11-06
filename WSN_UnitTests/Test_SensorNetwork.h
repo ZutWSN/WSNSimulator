@@ -8,9 +8,7 @@ class Test_SensorNetwork : public QObject
     Q_OBJECT
 public:
     void test_addLayer();
-    void test_createNode();
-    void test_connectNodes();
-    void test_findBestPath();
+    void test_getLayer();
 };
 
 #endif // TEST_SENSORNETWORK_H
