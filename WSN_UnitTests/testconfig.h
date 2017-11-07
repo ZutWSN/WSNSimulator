@@ -22,162 +22,22 @@ static const QString TEST_REPORTFILE_NODE = "reportFile";
 
 namespace WSN_UnitTests_Config
 {
-struct Test
-{
-public:
-    bool readTestConfig()
+    class TestConfig
     {
-        bool readFileSuccessfully = false;
-        QFile config(TEST_CONFIG_FILE);
-        if(config.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-            QXmlStreamReader xmlReader(&config);
-            while(!xmlReader.isEndDocument())
-            {
-                if(xmlReader.isStartElement())
-                {
-                    if(xmlReader.name().toString() == TEST_NODE)
-                    {
-                        for(auto && attr : xmlReader.attributes())
-                        {
-                            if(attr.name().toString() == TEST_NODE_ATTRIBUTE)
-                            {
-                                if(attr.value().toString().toStdString() == "true")
-                                {
-                                    std::function<void(const QString&, bool)> testFunction;
-                                    bool saveReport = false;
-                                    bool testCaseFound = false;
-                                    QString reportFile;
-                                    while(!(xmlReader.isEndElement() && xmlReader.name() == TEST_NODE))
-                                    {
-                                        xmlReader.readNext();
-                                        if(xmlReader.isStartElement() && (xmlReader.name().toString() == TEST_NAME_NODE))
-                                        {
-                                            xmlReader.readNext(); 
-                                            if(xmlReader.isCharacters())
-                                            {
-                                                testCaseFound = getTestFunction(testFunction, xmlReader.text().toString());
-                                            }
-                                        }
-                                        if(xmlReader.isStartElement() && (xmlReader.name().toString() == TEST_SAVE_REPORT_NODE))
-                                        {
-                                            xmlReader.readNext();
-                                            if(xmlReader.isCharacters())
-                                            {
-                                                saveReport = (xmlReader.text().toString() == "true") ? true : false;
-                                            }
-                                        }
-                                        if(xmlReader.isStartElement() && (xmlReader.name().toString() == TEST_REPORTFILE_NODE))
-                                        {
-                                            xmlReader.readNext();
-                                            if(xmlReader.isCharacters())
-                                            {
-                                                reportFile = xmlReader.text().toString();
-                                            }
-                                        }
-                                    }
-                                    //call test function
-                                    if(testCaseFound)
-                                    {
-                                        testFunction(reportFile, saveReport);
-                                        testCaseFound = false;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                xmlReader.readNext();
-            }
-            readFileSuccessfully = true;
-        }
-        return readFileSuccessfully;
-    }
-private:
-    void runNetworkNodesTest(const QString &reportFile, bool report)
-    {
-        Test_NetworkNodes test_nodes;
-        QStringList log;
-        if(report)
-        {
-            log << "." << "-o" << reportFile;
-        }
-        QTest::qExec(&test_nodes, log);
-    }
+    public:
+        bool readTestConfig();
 
-    void runNetworkLayerTest(const QString &reportFile, bool report)
-    {
-        Test_NetworkLayer test_layer;
-        QStringList log;
-        if(report)
-        {
-            log << "." << "-o" << reportFile;
-        }
-        QTest::qExec(&test_layer, log);
-    }
+    private:
+        void runNetworkNodesTest(const QString &reportFile, bool report);
 
-    void runSensorNetworkTest(const QString &reportFile, bool report)
-    {
-        Test_SensorNetwork test_network;
-        QStringList log;
-        if(report)
-        {
-            log << "." << "-o" << reportFile;
-        }
-        QTest::qExec(&test_network, log);
-    }
+        void runNetworkLayerTest(const QString &reportFile, bool report);
 
-    void runDataFrameTest(const QString &reportFile, bool report)
-    {
-        Test_DataFrame test_frame;
-        QStringList log;
-        if(report)
-        {
-            log << "." << "-o" << reportFile;
-        }
-        QTest::qExec(&test_frame, log);
-    }
+        void runSensorNetworkTest(const QString &reportFile, bool report);
 
-    void runWidgetsTest(const QString &reportFile, bool report)
-    {
-        Test_Widgets test_widgets;
-        QStringList log;
-        if(report)
-        {
-            log << "." <<"-o" << reportFile;
-        }
-        QTest::qExec(&test_widgets, log);
-    }
+        void runDataFrameTest(const QString &reportFile, bool report);
 
-    bool getTestFunction(std::function<void(const QString&, bool)> &testFunction, const QString &testName)
-    {
-        bool validTestName = true;
-        if(testName == "NetworkNodesTest")
-        {
-            testFunction = std::bind(&WSN_UnitTests_Config::Test::runNetworkNodesTest, this, _1, _2);
-        }
-        else if(testName == "WidgetsTest")
-        {
-            testFunction = std::bind(&WSN_UnitTests_Config::Test::runWidgetsTest, this, _1, _2);
-        }
-        else if(testName == "NetworkLayerTest")
-        {
-            testFunction = std::bind(&WSN_UnitTests_Config::Test::runNetworkLayerTest, this, _1, _2);
-        }
-        else if(testName == "SensorNetworkTest")
-        {
-            testFunction = std::bind(&WSN_UnitTests_Config::Test::runSensorNetworkTest, this, _1, _2);
-        }
-        else if(testName == "DataFrameTest")
-        {
-            testFunction = std::bind(&WSN_UnitTests_Config::Test::runDataFrameTest, this, _1, _2);
-        }
-        else
-        {
-            validTestName = false;
-        }
-        return validTestName;
-    }
-};
+        void runWidgetsTest(const QString &reportFile, bool report);
+        bool getTestFunction(std::function<void(const QString&, bool)> &testFunction, const QString &testName);
+    };
 }
 #endif // TESTCONFIG_H

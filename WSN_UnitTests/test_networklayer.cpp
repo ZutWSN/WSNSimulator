@@ -26,7 +26,8 @@ void Test_NetworkLayer::test_connectNodes()
     layer.createNode(NetworkNode::NodeType::Cluster, cluster1_id);
     layer.createNode(NetworkNode::NodeType::Cluster, cluster2_id);
     QCOMPARE(layer.getNumOfNodes(), 4);
-    layer.connectNodes(sensor1_id, cluster1_id);
+    QCOMPARE(layer.connectNodes(sensor1_id, cluster1_id), true);
+    QCOMPARE(layer.connectNodes(sensor2_id, cluster1_id), true);
 
 }
 

@@ -20,6 +20,7 @@ public:
 
     void setLayerId(quint16);
     qint16 getLayerId() const;
+    quint16 getNumOfNodes() const;
 private:
     qint16 checkIfHasNode(quint16 node_id) const;
     NetworkNode* copyNetworkNode(const NetworkNode *node) const;

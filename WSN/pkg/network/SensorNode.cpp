@@ -11,7 +11,7 @@ SensorNode::SensorNode(quint16 node_id):
 
 bool SensorNode::connectToCluster(ClusterNode *cluster)
 {
-    bool success  = false;
+    bool connected  = false;
     if(cluster && !m_connectedToCluster)
     {
         if(cluster->addSensorNode(this))
@@ -19,18 +19,21 @@ bool SensorNode::connectToCluster(ClusterNode *cluster)
             NetworkNode *cluter_node = cluster;
             if(connectToNode(cluster_node))
             {
-                success = true;
+                connected = true;
                 m_connectedToCluster = true;
             }
         }
     }
-    return success;
+    return connected;
 }
 
 bool SensorNode::disconnectFromCluster()
 {
     bool success = false;
+    if(m_connectedToCluster)
+    {
 
+    }
     return success;
 }
 
