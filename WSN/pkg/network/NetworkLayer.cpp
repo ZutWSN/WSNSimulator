@@ -119,6 +119,11 @@ qint16 NetworkLayer::getLayerId() const
     return m_layer_id;
 }
 
+quint16 NetworkLayer::getNumOfNodes() const
+{
+    return m_nodes.size();
+}
+
 bool NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
 {
     NetworkNode *new_node = nullptr;
@@ -153,7 +158,33 @@ bool NetworkLayer::connectNodes(quint16 first_node, quint16 second_node)
         qint16 sNode_idx = checkIfHasNode(second_node);
         if(fNode_idx >=0 && sNode_idx >= 0)
         {
-            connected = m_nodes[fNode_idx]->connectToNode(m_nodes[sNode_idx]);
+            NetworkNode *fNode = m_nodes[fNode_idx];
+            NetworkNode *sNode = m_nodes[sNode_idx];
+            //check if Cluster Sensor connection
+            if( (fNode->getNodeType() == NetworkNode::NodeType::Cluster) && (sNode->getNodeType() == NetworkNode::NodeType::Sensor) ||
+                (fNode->getNodeType() == NetworkNode::NodeType::Sensor) && (sNode->getNodeType() == NetworkNode::NodeType::Cluster))
+            {
+                SensorNode *sensor = (fNode->getNodeType() == NetworkNode::NodeType::Sensor) ? static_cast<SensorNode*>(fNode) : static_cast<SensorNode*>(sNode);
+                ClusterNode *cluster = (fNode->getNodeType() == NetworkNode::NodeType::Cluster) ? static_cast<ClusterNode*>(fNode) : static_cast<ClusterNode*>(sNode);
+                if(sensor->connectToCluster(cluster))
+                {
+                    connected = true;
+                }
+            }
+            else if(fNode->getNodeType() == NetworkNode::NodeType::Cluster && (fNode->getNodeType() == sNode->getNodeType()))
+            {
+                //check if Cluster Cluster connection
+                ClusterNode *fCluster = static_cast<ClusterNode*>(fNode);
+                ClusterNode *sCluster = static_cast<ClusterNode*>(sNode);
+                if(fCluster->addNeighbourCluster(sCluster))
+                {
+                    connected = true;
+                }
+            }
+            else
+            {
+                //for now don't allow Sensor <-> Sensor connection
+            }
         }
     }
     return connected;

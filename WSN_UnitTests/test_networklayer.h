@@ -6,7 +6,7 @@
 class Test_NetworkLayer : public QObject
 {
     Q_OBJECT
-public:
+private slots:
     void test_createNode();
     void test_connectNodes();
     void test_connectNodeWidget();

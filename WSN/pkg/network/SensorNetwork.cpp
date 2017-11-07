@@ -113,7 +113,7 @@ SensorNetwork& SensorNetwork::operator=(SensorNetwork &&other)
 bool SensorNetwork::addLayer(qint16 layer_id)
 {
     bool hasLayer = false;
-    if(checkIfHasLayer(layer_id))
+    if(!checkIfHasLayer(layer_id))
     {
         m_layers.push_back(new NetworkLayer(layer_id));
         hasLayer = true;

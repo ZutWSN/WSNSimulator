@@ -6,7 +6,7 @@
 class Test_SensorNetwork : public QObject
 {
     Q_OBJECT
-public:
+private slots:
     void test_addLayer();
     void test_getLayer();
 };

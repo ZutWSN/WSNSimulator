@@ -6,7 +6,7 @@
 class Test_DataFrame : public QObject
 {
     Q_OBJECT
-public:
+private slots:
     void test_setMsg();
     void test_setMsgType();
     void test_setDestination();
