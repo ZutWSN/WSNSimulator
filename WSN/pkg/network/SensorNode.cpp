@@ -9,18 +9,23 @@ SensorNode::SensorNode(quint16 node_id):
 
 }
 
+//add other network nodes overloaded contructor
+
 bool SensorNode::connectToCluster(ClusterNode *cluster)
 {
     bool connected  = false;
-    if(cluster && !m_connectedToCluster)
+    if(cluster)
     {
-        if(cluster->addSensorNode(this))
+        if(!m_connectedToCluster)
         {
-            NetworkNode *cluter_node = cluster;
-            if(connectToNode(cluster_node))
+            if(cluster->addSensorNode(this))
             {
-                connected = true;
-                m_connectedToCluster = true;
+                NetworkNode *cluster_node = cluster;
+                if(connectToNode(cluster_node))
+                {
+                    connected = true;
+                    m_connectedToCluster = true;
+                }
             }
         }
     }

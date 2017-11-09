@@ -2,6 +2,7 @@
 #define NETWORKNODE_H
 #include "DataFrame.h"
 #include <QObject>
+#include <QVector>
 #include <QPoint>
 
 class NetworkNode : public QObject
@@ -16,12 +17,14 @@ public:
     };
 
     NetworkNode(quint16 node_id = 0);
+    NetworkNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     NetworkNode(const NetworkNode &other);
     NetworkNode& operator=(const NetworkNode &rhs);
     virtual ~NetworkNode();
 
     bool sendData(const DataFrame &txData);   
-    bool connectToNode(NetworkNode *node);
+    virtual bool connectToNode(NetworkNode *node) = 0;
+    virtual bool disconnectFromNode(NetworkNode *node) = 0;
 
     void setNodeID(quint16 node_id);
     void setLayer(qint16 layer_id);
@@ -33,6 +36,7 @@ public:
     QPoint getNodePostion() const;
     bool getSendDataReceived() const;
     virtual NetworkNode::NodeType getNodeType() const;
+    bool checkIfInRange(QPoint &position) const;
 public slots:
     void onReceivedData(const DataFrame &rxData);
 signals:
@@ -44,6 +48,7 @@ private:
 private:
     bool m_sendDataReceived;
     bool m_connectedToWidget;
+    quint16 m_range;
     quint16 m_node_id;
     qint16 m_layer_id;
     QPoint m_node_position;

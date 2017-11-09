@@ -11,6 +11,7 @@ public:
     ClusterNode(quint16 node_id);
 
     bool addSensorNode(SensorNode *sensor);
+    bool connectToNode(NetworkNode *node)
     bool addNeighbourCluster(ClusterNode* cluster);
 
     NetworkNode::NodeType getNodeType() const;

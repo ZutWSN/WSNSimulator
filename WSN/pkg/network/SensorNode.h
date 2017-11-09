@@ -8,12 +8,11 @@ class SensorNode : public NetworkNode
 {
 public:
     SensorNode(quint16 node_id);
-
-    bool connectToCluster(ClusterNode *cluster);
     bool disconnectFromCluster();
-
     NetworkNode::NodeType getNodeType() const;
     bool isConnectedToCluster() const;
+private:
+    bool connectToCluster(ClusterNode *cluster);
 private:
     quint16 m_cluster_id;
     bool m_connectedToCluster;
