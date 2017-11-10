@@ -6,9 +6,7 @@ NetworkNode::NetworkNode(quint16 node_id) :
     m_node_id(node_id),
     m_layer_id(-1),
     m_node_position(QPoint(0, 0)),
-    m_connectedNodeID(0),
     m_Widget(nullptr),
-    m_connectedToNode(false),
     m_sendDataReceived(false),
     m_connectedToWidget(false)
 {
@@ -20,9 +18,7 @@ NetworkNode::NetworkNode(quint16 node_id, quint16 range, qint16 layer_id, const 
     m_node_id(node_id),
     m_layer_id(layer_id),
     m_node_position(node_position),
-    m_connectedNodeID(0),
     m_Widget(nullptr),
-    m_connectedToNode(false),
     m_sendDataReceived(false),
     m_connectedToWidget(false)
 {
@@ -132,13 +128,19 @@ bool NetworkNode::connectToNode(NetworkNode *node)
             {
                 if(node->getNodeID() != m_node_id)
                 {
-                    //both nodes have to be in each others range for 2 way communication
-                    if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
+                    //check if already connected to this node
+                    if(!checkIfConnected(node->getNodeID()))
                     {
-                        connected = static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), node, SLOT(onReceivedData(DataFrame))));
-                        connected &= static_cast<bool>(connect(node, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedData(DataFrame))));
-                        m_connectedNodeID = node->getNodeID();
-                        m_connectedToNode = true;
+                        //both nodes have to be in each others range for 2 way communication
+                        if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
+                        {
+                            connected = static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), node, SLOT(onReceivedData(DataFrame))));
+                            connected &= static_cast<bool>(connect(node, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedData(DataFrame))));
+                            if(connected)
+                            {
+                                m_connectedNodesIDs.push_back(node->getNodeID());
+                            }
+                        }
                     }
                 }
             }
@@ -152,11 +154,17 @@ bool NetworkNode::disconnectFromNode(NetworkNode *node)
     bool disconnected = false;
     if(node)
     {
-        if(node->getNodeID() == m_connectedNodeID)
+        if(checkIfConnected(node->getNodeID()))
         {
-            disconnected = disconnect()
+            disconnected = disconnect(this, 0, node, 0);
+            disconnected &= disconnect(node, 0, this, 0);
+            if(disconnected)
+            {
+                m_connectedNodesIDs.remove(m_connectedNodesIDs.indexOf(node->getNodeID()));
+            }
         }
     }
+    return disconnected;
 }
 
 bool NetworkNode::getSendDataReceived() const
@@ -169,9 +177,9 @@ NetworkNode::NodeType NetworkNode::getNodeType() const
     return NodeType::NoType;
 }
 
-bool NetworkNode::checkIfInRange(QPoint &position) const
+bool NetworkNode::checkIfInRange(const QPoint &position) const
 {
-    quint16 dist = pow((pow(abs(position.x() -m_node_position(x)), 2) + pow(abs(position.y() -m_node_position(y)), 2)), 0.5);
+    quint16 dist = pow((pow(abs(position.x() - m_node_position.x()), 2) + pow(abs(position.y() - m_node_position.y()), 2)), 0.5);
     return dist <= m_range ;
 }
 
@@ -200,6 +208,20 @@ void NetworkNode::processData(const DataFrame &rxData)
 {
     //notify corresponding widget about received data
     emit receivedNewData(rxData);
+}
+
+bool NetworkNode::checkIfConnected(quint16 node_id)
+{
+    bool connected = false;
+    for(auto && id : m_connectedNodesIDs)
+    {
+        if(node_id == id)
+        {
+            connected = true;
+            break;
+        }
+    }
+    return connected;
 }
 
 

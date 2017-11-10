@@ -11,35 +11,41 @@ SensorNode::SensorNode(quint16 node_id):
 
 //add other network nodes overloaded contructor
 
-bool SensorNode::connectToCluster(ClusterNode *cluster)
+bool SensorNode::connectToNode(NetworkNode *node)
 {
+    // only allows connecting to clusters
     bool connected  = false;
-    if(cluster)
+    if(node && (node->getNodeType() == NetworkNode::NodeType::Cluster))
     {
         if(!m_connectedToCluster)
         {
-            if(cluster->addSensorNode(this))
+            if(NetworkNode::connectToNode(node))
             {
-                NetworkNode *cluster_node = cluster;
-                if(connectToNode(cluster_node))
-                {
-                    connected = true;
-                    m_connectedToCluster = true;
-                }
+                static_cast<ClusterNode*>(node)->addSensorNode(this->m_node_id);
+                connected = true;
+                m_connectedToCluster = true;
+                m_cluster_id = node ->getNodeID();
             }
         }
     }
     return connected;
 }
 
-bool SensorNode::disconnectFromCluster()
+bool SensorNode::disconnectFromNode(NetworkNode *node)
 {
-    bool success = false;
-    if(m_connectedToCluster)
+    bool disconnected = false;
+    if(node && (node->getNodeType() == NetworkNode::NodeType::Cluster))
     {
-
+        if(m_connectedToCluster)
+        {
+            if(NetworkNode::disconnectFromNode(node))
+            {
+                m_cluster_id = 0;
+                m_connectedToCluster = false;
+            }
+        }
     }
-    return success;
+    return disconnected;
 }
 
 NetworkNode::NodeType SensorNode::getNodeType() const

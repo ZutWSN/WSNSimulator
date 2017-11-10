@@ -2,7 +2,7 @@
 #define NETWORKNODE_H
 #include "DataFrame.h"
 #include <QObject>
-#include <QVector>
+#include <QList>
 #include <QPoint>
 
 class NetworkNode : public QObject
@@ -23,12 +23,13 @@ public:
     virtual ~NetworkNode();
 
     bool sendData(const DataFrame &txData);   
-    virtual bool connectToNode(NetworkNode *node) = 0;
-    virtual bool disconnectFromNode(NetworkNode *node) = 0;
+    virtual bool connectToNode(NetworkNode *node);
+    virtual bool disconnectFromNode(NetworkNode *node);
+    bool connectToNodeWidget(QWidget *widget);
 
     void setNodeID(quint16 node_id);
     void setLayer(qint16 layer_id);
-    bool connectToNodeWidget(QWidget *widget);
+
     void setNodePosition(const QPoint &position);
 
     quint16 getNodeID() const;
@@ -36,7 +37,7 @@ public:
     QPoint getNodePostion() const;
     bool getSendDataReceived() const;
     virtual NetworkNode::NodeType getNodeType() const;
-    bool checkIfInRange(QPoint &position) const;
+    bool checkIfInRange(const QPoint &position) const;
 public slots:
     void onReceivedData(const DataFrame &rxData);
 signals:
@@ -45,14 +46,16 @@ signals:
     void changedNodeID(quint16 id);
 private:
     virtual void processData(const DataFrame &rxData);
+    bool checkIfConnected(quint16 node_id);
 private:
-    bool m_sendDataReceived;
-    bool m_connectedToWidget;
     quint16 m_range;
     quint16 m_node_id;
     qint16 m_layer_id;
     QPoint m_node_position;
     QWidget *m_Widget;
+    bool m_sendDataReceived;
+    bool m_connectedToWidget;
+    QVector<quint16> m_connectedNodesIDs;
 };
 
 #endif // NETWORKNODE_H
