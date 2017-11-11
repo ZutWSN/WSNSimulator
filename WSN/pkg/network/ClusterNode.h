@@ -3,23 +3,20 @@
 #include "NetworkNode.h"
 #include <QVector>
 
-class SensorNode;
-
 class ClusterNode : public NetworkNode
 {
+    Q_OBJECT
 public:
     ClusterNode(quint16 node_id);
+    ~ClusterNode();
 
-    bool addSensorNode(SensorNode *sensor);
-    bool connectToNode(NetworkNode *node);
-    bool addNeighbourCluster(ClusterNode* cluster);
+    bool broadCastDataToSensors() const;
 
     NetworkNode::NodeType getNodeType() const;
+public slots:
+    onReceivedData(const DataFrame &rxData);
 private:
-    bool checkIfSensorConnected(quint16 sensor_id);
-private:
-    QVector<SensorNode*> m_sensors;
-    QVector<ClusterNode*> m_clusterNeighbours;
+    void processData(const DataFrame &rxData);
 };
 
 #endif // CLUSTERNODE_H

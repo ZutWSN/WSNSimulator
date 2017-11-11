@@ -21,10 +21,10 @@ bool SensorNode::connectToNode(NetworkNode *node)
         {
             if(NetworkNode::connectToNode(node))
             {
-                static_cast<ClusterNode*>(node)->addSensorNode(this->m_node_id);
+                static_cast<ClusterNode*>(node)->addSensorNode(this);
                 connected = true;
                 m_connectedToCluster = true;
-                m_cluster_id = node ->getNodeID();
+                m_cluster_id = node->getNodeID();
             }
         }
     }

@@ -71,6 +71,20 @@ bool NetworkNode::sendData(const DataFrame &txData)
     return result;
 }
 
+bool NetworkNode::addNode(NetworkNode *node)
+{
+    bool success = false;
+    if(node && (m_layer_id == node->getNodeLayer()))
+    {
+        if(m_connectedNodes.indexOf(node) == -1)
+        {
+            m_connectedNodes.push_back(node);
+            success = true;
+        }
+    }
+    return success;
+}
+
 void NetworkNode::setLayer(qint16 layer_id)
 {
     m_layer_id = layer_id;
@@ -129,7 +143,7 @@ bool NetworkNode::connectToNode(NetworkNode *node)
                 if(node->getNodeID() != m_node_id)
                 {
                     //check if already connected to this node
-                    if(!checkIfConnected(node->getNodeID()))
+                    if(!checkIfConnectedToNode(node->getNodeType(), node->getNodeID()))
                     {
                         //both nodes have to be in each others range for 2 way communication
                         if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
@@ -138,7 +152,7 @@ bool NetworkNode::connectToNode(NetworkNode *node)
                             connected &= static_cast<bool>(connect(node, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedData(DataFrame))));
                             if(connected)
                             {
-                                m_connectedNodesIDs.push_back(node->getNodeID());
+                                m_connectedNodes.push_back(node);
                             }
                         }
                     }
@@ -154,13 +168,13 @@ bool NetworkNode::disconnectFromNode(NetworkNode *node)
     bool disconnected = false;
     if(node)
     {
-        if(checkIfConnected(node->getNodeID()))
+        if(checkIfConnectedToNode(node->getNodeType(), node->getNodeID()))
         {
             disconnected = disconnect(this, 0, node, 0);
             disconnected &= disconnect(node, 0, this, 0);
             if(disconnected)
             {
-                m_connectedNodesIDs.remove(m_connectedNodesIDs.indexOf(node->getNodeID()));
+                m_connectedNodes.remove(m_connectedNodes.indexOf(node));
             }
         }
     }
@@ -210,12 +224,12 @@ void NetworkNode::processData(const DataFrame &rxData)
     emit receivedNewData(rxData);
 }
 
-bool NetworkNode::checkIfConnected(quint16 node_id)
+bool NetworkNode::checkIfConnectedToNode(NetworkNode *node) const
 {
     bool connected = false;
-    for(auto && id : m_connectedNodesIDs)
+    for(NetworkNode* connected_node : m_connectedNodes)
     {
-        if(node_id == id)
+        if(node == connected_node)
         {
             connected = true;
             break;

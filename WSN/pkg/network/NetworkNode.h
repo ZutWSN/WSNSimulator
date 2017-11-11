@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QList>
 #include <QPoint>
+#include <QPair>
 
 class NetworkNode : public QObject
 {
@@ -22,7 +23,8 @@ public:
     NetworkNode& operator=(const NetworkNode &rhs);
     virtual ~NetworkNode();
 
-    bool sendData(const DataFrame &txData);   
+    bool sendData(const DataFrame &txData);
+    bool addNode(NetworkNode *node);
     virtual bool connectToNode(NetworkNode *node);
     virtual bool disconnectFromNode(NetworkNode *node);
     bool connectToNodeWidget(QWidget *widget);
@@ -46,7 +48,7 @@ signals:
     void changedNodeID(quint16 id);
 private:
     virtual void processData(const DataFrame &rxData);
-    bool checkIfConnected(quint16 node_id);
+    bool checkIfConnectedToNode(NetworkNode *node) const;
 private:
     quint16 m_range;
     quint16 m_node_id;
@@ -55,7 +57,7 @@ private:
     QWidget *m_Widget;
     bool m_sendDataReceived;
     bool m_connectedToWidget;
-    QVector<quint16> m_connectedNodesIDs;
+    QVector<NetworkNode*> m_connectedNodes;
 };
 
 #endif // NETWORKNODE_H

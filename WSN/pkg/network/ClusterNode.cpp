@@ -1,5 +1,4 @@
 #include "ClusterNode.h"
-#include "SensorNode.h"
 
 ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id)
@@ -7,44 +6,16 @@ ClusterNode::ClusterNode(quint16 node_id) :
 
 }
 
-bool ClusterNode::addSensorNode(quinit16 sensor_id)
+ClusterNode::~ClusterNode()
 {
-    bool success = false;
-    if(sensor)
-    {
-        if(!checkIfSensorConnected(sensor_id))
-        {
-            m_sensors.push_back(sensor);
-            success = true;
-        }
-    }
-    return success;
-}
-bool ClusterNode::connectToNode(NetworkNode *node)
-{
-    //check if cluster or sensor, add to separate vectors - sensors and neighbours
-    //add definition of virtual function in sensor, also disconnect
-    bool connected = false;
-    if(node)
-    {
-        //check if cluster of sensor and handle accordingly
-    }
-    return connected;
+
 }
 
-bool ClusterNode::addNeighbourCluster(ClusterNode *cluster)
+
+bool ClusterNode::broadCastDataToSensors() const
 {
-    bool success = false;
-    if(cluster && (cluster != this))
-    {
-        if(connectToNode(static_cast<NetworkNode*>(cluster)))
-        {
-            m_clusterNeighbours.push_back(cluster);
-            cluster->m_clusterNeighbours.push_back(this);
-            success = true;
-        }
-    }
-    return success;
+    //send Data to Sensors connected to cluster
+    return true;
 }
 
 NetworkNode::NodeType ClusterNode::getNodeType() const
@@ -52,17 +23,17 @@ NetworkNode::NodeType ClusterNode::getNodeType() const
     return NodeType::Cluster;
 }
 
-bool ClusterNode::checkIfSensorConnected(quint16 sensor_id)
+ClusterNode::onReceivedData(const DataFrame &rxData)
 {
-    bool connected = false;
-    for(auto && id : m_sensors)
-    {
-        if(sensor_id == sensor_id)
-        {
-            connected = true;
-            break;
-        }
-    }
-    return connected;
+    //handle checking if data is for this cluster if not do nothing - does not happen for sensor
+    //so it doesnt overload this, only process data
+}
+
+void ClusterNode::processData(const DataFrame &rxData)
+{
+    //accumulate if this is its destination, else forward it
+    //next node in defined path - emits signal to all connected cluster
+    //neighbours, only one processes it and forwards further, rest ignores it after check.
+    NetworkNode::processData(rxData);
 }
 
