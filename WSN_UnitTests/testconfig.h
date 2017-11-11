@@ -30,6 +30,7 @@ namespace WSN_UnitTests_Config
     private:
         void runNetworkNodesTest(const QString &reportFile, bool report);
         void runNetworkLayerTest(const QString &reportFile, bool report);
+        void runSensorNodeTest(const QString &reportFile, bool report);
         void runSensorNetworkTest(const QString &reportFile, bool report);
         void runDataFrameTest(const QString &reportFile, bool report);
         void runWidgetsTest(const QString &reportFile, bool report);

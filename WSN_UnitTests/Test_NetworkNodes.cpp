@@ -26,22 +26,41 @@ void Test_NetworkNodes::test_sendData()
 
 void Test_NetworkNodes::test_connectToNode()
 {
-    qRegisterMetaType<DataFrame>();
     NetworkNode sender(0);
     NetworkNode receiver(1);
     sender.setLayer(0);
     receiver.setLayer(0);
     //test nodes on the same layer
     QCOMPARE(sender.connectToNode(&receiver), true);
+    QCOMPARE(sender.checkIfConnectedToNode(&receiver), true);
     //test nodes same id error
     NetworkNode receiver1(0);
     receiver1.setLayer(0);
     QCOMPARE(sender.connectToNode(&receiver1), false);
+    QCOMPARE(sender.checkIfConnectedToNode(&receiver1), false);
     //test nodes on different layers
     NetworkNode receiver2(2);
     receiver2.setLayer(1);
     QCOMPARE(sender.connectToNode(&receiver2), false);
+    QCOMPARE(sender.checkIfConnectedToNode(&receiver2), false);
 
+}
+
+void Test_NetworkNodes::test_disconnectedFromNode()
+{
+    NetworkNode sender(0);
+    NetworkNode receiver(1);
+    NetworkNode receiver2(2);
+    sender.setLayer(0);
+    receiver.setLayer(0);
+    receiver2.setLayer(1);
+    //can't disconnect before connected
+    QCOMPARE(sender.disconnectFromNode(&receiver), false);
+    sender.connectToNode(&receiver);
+    //cant disconnect , not valid node -> noet connected and different layer
+    QCOMPARE(sender.disconnectFromNode(&receiver2), false);
+    //disconnect
+    QCOMPARE(sender.disconnectFromNode(&receiver), true);
 }
 
 void Test_NetworkNodes::test_connectToNodeWidget()

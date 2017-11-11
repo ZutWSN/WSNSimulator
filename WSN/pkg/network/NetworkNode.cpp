@@ -143,16 +143,18 @@ bool NetworkNode::connectToNode(NetworkNode *node)
                 if(node->getNodeID() != m_node_id)
                 {
                     //check if already connected to this node
-                    if(!checkIfConnectedToNode(node->getNodeType(), node->getNodeID()))
+                    if(!checkIfConnectedToNode(node))
                     {
                         //both nodes have to be in each others range for 2 way communication
                         if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
                         {
                             connected = static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), node, SLOT(onReceivedData(DataFrame))));
                             connected &= static_cast<bool>(connect(node, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedData(DataFrame))));
+                            connected &= node->addNode(this);
                             if(connected)
                             {
                                 m_connectedNodes.push_back(node);
+
                             }
                         }
                     }
@@ -168,7 +170,7 @@ bool NetworkNode::disconnectFromNode(NetworkNode *node)
     bool disconnected = false;
     if(node)
     {
-        if(checkIfConnectedToNode(node->getNodeType(), node->getNodeID()))
+        if(checkIfConnectedToNode(node))
         {
             disconnected = disconnect(this, 0, node, 0);
             disconnected &= disconnect(node, 0, this, 0);

@@ -11,6 +11,7 @@ private slots:
     void test_sendData();
     void test_onReceivedData();
     void test_connectToNode();
+    void test_disconnectedFromNode();
     void test_connectToNodeWidget();
 };
 

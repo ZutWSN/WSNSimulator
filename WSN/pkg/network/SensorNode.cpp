@@ -1,5 +1,4 @@
 #include "SensorNode.h"
-#include "ClusterNode.h"
 
 SensorNode::SensorNode(quint16 node_id):
     NetworkNode(node_id),
@@ -21,7 +20,6 @@ bool SensorNode::connectToNode(NetworkNode *node)
         {
             if(NetworkNode::connectToNode(node))
             {
-                static_cast<ClusterNode*>(node)->addSensorNode(this);
                 connected = true;
                 m_connectedToCluster = true;
                 m_cluster_id = node->getNodeID();
@@ -56,4 +54,13 @@ NetworkNode::NodeType SensorNode::getNodeType() const
 bool SensorNode::isConnectedToCluster() const
 {
     return m_connectedToCluster;
+}
+
+void SensorNode::processData(const DataFrame &rxData)
+{
+    //check data - process frame information - > will
+    // later decided what to do with it
+    //base class notifies connected widget
+    NetworkNode::processData(rxData);
+
 }

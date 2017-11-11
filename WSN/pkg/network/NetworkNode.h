@@ -40,15 +40,15 @@ public:
     bool getSendDataReceived() const;
     virtual NetworkNode::NodeType getNodeType() const;
     bool checkIfInRange(const QPoint &position) const;
+    bool checkIfConnectedToNode(NetworkNode *node) const;
 public slots:
     void onReceivedData(const DataFrame &rxData);
 signals:
     void dataSend(const DataFrame &txData);
     void receivedNewData(const DataFrame &rxData);
     void changedNodeID(quint16 id);
-private:
+protected:
     virtual void processData(const DataFrame &rxData);
-    bool checkIfConnectedToNode(NetworkNode *node) const;
 private:
     quint16 m_range;
     quint16 m_node_id;
