@@ -8,7 +8,18 @@ SensorNode::SensorNode(quint16 node_id):
 
 }
 
-//add other network nodes overloaded contructor
+SensorNode::SensorNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position) :
+     NetworkNode(node_id, range, layer_id, node_position),
+     m_cluster_id(0),
+     m_connectedToCluster(false)
+{
+
+}
+
+SensorNode::~SensorNode()
+{
+
+}
 
 bool SensorNode::connectToNode(NetworkNode *node)
 {

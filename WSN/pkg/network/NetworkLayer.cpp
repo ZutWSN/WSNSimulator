@@ -161,7 +161,7 @@ bool NetworkLayer::connectNodes(quint16 first_node, quint16 second_node)
             NetworkNode *fNode = m_nodes[fNode_idx];
             NetworkNode *sNode = m_nodes[sNode_idx];
             //check if valid node types and not Sensor - Sensor connection
-            if(!(fNode->getNodeType() == NetworkNode::NodeType::Sensor) && (sNode->getNodeType() == NetworkNode::NodeType::Sensor))
+            if(!((fNode->getNodeType() == NetworkNode::NodeType::Sensor) && (sNode->getNodeType() == NetworkNode::NodeType::Sensor)))
             {
                 if((fNode->getNodeType() != NetworkNode::NodeType::NoType) && (sNode->getNodeType() != NetworkNode::NodeType::NoType))
                 {
@@ -207,7 +207,7 @@ qint16 NetworkLayer::checkIfHasNode(quint16 node_id) const
     {
         if(node->getNodeID() == node_id)
         {
-            node_id = i;
+            node_idx = i;
             break;
         }
         ++i;

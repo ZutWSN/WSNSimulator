@@ -21,6 +21,7 @@ public:
     NetworkNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     NetworkNode(const NetworkNode &other);
     NetworkNode& operator=(const NetworkNode &rhs);
+    //maybe add move constructor and move assignment operator
     virtual ~NetworkNode();
 
     bool sendData(const DataFrame &txData);

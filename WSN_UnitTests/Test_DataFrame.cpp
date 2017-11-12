@@ -28,5 +28,6 @@ void Test_DataFrame::test_frameEmpty()
     DataFrame frame;
     QCOMPARE(frame.frameEmpty(), true);
     QByteArray msg("Some data");
+    frame.setMsg(msg);
     QCOMPARE(frame.frameEmpty(), false);
 }

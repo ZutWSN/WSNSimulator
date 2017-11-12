@@ -8,6 +8,7 @@ class ClusterNode : public NetworkNode
     Q_OBJECT
 public:
     ClusterNode(quint16 node_id);
+    ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     ~ClusterNode();
 
     bool broadCastDataToSensors() const;

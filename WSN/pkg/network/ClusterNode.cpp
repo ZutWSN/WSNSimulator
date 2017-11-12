@@ -6,6 +6,12 @@ ClusterNode::ClusterNode(quint16 node_id) :
 
 }
 
+ClusterNode::ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position):
+    NetworkNode(node_id, range, layer_id, node_position)
+{
+
+}
+
 ClusterNode::~ClusterNode()
 {
 
