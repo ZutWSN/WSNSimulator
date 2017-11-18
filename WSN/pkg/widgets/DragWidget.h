@@ -20,15 +20,19 @@ public:
     virtual ~DragWidget();
     void setWidgetImage(const QString &imgName);
     void setAsRootWidget();
+    void setConnectedToNode(bool connected);
 
     bool isRootWidget() const;
     virtual DragWidget::DragWidgetType getWidgetType() const;
     QString getImageName() const;
+    bool isConnectedToNode() const;
 public slots:
     void onNodeReceivedData(const DataFrame &data);
 private:
     QString m_imgName;
     bool m_rootWidget;
+    bool m_connectedToNode;
+
 };
 
 #endif // DRAGWIDGET_H

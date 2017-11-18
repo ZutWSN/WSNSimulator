@@ -94,17 +94,18 @@ bool NetworkNode::connectToNodeWidget(QWidget *widget)
 {
     bool success = false;
     DragWidget *dragWidget = static_cast<DragWidget*>(widget);
-    if(dragWidget)
+    if(dragWidget && !dragWidget->isConnectedToNode())
     {
         if(!m_connectedToWidget)
         {
             success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
-        }        
-    }
-    m_connectedToWidget = success;
-    if(m_connectedToWidget)
-    {
-        m_Widget = widget;
+            m_connectedToWidget = success;
+            if(m_connectedToWidget)
+            {
+                dragWidget->setConnectedToNode(true);
+                m_Widget = widget;
+            }
+        }
     }
     return success;
 }
@@ -114,12 +115,16 @@ bool NetworkNode::disconnectFromWidget()
     bool disconnected = false;
     if(m_connectedToWidget && m_Widget)
     {
-        disconnected = disconnect(this, 0, m_Widget, 0);
-        disconnected &= disconnect(m_Widget, 0, this, 0);
+        DragWidget *dragWidget = static_cast<DragWidget*>(m_Widget);
+        if(dragWidget->isConnectedToNode())
+        {
+            disconnected = disconnect(this, 0, m_Widget, 0);
+        }
         if(disconnected)
         {
+            dragWidget->setConnectedToNode(false);
             m_Widget = nullptr;
-            m_connectedToWidget = false;
+            m_connectedToWidget = false;           
         }
     }
     return disconnected;

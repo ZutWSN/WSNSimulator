@@ -2,7 +2,8 @@
 
 DragWidget::DragWidget(QWidget *parent, bool rootWidget):
     QLabel(parent),
-    m_rootWidget(rootWidget)
+    m_rootWidget(rootWidget),
+    m_connectedToNode(false)
 {
 
 }
@@ -21,6 +22,11 @@ void DragWidget::setWidgetImage(const QString &imgName)
     m_imgName = imgName;
 }
 
+void DragWidget::setConnectedToNode(bool connected)
+{
+    m_connectedToNode = connected;
+}
+
 bool DragWidget::isRootWidget() const
 {
     return m_rootWidget;
@@ -34,6 +40,11 @@ DragWidget::DragWidgetType DragWidget::getWidgetType() const
 QString DragWidget::getImageName() const
 {
     return m_imgName;
+}
+
+bool DragWidget::isConnectedToNode() const
+{
+    return m_connectedToNode;
 }
 
 void DragWidget::onNodeReceivedData(const DataFrame &data)
