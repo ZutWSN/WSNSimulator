@@ -11,7 +11,7 @@
 //Path discovery will be done on event when new cluster is added
 //to its layer, then it will receive new optimal path map from sink
 //and resync with all nodes so that new cluster can synchronize with them
-class Test_ClusterNode
+class Test_ClusterNode : public QObject
 {
     Q_OBJECT
 public slots:

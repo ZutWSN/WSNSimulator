@@ -96,19 +96,33 @@ bool NetworkNode::connectToNodeWidget(QWidget *widget)
     DragWidget *dragWidget = static_cast<DragWidget*>(widget);
     if(dragWidget)
     {
-        if(m_connectedToWidget)
+        if(!m_connectedToWidget)
         {
-            if(disconnect(this, 0, 0, 0))
-            {
-                m_Widget = nullptr;
-                m_connectedToWidget = false;
-            }
-        }
-        success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
+            success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
+        }        
     }
     m_connectedToWidget = success;
-    if(m_connectedToWidget) {m_Widget = widget; }
+    if(m_connectedToWidget)
+    {
+        m_Widget = widget;
+    }
     return success;
+}
+
+bool NetworkNode::disconnectFromWidget()
+{
+    bool disconnected = false;
+    if(m_connectedToWidget && m_Widget)
+    {
+        disconnected = disconnect(this, 0, m_Widget, 0);
+        disconnected &= disconnect(m_Widget, 0, this, 0);
+        if(disconnected)
+        {
+            m_Widget = nullptr;
+            m_connectedToWidget = false;
+        }
+    }
+    return disconnected;
 }
 
 void NetworkNode::setNodePosition(const QPoint &position)

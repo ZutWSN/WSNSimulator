@@ -2,9 +2,8 @@
 #define NETWORKNODE_H
 #include "DataFrame.h"
 #include <QObject>
-#include <QList>
 #include <QPoint>
-#include <QPair>
+#include <QVector>
 
 class NetworkNode : public QObject
 {
@@ -29,6 +28,7 @@ public:
     virtual bool connectToNode(NetworkNode *node);
     virtual bool disconnectFromNode(NetworkNode *node);
     bool connectToNodeWidget(QWidget *widget);
+    bool disconnectFromWidget();
 
     void setNodeID(quint16 node_id);
     void setLayer(qint16 layer_id);

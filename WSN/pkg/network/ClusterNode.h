@@ -15,7 +15,7 @@ public:
 
     NetworkNode::NodeType getNodeType() const;
 public slots:
-    onReceivedData(const DataFrame &rxData);
+    void onReceivedData(const DataFrame &rxData);
 private:
     void processData(const DataFrame &rxData);
 };

@@ -16,6 +16,6 @@ void Test_SensorNetwork::test_getLayer()
     SensorNetwork network;
     network.addLayer(0);
     QVERIFY(network.getLayer(0) != nullptr);
-    QCOMPARE(network.getLayer(1), nullptr);
+    QVERIFY(network.getLayer(1) == nullptr);
 }
 

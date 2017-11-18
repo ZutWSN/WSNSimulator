@@ -1,6 +1,7 @@
 #include "test_NetworkLayer.h"
 #include "NetworkLayer.h"
 #include "NetworkNode.h"
+#include "widgetfactory.h"
 
 void Test_NetworkLayer::test_createNode()
 {
@@ -33,7 +34,21 @@ void Test_NetworkLayer::test_connectNodes()
 
 void Test_NetworkLayer::test_connectNodeWidget()
 {
-
+    NetworkLayer layer(0);
+    layer.createNode(NetworkNode::NodeType::Sensor, 0);
+    WidgetFactory wFactory;
+    QScopedPointer<DragWidget> sensorWgt(wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor));
+    //connect to new widget
+    QCOMPARE(layer.connectNodeWidget(0, static_cast<QWidget*>(sensorWgt.data())), true);
+    //connect to widget error, layer does not have that node id
+    QCOMPARE(layer.connectNodeWidget(1, static_cast<QWidget*>(sensorWgt.data())), false);
+    //connect to widget with another node before disconnecting previously connected node - false
+    //fix in widgets branch
+    layer.createNode(NetworkNode::NodeType::Sensor, 1);
+    QCOMPARE(layer.connectNodeWidget(1, static_cast<QWidget*>(sensorWgt.data())), false);
+    //connect widget after other node disconnects from it - change node test and code
+    layer.disconnectNodeWidget(0);
+    QCOMPARE(layer.connectNodeWidget(1, static_cast<QWidget*>(sensorWgt.data())), true);
 }
 
 void Test_NetworkLayer::test_removeNode()

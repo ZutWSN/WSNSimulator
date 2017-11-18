@@ -65,11 +65,17 @@ void Test_NetworkNodes::test_disconnectedFromNode()
 
 void Test_NetworkNodes::test_connectToNodeWidget()
 {
-    NetworkNode node;
+    NetworkNode node, node1;
     WidgetFactory wFactory;
     QScopedPointer<DragWidget> widgetPtr(wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor));
     QCOMPARE(node.connectToNodeWidget(widgetPtr.data()), true);
     QCOMPARE(node.connectToNodeWidget(nullptr), false);
+    //already some node connected to that widget first disconnect it
+    //fix in widget branch
+    QCOMPARE(node1.connectToNodeWidget(widgetPtr.data()), false);
+    //now after disconnecting it should work
+    QCOMPARE(node.disconnectFromWidget(), true);
+    QCOMPARE(node1.connectToNodeWidget(widgetPtr.data()), true);
 }
 
 void Test_NetworkNodes::test_onReceivedData()

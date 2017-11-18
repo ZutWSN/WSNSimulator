@@ -187,6 +187,17 @@ bool NetworkLayer::connectNodeWidget(quint16 node_id, QWidget *widget)
     return connected;
 }
 
+bool NetworkLayer::disconnectNodeWidget(quint16 node_id)
+{
+    bool disconnected = false;
+    qint16 node_idx = checkIfHasNode(node_id);
+    if(node_idx >= 0)
+    {
+        disconnected = m_nodes[node_idx]->disconnectFromWidget();
+    }
+    return disconnected;
+}
+
 bool NetworkLayer::removeNode(quint16 node_id)
 {
     bool removedNode = false;

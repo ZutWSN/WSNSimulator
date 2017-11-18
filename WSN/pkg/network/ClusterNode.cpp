@@ -29,7 +29,7 @@ NetworkNode::NodeType ClusterNode::getNodeType() const
     return NodeType::Cluster;
 }
 
-ClusterNode::onReceivedData(const DataFrame &rxData)
+void ClusterNode::onReceivedData(const DataFrame &rxData)
 {
     //handle checking if data is for this cluster if not do nothing - does not happen for sensor
     //so it doesnt overload this, only process data
