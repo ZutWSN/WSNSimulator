@@ -53,15 +53,16 @@ void Test_NetworkLayer::test_connectNodeWidget()
 
 void Test_NetworkLayer::test_removeNode()
 {
-
+    NetworkLayer layer(0);
+    QCOMPARE(layer.removeNode(0), false);
+    layer.createNode(NetworkNode::NodeType::Cluster, 0);
+    QCOMPARE(layer.removeNode(0), true);
 }
 
 void Test_NetworkLayer::test_setLayerId()
 {
-
-}
-
-void Test_NetworkLayer::test_getLayerId()
-{
-
+    NetworkLayer layer(0);
+    QVERIFY(layer.getLayerId() == 0);
+    layer.setLayerId(10);
+    QVERIFY(layer.getLayerId() == 10);
 }

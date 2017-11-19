@@ -204,10 +204,16 @@ bool NetworkLayer::removeNode(quint16 node_id)
     qint16 node_idx = checkIfHasNode(node_id);
     if(node_idx >= 0)
     {
+        delete m_nodes[node_id];
         m_nodes.remove(node_id);
         removedNode = true;
     }
     return removedNode;
+}
+
+void NetworkLayer::setLayerId(quint16 id)
+{
+    m_layer_id = id;
 }
 
 qint16 NetworkLayer::checkIfHasNode(quint16 node_id) const

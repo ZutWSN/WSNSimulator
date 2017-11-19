@@ -19,7 +19,7 @@ public:
     bool disconnectNodeWidget(quint16 node_id);
     bool removeNode(quint16 node_id);
 
-    void setLayerId(quint16);
+    void setLayerId(quint16 id);
     qint16 getLayerId() const;
     quint16 getNumOfNodes() const;
     //think about getter for node pointer, for network manager,make it private

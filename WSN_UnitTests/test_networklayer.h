@@ -12,7 +12,6 @@ private slots:
     void test_connectNodeWidget();
     void test_removeNode();
     void test_setLayerId();
-    void test_getLayerId();
 };
 
 #endif // TEST_NETWORKLAYER_H

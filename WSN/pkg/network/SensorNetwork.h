@@ -16,8 +16,14 @@ public:
 
     quint16 getNumberOfLayers() const;
     NetworkLayer* getLayer(qint16 layer_id) const;
+public slots:
+    void onNewClusterAdded(quint16 cluster_id, quint16 layer_id);
+    void onNewSensorAdded(quint16 sensor_id, quint16 layer_id);
 private:
     bool checkIfHasLayer(qint16 layer_id) const;
+    bool connectSensorToNearestCluster();
+    bool calculateNetworkPaths();
+    bool synchronizeNetwork();
 private:
     QVector<NetworkLayer*> m_layers;
 };
