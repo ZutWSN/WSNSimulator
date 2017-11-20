@@ -1,5 +1,6 @@
 #include "DataFrame.h"
 #include <utility>
+#include <QPair>
 
 DataFrame::DataFrame():
     m_Msg(QByteArray()),
@@ -9,10 +10,13 @@ DataFrame::DataFrame():
 
 }
 
-DataFrame::DataFrame(const QByteArray &msg, DataFrame::RxData type, quint16 destination_id):
+DataFrame::DataFrame(const QByteArray &msg,
+                     DataFrame::RxData type,
+                     quint16 destination_id,
+                     quint16 layer_id, quint16 sender_id, quint16 sender_id):
     m_Msg(msg),
     m_Type(type),
-    m_desination_id(destination_id)
+    m_desination(qMakePair(destination_id, layer_id))
 {
 
 }
@@ -80,9 +84,14 @@ void DataFrame::setMsgType(DataFrame::RxData type)
     m_Type = type;
 }
 
-void DataFrame::setDestination(quint16 node_id)
+void DataFrame::setSender(const QPair<quint16, quint16> &sender)
 {
-    m_desination_id = node_id;
+    m_sender = sender;
+}
+
+void DataFrame::setDestination(const QPair<quint16, quint16> &destination)
+{
+    m_desination = destination;
 }
 
 QByteArray DataFrame::getMsg() const
@@ -95,9 +104,14 @@ DataFrame::RxData DataFrame::getMsgType() const
     return m_Type;
 }
 
-quint16 DataFrame::getDestination() const
+QPair<quint16, quint16> DataFrame::getSender() const
 {
-    return m_desination_id;
+    return m_sender;
+}
+
+QPair<quint16, quint16> DataFrame::getDestination() const
+{
+    return m_desination;
 }
 
 bool DataFrame::frameEmpty() const

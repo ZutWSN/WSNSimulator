@@ -16,6 +16,7 @@ class Test_ClusterNode : public QObject
     Q_OBJECT
 public slots:
     void test_broadCastDataToSensors();
+    void test_setBroadCastTimer();
     void test_onReceivedData();
     void test_processData();
 };

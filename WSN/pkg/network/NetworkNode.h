@@ -49,16 +49,17 @@ signals:
     void receivedNewData(const DataFrame &rxData);
     void changedNodeID(quint16 id);
 protected:
-    virtual void processData(const DataFrame &rxData);
+    virtual void processNewData(const DataFrame &rxData);
+    void processReceiveAcknowledged(const DataFrame &rxData);
 private:
     quint16 m_range;
     quint16 m_node_id;
     qint16 m_layer_id;
     QPoint m_node_position;
     QWidget *m_Widget;
-    bool m_sendDataReceived;
     bool m_connectedToWidget;
     QVector<NetworkNode*> m_connectedNodes;
+    QVector<DataFrame> m_pendingSendDataFrames;
 };
 
 #endif // NETWORKNODE_H

@@ -16,7 +16,7 @@ public:
     NetworkNode::NodeType getNodeType() const;
     bool isConnectedToCluster() const;
 private:
-    void processData(const DataFrame &rxData);
+    void processNewData(const DataFrame &rxData);
 private:
     quint16 m_cluster_id;
     bool m_connectedToCluster;

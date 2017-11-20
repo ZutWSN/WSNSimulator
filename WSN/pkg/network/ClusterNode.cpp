@@ -17,6 +17,10 @@ ClusterNode::~ClusterNode()
 
 }
 
+bool ClusterNode::sendData(const DataFrame &txData)
+{
+
+}
 
 bool ClusterNode::broadCastDataToSensors() const
 {
@@ -29,17 +33,17 @@ NetworkNode::NodeType ClusterNode::getNodeType() const
     return NodeType::Cluster;
 }
 
-void ClusterNode::onReceivedData(const DataFrame &rxData)
-{
-    //handle checking if data is for this cluster if not do nothing - does not happen for sensor
-    //so it doesnt overload this, only process data
-}
 
-void ClusterNode::processData(const DataFrame &rxData)
+void ClusterNode::processNewData(const DataFrame &rxData)
 {
     //accumulate if this is its destination, else forward it
     //next node in defined path - emits signal to all connected cluster
     //neighbours, only one processes it and forwards further, rest ignores it after check.
-    NetworkNode::processData(rxData);
+
+    //handle checking if data is for this cluster if not do nothing - does not happen for sensor
+    //so it doesnt overload this, only process data
+    //if this cluster is destination the broadcast data to its sensors
+    //Get info from data frame
+    NetworkNode::processNewData(rxData);
 }
 

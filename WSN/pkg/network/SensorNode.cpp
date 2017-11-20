@@ -67,7 +67,7 @@ bool SensorNode::isConnectedToCluster() const
     return m_connectedToCluster;
 }
 
-void SensorNode::processData(const DataFrame &rxData)
+void SensorNode::processNewData(const DataFrame &rxData)
 {
     //check data - process frame information - > will
     // later decided what to do with it

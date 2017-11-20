@@ -11,13 +11,10 @@ public:
     ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     ~ClusterNode();
 
-    bool broadCastDataToSensors() const;
-
+    bool broadCastDataToSensors() const;    
     NetworkNode::NodeType getNodeType() const;
-public slots:
-    void onReceivedData(const DataFrame &rxData);
 private:
-    void processData(const DataFrame &rxData);
+    void processNewData(const DataFrame &rxData);
 };
 
 #endif // CLUSTERNODE_H

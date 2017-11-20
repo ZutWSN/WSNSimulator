@@ -7,7 +7,6 @@ NetworkNode::NetworkNode(quint16 node_id) :
     m_layer_id(-1),
     m_node_position(QPoint(0, 0)),
     m_Widget(nullptr),
-    m_sendDataReceived(false),
     m_connectedToWidget(false)
 {
 
@@ -19,7 +18,6 @@ NetworkNode::NetworkNode(quint16 node_id, quint16 range, qint16 layer_id, const 
     m_layer_id(layer_id),
     m_node_position(node_position),
     m_Widget(nullptr),
-    m_sendDataReceived(false),
     m_connectedToWidget(false)
 {
 
@@ -64,11 +62,18 @@ bool NetworkNode::sendData(const DataFrame &txData)
     bool result = false;
     if(!txData.frameEmpty())
     {
-        m_sendDataReceived = false;
         emit dataSend(txData);
         result = true;
+        m_pendingSendDataFrames(txData);
     }
     return result;
+}
+
+bool NetworkNode::processReceiveAcknowledged(const DataFrame &rxData)
+{
+    //check if frame in pending data, if it is remove it and send signal
+    //if all pending data has been removed
+    return true;
 }
 
 bool NetworkNode::addNode(NetworkNode *node)
@@ -229,17 +234,17 @@ void NetworkNode::onReceivedData(const DataFrame &rxData)
     switch(rxData.getMsgType())
     {
         case DataFrame::RxData::NEW_DATA : // received new data, later add checking it and sending back info that it was recived sucessfully
-            processData(rxData);
+            processNewData(rxData);
             break;
         case DataFrame::RxData::RECEIVED_DATA : //receiver notification that last send data was accepted
-            m_sendDataReceived = true; // later create send data received successfull by target data pool, which will be changed and checked with send was acknowledged
+            processReceiveAcknowledged(rxData);
             break;
         default:
             break;
     }
 }
 
-void NetworkNode::processData(const DataFrame &rxData)
+void NetworkNode::processNewData(const DataFrame &rxData)
 {
     //notify corresponding widget about received data
     emit receivedNewData(rxData);
