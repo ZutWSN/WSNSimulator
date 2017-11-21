@@ -35,10 +35,17 @@ void ClusterNode::processNewData(const DataFrame &rxData)
             DataFrame txData(rxData);
             //now start processing for forwarding or broadcasting
             txData.setSender(qMakePair(m_node_id, m_layer_id));
-            if(rxData.isFinalDestination())
+            if(rxData.isFinalDestination(txData.getSender()))
             {
-                txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
-                emit broacastDataToSensors(rxData);
+                if(rxData.getMsgType() == DataFrame::RxData::PATH_SYNC)
+                {
+                    bool extractNewPathFromMsg(rxData.getMsg());
+                }
+                else
+                {
+                    txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
+                    emit broacastDataToSensors(rxData);
+                }
             }
             else
             {
@@ -49,5 +56,20 @@ void ClusterNode::processNewData(const DataFrame &rxData)
             }
         }
     }
+}
+
+bool ClusterNode::extractNewPathFromMsg(const QByteArray &pathMsg)
+{
+    /* extract new path from QByteArray message, define message text format
+     * np. Parse this Json, it has all data regarding netwok paths
+     * JSon:
+     * {
+        "Sink_ID": "0",
+        "Paths": [
+        { "Node_ID":"0", "Layer_ID":"2", "Path":[ "0", "1", "2" ] },
+        { "Node_ID":"1", "Layer_ID":"2", "Path":[ "1", "2", "0" ] },
+        { "Node_ID":"2", "Layer_ID":"2", "Path":[ "2", "1", "0" ] }
+    */
+    return true;
 }
 

@@ -16,8 +16,9 @@ signals:
     void broacastDataToSensors(const DataFrame &rxData);
 private:
     void processNewData(const DataFrame &rxData);
+    bool extractNewPathFromMsg(const QByteArray &pathMsg);
 private:
-    QString pathToSink;
+    QVector<QPair<quint16, quint16> > m_sinkPath;
 };
 
 #endif // CLUSTERNODE_H

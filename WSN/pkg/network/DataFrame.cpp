@@ -144,4 +144,8 @@ bool DataFrame::frameEmpty() const
     return m_Msg.isEmpty();
 }
 
+bool DataFrame::isFinalDestination(const QPair<quint16, quint16> &nodeLayerAndID) const
+{
+    return (m_path.indexOf(nodeLayerAndID) == (m_path.size() - 1));
+}
 

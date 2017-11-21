@@ -22,8 +22,7 @@ public:
     void setLayerId(quint16 id);
     qint16 getLayerId() const;
     quint16 getNumOfNodes() const;
-    //think about getter for node pointer, for network manager,make it private
-    //so that only friend class can use it.
+    //make sensor network a friend so it can access layer nodes via private getter or directly from vector m_nodes
 private:
     qint16 checkIfHasNode(quint16 node_id) const;
     NetworkNode* copyNetworkNode(const NetworkNode *node) const;

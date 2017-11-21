@@ -11,7 +11,8 @@ public:
         NO_DATA = 0,
         NEW_DATA = 1,
         RECEIVED_DATA = 2,
-        SENSOR_BROADCAST = 3
+        PATH_SYNC = 3,
+        SENSOR_BROADCAST = 4
     };
 
     DataFrame();
@@ -39,7 +40,7 @@ public:
     QPair<quint16, quint16> getSender() const;
     QPair<quint16, quint16> getNextChainNode(quint16 currentNodeID) const;
     bool frameEmpty() const;
-    bool isFinalDestination() const;
+    bool isFinalDestination(const QPair<quint16, quint16> &nodeLayerAndID) const;
 
     // later add compress data, maybe parsing a hex msg not just saving and reading a string
 private:

@@ -42,6 +42,7 @@ public:
     virtual NetworkNode::NodeType getNodeType() const;
     bool checkIfInRange(const QPoint &position) const;
     bool checkIfConnectedToNode(NetworkNode *node) const;
+    quint16 getNumOfPendingDataFrames() const;
 public slots:
     void onReceivedData(const DataFrame &rxData);
 signals:

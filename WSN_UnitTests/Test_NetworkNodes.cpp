@@ -110,4 +110,7 @@ void Test_NetworkNodes::test_onReceivedData()
     QCOMPARE(receiverSendMonitor.count(), 1);
     QCOMPARE(receivedNewDataMonitor.count(), 1);
     QCOMPARE(sender.getSendDataReceived(), true);
+
+    QVERIFY(sender.getNumOfPendingDataFrames() == 0);
+    QVERIFY(receiver.getNumOfPendingDataFrames() == 0);
 }
