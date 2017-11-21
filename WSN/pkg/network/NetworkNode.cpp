@@ -73,7 +73,16 @@ bool NetworkNode::processReceiveAcknowledged(const DataFrame &rxData)
 {
     //check if frame in pending data, if it is remove it and send signal
     //if all pending data has been removed
-    return true;
+    bool deletedPending = false;
+    for(quint16 i = 0; i < m_pendingSendDataFrames.size(); i++)
+    {
+        if(m_pendingSendDataFrames[i].getSender() == rxData.getSender())
+        {
+            m_pendingSendDataFrames.remove(i);
+            deletedPending = true;
+        }
+    }
+    return deletedPending;
 }
 
 bool NetworkNode::addNode(NetworkNode *node)
@@ -248,6 +257,10 @@ void NetworkNode::processNewData(const DataFrame &rxData)
 {
     //notify corresponding widget about received data
     emit receivedNewData(rxData);
+    //send back that data received
+    DataFrame txData(rxData);
+    txData.setMsgType(DataFrame::RxData::RECEIVED_DATA);
+    sendData(txData);
 }
 
 bool NetworkNode::checkIfConnectedToNode(NetworkNode *node) const

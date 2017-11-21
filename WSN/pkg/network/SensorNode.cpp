@@ -1,4 +1,5 @@
 #include "SensorNode.h"
+#include "ClusterNode.h"
 
 SensorNode::SensorNode(quint16 node_id):
     NetworkNode(node_id),
@@ -29,11 +30,18 @@ bool SensorNode::connectToNode(NetworkNode *node)
     {
         if(!m_connectedToCluster)
         {
-            if(NetworkNode::connectToNode(node))
+            if(node->getNodeLayer() == m_layer_id)
             {
-                connected = true;
-                m_connectedToCluster = true;
-                m_cluster_id = node->getNodeID();
+                if(node->getNodeID() != m_node_id)
+                {
+                    ClusterNode *cluster = static_cast<ClusterNode*>(node);
+                    if(static_cast<bool>(connect(cluster, SIGNAL(broacastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame)))))
+                    {
+                        connected = true;
+                        m_connectedToCluster = true;
+                        m_cluster_id = node->getNodeID();
+                    }
+                }
             }
         }
     }
@@ -47,10 +55,18 @@ bool SensorNode::disconnectFromNode(NetworkNode *node)
     {
         if(m_connectedToCluster)
         {
-            if(NetworkNode::disconnectFromNode(node))
+            if(node->getNodeLayer() == m_layer_id)
             {
-                m_cluster_id = 0;
-                m_connectedToCluster = false;
+                if(node->getNodeID() == m_cluster_id)
+                {
+                    disconnected = disconnect(node, 0, this, 0);
+                    if(disconnected)
+                    {
+                        m_connectedNodes.remove(m_connectedNodes.indexOf(node));
+                        m_connectedToCluster = false;
+                        m_cluster_id = 0;
+                    }
+                }
             }
         }
     }
@@ -72,6 +88,7 @@ void SensorNode::processNewData(const DataFrame &rxData)
     //check data - process frame information - > will
     // later decided what to do with it
     //base class notifies connected widget
-    NetworkNode::processData(rxData);
+    NetworkNode::processNewData(rxData);
 
 }
+

@@ -14,6 +14,8 @@ void Test_DataFrame::test_setMsgType()
     DataFrame frame;
     frame.setMsgType(DataFrame::RxData::NEW_DATA);
     QCOMPARE(frame.getMsgType(), DataFrame::RxData::NEW_DATA);
+    frame.setMsgType(DataFrame::RxData::RECEIVED_DATA);
+    QCOMPARE(frame.getMsgType(), DataFrame::RxData::RECEIVED_DATA);
 }
 
 void Test_DataFrame::test_setDestination()
@@ -31,3 +33,14 @@ void Test_DataFrame::test_frameEmpty()
     frame.setMsg(msg);
     QCOMPARE(frame.frameEmpty(), false);
 }
+
+void Test_DataFrame::test_setPath()
+{
+    DataFrame frame;
+    QVector<QPair<quint16, quint16> > path;
+    QCOMPARE(frame.setPath(path), false);
+    path.push_back(qMakePair(0, 0));
+    path.push_back(qMakePair(1, 0));
+    QQCOMPARE(frame.setPath(path), true);
+}
+

@@ -15,6 +15,8 @@ public:
     bool connectToNode(NetworkNode *node);
     NetworkNode::NodeType getNodeType() const;
     bool isConnectedToCluster() const;
+public slots:
+    void onReceivedDataFromCluster(const DataFrame &rxData);
 private:
     void processNewData(const DataFrame &rxData);
 private:

@@ -17,17 +17,6 @@ ClusterNode::~ClusterNode()
 
 }
 
-bool ClusterNode::sendData(const DataFrame &txData)
-{
-
-}
-
-bool ClusterNode::broadCastDataToSensors() const
-{
-    //send Data to Sensors connected to cluster
-    return true;
-}
-
 NetworkNode::NodeType ClusterNode::getNodeType() const
 {
     return NodeType::Cluster;
@@ -36,14 +25,29 @@ NetworkNode::NodeType ClusterNode::getNodeType() const
 
 void ClusterNode::processNewData(const DataFrame &rxData)
 {
-    //accumulate if this is its destination, else forward it
-    //next node in defined path - emits signal to all connected cluster
-    //neighbours, only one processes it and forwards further, rest ignores it after check.
-
-    //handle checking if data is for this cluster if not do nothing - does not happen for sensor
-    //so it doesnt overload this, only process data
-    //if this cluster is destination the broadcast data to its sensors
-    //Get info from data frame
     NetworkNode::processNewData(rxData);
+    QPair<quint16, quint16> destination = rxData.getDestination();
+    if(destination.second == m_layer_id)
+    {
+        if(destination.first == m_node_id)
+        {
+            //send back that message received
+            DataFrame txData(rxData);
+            //now start processing for forwarding or broadcasting
+            txData.setSender(qMakePair(m_node_id, m_layer_id));
+            if(rxData.isFinalDestination())
+            {
+                txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
+                emit broacastDataToSensors(rxData);
+            }
+            else
+            {
+                QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id);
+                txData.setDestination(nextNode);
+                txData.setMsgType(DataFrame::RxData::NEW_DATA);
+                sendData(txData);
+            }
+        }
+    }
 }
 

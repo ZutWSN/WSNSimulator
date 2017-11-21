@@ -1,6 +1,7 @@
 #include "DataFrame.h"
 #include <utility>
 #include <QPair>
+#include <QVector>
 
 DataFrame::DataFrame():
     m_Msg(QByteArray()),
@@ -89,6 +90,17 @@ void DataFrame::setSender(const QPair<quint16, quint16> &sender)
     m_sender = sender;
 }
 
+bool DataFrame::setPath(const QVector<QPair<quint16, quint16> > &path)
+{
+    bool pathSet = false;
+    if(path.isEmpty())
+    {
+        m_path = path;
+        pathSet = true;
+    }
+    return pathSet;
+}
+
 void DataFrame::setDestination(const QPair<quint16, quint16> &destination)
 {
     m_desination = destination;
@@ -107,6 +119,19 @@ DataFrame::RxData DataFrame::getMsgType() const
 QPair<quint16, quint16> DataFrame::getSender() const
 {
     return m_sender;
+}
+
+QPair<quint16, quint16> DataFrame::getNextChainNode(quint16 currentNodeID) const
+{
+    QPair<quint16, quint16> nextNode;
+    for(quint16 i = 0; i < m_path.size(); i++)
+    {
+        if(currentNodeID == m_path[i].first)
+        {
+            nextNode = m_path[i + 1];
+        }
+    }
+    return nextNode;
 }
 
 QPair<quint16, quint16> DataFrame::getDestination() const

@@ -50,7 +50,7 @@ signals:
     void changedNodeID(quint16 id);
 protected:
     virtual void processNewData(const DataFrame &rxData);
-    void processReceiveAcknowledged(const DataFrame &rxData);
+    bool processReceiveAcknowledged(const DataFrame &rxData);
 private:
     quint16 m_range;
     quint16 m_node_id;

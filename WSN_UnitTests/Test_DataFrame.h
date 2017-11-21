@@ -11,5 +11,6 @@ private slots:
     void test_setMsgType();
     void test_setDestination();
     void test_frameEmpty();
+    void test_setPath();
 };
 #endif // TEST_DATAFRAME_H

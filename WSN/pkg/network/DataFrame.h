@@ -11,6 +11,7 @@ public:
         NO_DATA = 0,
         NEW_DATA = 1,
         RECEIVED_DATA = 2,
+        SENSOR_BROADCAST = 3
     };
 
     DataFrame();
@@ -30,12 +31,15 @@ public:
     void setMsgType(DataFrame::RxData type);
     void setDestination(const QPair<quint16, quint16> &destination);
     void setSender(const QPair<quint16, quint16> &sender);
+    bool setPath(const QVector<QPair<quint16, quint16> > &path);
 
     QByteArray getMsg() const;
     DataFrame::RxData getMsgType() const;
     QPair<quint16, quint16> getDestination() const;
     QPair<quint16, quint16> getSender() const;
+    QPair<quint16, quint16> getNextChainNode(quint16 currentNodeID) const;
     bool frameEmpty() const;
+    bool isFinalDestination() const;
 
     // later add compress data, maybe parsing a hex msg not just saving and reading a string
 private:
@@ -43,6 +47,7 @@ private:
     DataFrame::RxData m_Type;
     QPair<quint16, quint16> m_desination;
     QPair<quint16, quint16> m_sender;
+    QVector<QPair<quint16, quint16> > m_path;
 };
 
 Q_DECLARE_METATYPE(DataFrame)
