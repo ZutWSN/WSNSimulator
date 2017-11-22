@@ -17,9 +17,72 @@ ClusterNode::~ClusterNode()
 
 }
 
+bool ClusterNode::connectToNode(NetworkNode *node)
+{
+    bool connected = false;
+    if(node)
+    {
+        if(node->getNodeType() == NetworkNode::NodeType::Cluster)
+        {
+            connected = NetworkNode::connectToNode(node);
+        }
+        else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
+        {
+            if(node->connectToNode(this))
+            {
+                connected = true;
+                m_sensors.push_back(node);
+            }
+        }
+    }
+}
+
 NetworkNode::NodeType ClusterNode::getNodeType() const
 {
     return NodeType::Cluster;
+}
+
+bool ClusterNode::disconnectFromNode(NetworkNode *node)
+{
+    bool disconnected = false;
+    if(node)
+    {
+        if(node->getNodeType() == NetworkNode::NodeType::Sensor)
+        {
+            if(checkIfConnectedToSensor(node))
+            {
+                if(node->disconnectFromNode(this))
+                {
+                    disconnected = true;
+                    m_sensors.remove(m_sensors.indexOf(node));
+                }
+            }
+        }
+        else if(node->getNodeType() == NetworkNode::NodeType::Cluster)
+        {
+            disconnected = NetworkNode::disconnectFromNode(node);
+        }
+    }
+    return disconnected;
+}
+
+quint16 ClusterNode::getNumOfSensors() const
+{
+    return m_sensors.size();
+}
+
+bool ClusterNode::checkIfConnectedToSensor(NetworkNode *sensor) const
+{
+    bool connected = false;
+    for(NetworkNode* connected_sensor : m_sensors)
+    {
+        if(sensor == connected_sensor)
+        {
+            connected = true;
+            break;
+        }
+    }
+    return connected;
 }
 
 
@@ -50,9 +113,12 @@ void ClusterNode::processNewData(const DataFrame &rxData)
             else
             {
                 QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id);
-                txData.setDestination(nextNode);
-                txData.setMsgType(DataFrame::RxData::NEW_DATA);
-                sendData(txData);
+                if(checkIfConnectedToNode(nextNode))
+                {
+                    txData.setDestination(nextNode);
+                    txData.setMsgType(DataFrame::RxData::NEW_DATA);
+                    sendData(txData);
+                }
             }
         }
     }

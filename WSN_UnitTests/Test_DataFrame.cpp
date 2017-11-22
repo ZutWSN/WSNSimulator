@@ -41,6 +41,6 @@ void Test_DataFrame::test_setPath()
     QCOMPARE(frame.setPath(path), false);
     path.push_back(qMakePair(0, 0));
     path.push_back(qMakePair(1, 0));
-    QQCOMPARE(frame.setPath(path), true);
+    QCOMPARE(frame.setPath(path), true);
 }
 

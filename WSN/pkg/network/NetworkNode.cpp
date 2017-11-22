@@ -1,5 +1,6 @@
 #include "NetworkNode.h"
 #include "DragWidget.h"
+#include <QPair>
 
 NetworkNode::NetworkNode(quint16 node_id) :
     m_range(0),
@@ -272,6 +273,21 @@ bool NetworkNode::checkIfConnectedToNode(NetworkNode *node) const
     for(NetworkNode* connected_node : m_connectedNodes)
     {
         if(node == connected_node)
+        {
+            connected = true;
+            break;
+        }
+    }
+    return connected;
+}
+
+bool NetworkNode::checkIfConnectedToNode(const QPair<quint16, quint16> &node) const
+{
+    bool connected = false;
+    for(NetworkNode* connected_node : m_connectedNodes)
+    {
+        if(node.first == connected_node->getNodeID() &&
+           node.second == connected_node->getNodeID())
         {
             connected = true;
             break;
