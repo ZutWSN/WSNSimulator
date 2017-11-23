@@ -14,10 +14,12 @@ DataFrame::DataFrame():
 DataFrame::DataFrame(const QByteArray &msg,
                      DataFrame::RxData type,
                      quint16 destination_id,
-                     quint16 layer_id, quint16 sender_id, quint16 sender_id):
+                     quint16 layer_id,
+                     quint16 sender_id):
     m_Msg(msg),
     m_Type(type),
-    m_desination(qMakePair(destination_id, layer_id))
+    m_desination(qMakePair(destination_id, layer_id)),
+    m_sender(qMakePair(sender_id, layer_id))
 {
 
 }
@@ -90,7 +92,7 @@ void DataFrame::setSender(const QPair<quint16, quint16> &sender)
     m_sender = sender;
 }
 
-bool DataFrame::setPath(const QVector<QPair<quint16, quint16> > &path)
+bool DataFrame::setPath(const QVector<quint16> &path)
 {
     bool pathSet = false;
     if(path.isEmpty())

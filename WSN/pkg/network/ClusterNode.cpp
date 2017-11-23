@@ -1,4 +1,11 @@
 #include "ClusterNode.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+
+const QString LAYER_ID = "Layer_ID";
+const QString NODE_ID = "Node_ID";
+const QString PATH = "Path";
 
 ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id)
@@ -7,7 +14,8 @@ ClusterNode::ClusterNode(quint16 node_id) :
 }
 
 ClusterNode::ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position):
-    NetworkNode(node_id, range, layer_id, node_position)
+    NetworkNode(node_id, range, layer_id, node_position),
+    m_sensorDataCounter(0)
 {
 
 }
@@ -40,6 +48,19 @@ bool ClusterNode::connectToNode(NetworkNode *node)
 NetworkNode::NodeType ClusterNode::getNodeType() const
 {
     return NodeType::Cluster;
+}
+
+void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
+{
+    m_mesgData += data;
+    ++m_sensorDataCounter;
+    if(m_sensorDataCounter == m_sensors.size())
+    {
+        DataFrame frame(m_mesgData, DataFrame::RxData::NEW_DATA, m_sinkPath[0], m_layer_id, m_node_id);
+        frame.setPath(m_sinkPath);
+        sendData(frame);
+        m_sensorDataCounter = 0;
+    }
 }
 
 bool ClusterNode::disconnectFromNode(NetworkNode *node)
@@ -104,7 +125,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                 {
                     bool extractNewPathFromMsg(rxData.getMsg());
                 }
-                else
+                else if(rxData.getMsgType() == DataFrame::RxData::NEW_DATA)
                 {
                     txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
                     emit broacastDataToSensors(rxData);
@@ -112,11 +133,11 @@ void ClusterNode::processNewData(const DataFrame &rxData)
             }
             else
             {
+                //forward data
                 QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id);
                 if(checkIfConnectedToNode(nextNode))
                 {
                     txData.setDestination(nextNode);
-                    txData.setMsgType(DataFrame::RxData::NEW_DATA);
                     sendData(txData);
                 }
             }
@@ -126,6 +147,42 @@ void ClusterNode::processNewData(const DataFrame &rxData)
 
 bool ClusterNode::extractNewPathFromMsg(const QByteArray &pathMsg)
 {
+    bool msgExtracted = false;
+    QJsonDocument jsonData = QJsonDocument::fromBinaryData(pathMsg, QJsonDocument::Validate);
+    if(jsonData)
+    {
+        QJsonObject jsonObj = jsonData.object();
+        quint16 node_id, layer_id;
+        QVector<quint16> path;
+        auto keys = jsonObj.keys();
+        for(auto && key : keys)
+        {
+            if(key == NODE_ID)
+            {
+                node_id = static_cast<quint16>(jsonObj[key].toInt());
+            }
+            else if(key == LAYER_ID)
+            {
+                layer_id = static_cast<quint16>(jsonObj[key].toInt());
+            }
+            else if(key == PATH)
+            {
+                for(auto && array_elem : jsonObj[key].toArray())
+                {
+                    if(array_elem.isDouble())
+                    {
+                        qDebug() << "Json double : " << array_elem.toInt() << "\n";
+                    }
+                    else if(array_elem.isObject())
+                    {
+                        readAndPrintJsonObject(array_elem.toObject());
+                    }
+                }
+            }
+        }
+
+
+    }
     /* extract new path from QByteArray message, define message text format
      * np. Parse this Json, it has all data regarding netwok paths
      * JSon:
@@ -136,6 +193,6 @@ bool ClusterNode::extractNewPathFromMsg(const QByteArray &pathMsg)
         { "Node_ID":"1", "Layer_ID":"2", "Path":[ "1", "2", "0" ] },
         { "Node_ID":"2", "Layer_ID":"2", "Path":[ "2", "1", "0" ] }
     */
-    return true;
+    return msgExtracted;
 }
 

@@ -105,6 +105,11 @@ void NetworkNode::setLayer(qint16 layer_id)
     m_layer_id = layer_id;
 }
 
+void NetworkNode::setNodeRange(quint16 range)
+{
+    m_range = range;
+}
+
 bool NetworkNode::connectToNodeWidget(QWidget *widget)
 {
     bool success = false;
@@ -163,6 +168,11 @@ qint16 NetworkNode::getNodeLayer() const
 QPoint NetworkNode::getNodePostion() const
 {
     return m_node_position;
+}
+
+quint16 NetworkNode::getNodeRange() const
+{
+    return m_range;
 }
 
 bool NetworkNode::connectToNode(NetworkNode *node)
@@ -243,16 +253,13 @@ void NetworkNode::onReceivedData(const DataFrame &rxData)
     //Get info from data frame
     switch(rxData.getMsgType())
     {
-        case DataFrame::RxData::NEW_DATA :
-        case DataFrame::RxData::SENSOR_BROADCAST :
-        case DataFrame::RxData::PATH_SYNC :
-            processNewData(rxData);
-            break;
         case DataFrame::RxData::RECEIVED_DATA : //receiver notification that last send data was accepted
             processReceiveAcknowledged(rxData);
             break;
         case DataFrame::RxData::NO_DATA:
+            break;
         default:
+            processNewData(rxData);
             break;
     }
 }

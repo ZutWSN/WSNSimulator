@@ -32,12 +32,14 @@ public:
 
     void setNodeID(quint16 node_id);
     void setLayer(qint16 layer_id);
+    void setNodeRange(quint16 range);
 
     void setNodePosition(const QPoint &position);
 
     quint16 getNodeID() const;
     qint16 getNodeLayer() const;
     QPoint getNodePostion() const;
+    quint16 getNodeRange() const;
     bool getSendDataReceived() const;
     virtual NetworkNode::NodeType getNodeType() const;
     bool checkIfInRange(const QPoint &position) const;

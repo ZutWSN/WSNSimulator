@@ -9,10 +9,14 @@ public:
     enum RxData
     {
         NO_DATA = 0,
-        NEW_DATA = 1,
-        RECEIVED_DATA = 2,
-        PATH_SYNC = 3,
-        SENSOR_BROADCAST = 4
+        NEW_DATA,
+        RECEIVED_DATA,
+        PATH_SYNC,
+        SENSOR_BROADCAST,
+        NEIGHBOUR_PATH_REQ,
+        NEIGHBOUR_PATH,
+        CLUSTER_PATH,
+        SENSOR_RESPONSE
     };
 
     DataFrame();
@@ -20,7 +24,6 @@ public:
               DataFrame::RxData type,
               quint16 destination_id,
               quint16 layer_id,
-              quint16 sender_id,
               quint16 sender_id);
     DataFrame(const DataFrame &other);
     DataFrame(DataFrame &&other);
@@ -32,7 +35,7 @@ public:
     void setMsgType(DataFrame::RxData type);
     void setDestination(const QPair<quint16, quint16> &destination);
     void setSender(const QPair<quint16, quint16> &sender);
-    bool setPath(const QVector<QPair<quint16, quint16> > &path);
+    bool setPath(const QVector<quint16> &path);
 
     QByteArray getMsg() const;
     DataFrame::RxData getMsgType() const;
@@ -48,7 +51,7 @@ private:
     DataFrame::RxData m_Type;
     QPair<quint16, quint16> m_desination;
     QPair<quint16, quint16> m_sender;
-    QVector<QPair<quint16, quint16> > m_path;
+    QVector<quint16> m_path;
 };
 
 Q_DECLARE_METATYPE(DataFrame)
