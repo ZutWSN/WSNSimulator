@@ -35,9 +35,10 @@ bool SensorNode::connectToNode(NetworkNode *node)
                 if(node->getNodeID() != m_node_id)
                 {
                     ClusterNode *cluster = static_cast<ClusterNode*>(node);
-                    if(static_cast<bool>(connect(cluster, SIGNAL(broacastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame)))))
+                    connected = static_cast<bool>(connect(cluster, SIGNAL(broacastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
+                    connected &= static_cast<bool>(connect(this, SIGNAL(clusterDataSend(QByteArray)), cluster, SLOT(onReceivedDataFromSensor(QByteArray))));
+                    if(connected)
                     {
-                        connected = true;
                         m_connectedToCluster = true;
                         m_cluster_id = node->getNodeID();
                     }
@@ -60,9 +61,9 @@ bool SensorNode::disconnectFromNode(NetworkNode *node)
                 if(node->getNodeID() == m_cluster_id)
                 {
                     disconnected = disconnect(node, 0, this, 0);
+                    disconnected &= disconnect(this, 0, node, 0);
                     if(disconnected)
                     {
-                        m_connectedNodes.remove(m_connectedNodes.indexOf(node));
                         m_connectedToCluster = false;
                         m_cluster_id = 0;
                     }

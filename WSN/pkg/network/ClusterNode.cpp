@@ -15,7 +15,8 @@ ClusterNode::ClusterNode(quint16 node_id) :
 
 ClusterNode::ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position):
     NetworkNode(node_id, range, layer_id, node_position),
-    m_sensorDataCounter(0)
+    m_sensorDataCounter(0),
+    m_neighbourPathsCounter(0)
 {
 
 }
@@ -43,6 +44,18 @@ bool ClusterNode::connectToNode(NetworkNode *node)
             }
         }
     }
+}
+
+bool ClusterNode::sendSinkPathReq()
+{
+    bool seekingPath = false;
+    if(m_state == ClusterStates::CREATED)
+    {
+        DataFrame frame(QByte)
+        m_state = ClusterStates::PATH_SEEKING;
+        sendData()
+    }
+    return seekingPath;
 }
 
 NetworkNode::NodeType ClusterNode::getNodeType() const
@@ -106,46 +119,88 @@ bool ClusterNode::checkIfConnectedToSensor(NetworkNode *sensor) const
     return connected;
 }
 
-
 void ClusterNode::processNewData(const DataFrame &rxData)
 {
     NetworkNode::processNewData(rxData);
-    QPair<quint16, quint16> destination = rxData.getDestination();
-    if(destination.second == m_layer_id)
+    DataFrame txData(rxData);
+    txData.setSender(qMakePair(m_node_id, m_layer_id));
+    if(rxData.isNeighbourBroadcast())
     {
-        if(destination.first == m_node_id)
+        if(rxData.getMsgType() == DataFrame::RxData::NEIGHBOUR_PATH_REQ)
         {
-            //send back that message received
-            DataFrame txData(rxData);
-            //now start processing for forwarding or broadcasting
-            txData.setSender(qMakePair(m_node_id, m_layer_id));
-            if(rxData.isFinalDestination(txData.getSender()))
+            txData.setMsgType(DataFrame::RxData::NEIGHBOUR_PATH);
+            txData.setDestination(rxData.getSender());
+            QVector<quint16> path = {rxData.getSender()};
+            txData.setPath(path);
+            sendData(txData);
+            break;
+        }
+    }
+    else
+    {
+        QPair<quint16, quint16> destination = rxData.getDestination();
+        if(destination.second == m_layer_id)
+        {
+            if(destination.first == m_node_id)
             {
-                if(rxData.getMsgType() == DataFrame::RxData::PATH_SYNC)
+                //now start processing for forwarding or broadcasting
+                if(rxData.isFinalDestination(txData.getSender()))
                 {
-                    bool extractNewPathFromMsg(rxData.getMsg());
+                    switch(rxData.getMsgType())
+                    {
+                        case DataFrame::RxData::PATH_SYNC:
+                            m_sinkPath = extractPathFromMsg(rxData.getMsg());
+                            break;
+                        case DataFrame::RxData::NEW_DATA:
+                            txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
+                            emit broacastDataToSensors(txData.getMsg());
+                            break;
+                        case DataFrame::RxData::NEIGHBOUR_PATH:
+                            if(m_neighbourPathsCounter < m_connectedNodes.size())
+                            {
+                                quint16 pathLength = getPathLengthFromMsg(rxData.getMsg());
+                                auto path = extractNewPathFromMsg(rxData.getMsg());
+                                if(pathLength < m_pathLength)
+                                {
+                                    m_pathLength = pathLength;
+                                    m_sinkPath = path;
+                                }
+                                ++m_neighbourPathsCounter;
+                                if(m_neighbourPathsCounter == m_connectedNodes.size())
+                                {
+                                    m_neighbourPathsCounter = 0;
+                                    m_state = ClusterStates::CONNECTED;
+                                    QByteArray clusterPathMsg;
+                                    //send newly found sinkpath to sink for it to recognize that new cluster has been
+                                    //added to its cluster network and so that sink can send messages to it
+                                    if(createClusterPathMsg(clusterPathMsg))
+                                    {
+                                        DataFrame frame(clusterPathMsg, DataFrame::RxData::CLUSTER_PATH, m_sinkPath[0], m_layer_id, m_node_id);
+                                        frame.setPath(m_sinkPath);
+                                    }
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
-                else if(rxData.getMsgType() == DataFrame::RxData::NEW_DATA)
+                else
                 {
-                    txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
-                    emit broacastDataToSensors(rxData);
-                }
-            }
-            else
-            {
-                //forward data
-                QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id);
-                if(checkIfConnectedToNode(nextNode))
-                {
-                    txData.setDestination(nextNode);
-                    sendData(txData);
+                    //forward data
+                    QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id);
+                    if(checkIfConnectedToNode(nextNode))
+                    {
+                        txData.setDestination(nextNode);
+                        sendData(txData);
+                    }
                 }
             }
         }
     }
 }
-
-bool ClusterNode::extractNewPathFromMsg(const QByteArray &pathMsg)
+//to do
+bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
 {
     bool msgExtracted = false;
     QJsonDocument jsonData = QJsonDocument::fromBinaryData(pathMsg, QJsonDocument::Validate);
@@ -194,5 +249,12 @@ bool ClusterNode::extractNewPathFromMsg(const QByteArray &pathMsg)
         { "Node_ID":"2", "Layer_ID":"2", "Path":[ "2", "1", "0" ] }
     */
     return msgExtracted;
+}
+
+bool ClusterNode::createClusterPathMsg(QByteArray &msg)
+{
+    bool created = false;
+    //put m_sinkPath and pathlength in it
+    return created;
 }
 

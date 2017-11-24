@@ -20,11 +20,20 @@ class ClusterNode : public NetworkNode
 {
     Q_OBJECT
 public:
+    enum ClusterStates
+    {
+        CREATED = 0,
+        PATH_SEEKING,
+        CONNECTED,
+        WAITING_FOR_RESPONSE
+    }
+
     ClusterNode(quint16 node_id);
     ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     ~ClusterNode();
 
     bool connectToNode(NetworkNode *node);
+    bool sendSinkPathReq();
     bool disconnectFromNode(NetworkNode *node);
 
     quint16 getNumOfSensors() const;
@@ -36,12 +45,16 @@ signals:
     void broacastDataToSensors(const QByteArray &data);
 private:
     void processNewData(const DataFrame &rxData);
-    bool extractNewPathFromMsg(const QByteArray &pathMsg);
+    bool extractPathFromMsg(const QByteArray &pathMsg);
+    bool createClusterPathMsg(QByteArray &msg);
 private:
     QVector<quint16> m_sinkPath;
     QVector<NetworkNode*> m_sensors;
     QByteArray m_mesgData;
     quint16 m_sensorDataCounter;
+    quint16 m_neighbourPathsCounter;
+    quint16 m_pathLength;
+    ClusterStates m_state;
 
 };
 

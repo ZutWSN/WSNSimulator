@@ -17,6 +17,8 @@ public:
     bool isConnectedToCluster() const;
 public slots:
     void onReceivedDataFromCluster(const DataFrame &rxData);
+signals:
+    void clusterDataSend(const QByteArray &data);
 private:
     void processNewData(const DataFrame &rxData);
 private:
