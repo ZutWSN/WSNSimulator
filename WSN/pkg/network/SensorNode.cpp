@@ -32,15 +32,19 @@ bool SensorNode::connectToNode(NetworkNode *node)
         {
             if(node->getNodeLayer() == m_layer_id)
             {
+
                 if(node->getNodeID() != m_node_id)
                 {
-                    ClusterNode *cluster = static_cast<ClusterNode*>(node);
-                    connected = static_cast<bool>(connect(cluster, SIGNAL(broacastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
-                    connected &= static_cast<bool>(connect(this, SIGNAL(clusterDataSend(QByteArray)), cluster, SLOT(onReceivedDataFromSensor(QByteArray))));
-                    if(connected)
+                    if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
                     {
-                        m_connectedToCluster = true;
-                        m_cluster_id = node->getNodeID();
+                        ClusterNode *cluster = static_cast<ClusterNode*>(node);
+                        connected = static_cast<bool>(connect(cluster, SIGNAL(broacastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
+                        connected &= static_cast<bool>(connect(this, SIGNAL(clusterDataSend(QByteArray)), cluster, SLOT(onReceivedDataFromSensor(QByteArray))));
+                        if(connected)
+                        {
+                            m_connectedToCluster = true;
+                            m_cluster_id = node->getNodeID();
+                        }
                     }
                 }
             }

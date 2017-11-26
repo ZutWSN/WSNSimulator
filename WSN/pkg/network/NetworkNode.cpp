@@ -86,6 +86,19 @@ bool NetworkNode::processReceiveAcknowledged(const DataFrame &rxData)
     return deletedPending;
 }
 
+NetworkNode *NetworkNode::getNodeByID(quint16 id)
+{
+    NetworkNode *retNode = nullptr;
+    for(NetworkNode *node : m_connectedNodes)
+    {
+        if(node->getNodeID() == id)
+        {
+            retNode = node;
+        }
+    }
+    return retNode;
+}
+
 bool NetworkNode::addNode(NetworkNode *node)
 {
     bool success = false;
@@ -239,8 +252,25 @@ NetworkNode::NodeType NetworkNode::getNodeType() const
 
 bool NetworkNode::checkIfInRange(const QPoint &position) const
 {
-    quint16 dist = pow((pow(abs(position.x() - m_node_position.x()), 2) + pow(abs(position.y() - m_node_position.y()), 2)), 0.5);
-    return dist <= m_range ;
+    return getDistanceFromNode(position) <= m_range ;
+}
+
+quint16 NetworkNode::getDistanceFromNode(const QPoint &position) const
+{
+    return pow((pow(abs(position.x() - m_node_position.x()), 2) + pow(abs(position.y() - m_node_position.y()), 2)), 0.5);
+}
+
+quint16 NetworkNode::getDistanceFromConnectedNode(quint16 node_id) const
+{
+    quint16 distance = 0;
+    for(NetworkNode* node : m_connectedNodes)
+    {
+        if(node->getNodeID() == node_id)
+        {
+            distance = getDistanceFromNode(node->getNodePostion());
+        }
+    }
+    return distance;
 }
 
 void NetworkNode::setNodeID(quint16 node_id)

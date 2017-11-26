@@ -44,6 +44,7 @@ public slots:
 signals:
     void broacastDataToSensors(const QByteArray &data);
 private:
+    quint16 getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path);
     void processNewData(const DataFrame &rxData);
     bool extractPathFromMsg(const QByteArray &pathMsg);
     bool createClusterPathMsg(QByteArray &msg);
