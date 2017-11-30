@@ -63,7 +63,9 @@ void Test_NetworkNodes::test_connectToNodeWidget()
 
 void Test_NetworkNodes::test_sendData()
 {
-    NetworkNode sensor, cluster;
+    NetworkNode sensor(0), cluster(1);
+    sensor.setLayer(0);
+    cluster.setLayer(0);
     //for signals and slots - has to register non Qt object type
     qRegisterMetaType<DataFrame>();
     sensor.connectToNode(&cluster);
@@ -80,5 +82,9 @@ void Test_NetworkNodes::test_sendData()
     QCOMPARE(sensor.sendData(frame1), true);
     QCOMPARE(sensorSendData.count(), 1);
     //check if received acknowledged
+    while(sensor.getNumOfPendingDataFrames() > 0)
+    {
+        QThread::msleep(100);
+    }
     QCOMPARE(clusterSendData.count(), 1);
 }

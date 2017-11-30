@@ -7,7 +7,6 @@
 #include "Test_NetworkNodes.h"
 #include "Test_DataFrame.h"
 #include "Test_SensorNode.h"
-#include <functional>
 
 using namespace std::placeholders;
 

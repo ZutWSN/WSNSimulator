@@ -79,9 +79,12 @@ bool NetworkNode::sendData(const DataFrame &txData)
     bool result = false;
     if(!txData.frameEmpty())
     {
-        emit dataSend(txData);
         result = true;
-        m_pendingSendDataFrames.push_back(txData);
+        if(txData.getMsgType() != DataFrame::RxData::RECEIVED_DATA)
+        {
+            m_pendingSendDataFrames.push_back(txData);
+        }
+        emit dataSend(txData);
     }
     return result;
 }
@@ -97,6 +100,7 @@ bool NetworkNode::processReceiveAcknowledged(const DataFrame &rxData)
         {
             m_pendingSendDataFrames.remove(i);
             deletedPending = true;
+            break;
         }
     }
     return deletedPending;
