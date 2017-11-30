@@ -82,9 +82,25 @@ void Test_NetworkNodes::test_sendData()
     QCOMPARE(sensor.sendData(frame1), true);
     QCOMPARE(sensorSendData.count(), 1);
     //check if received acknowledged
-    while(sensor.getNumOfPendingDataFrames() > 0)
-    {
-        QThread::msleep(100);
-    }
     QCOMPARE(clusterSendData.count(), 1);
+}
+
+void Test_NetworkNodes::test_getDistanceFromNode()
+{
+
+}
+
+void Test_NetworkNodes::test_getDistanceFromConnectedNode()
+{
+
+}
+
+void Test_NetworkNodes::test_getNumOfPendingDataFrames()
+{
+
+}
+
+void Test_NetworkNodes::test_checkIfInRange()
+{
+
 }

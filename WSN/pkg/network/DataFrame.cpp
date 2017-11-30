@@ -96,7 +96,7 @@ void DataFrame::setSender(const QPair<quint16, quint16> &sender)
 bool DataFrame::setPath(const QVector<quint16> &path)
 {
     bool pathSet = false;
-    if(path.isEmpty())
+    if(!path.isEmpty())
     {
         m_path = path;
         pathSet = true;

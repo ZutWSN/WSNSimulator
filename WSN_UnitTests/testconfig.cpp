@@ -7,6 +7,7 @@
 #include "Test_NetworkNodes.h"
 #include "Test_DataFrame.h"
 #include "Test_SensorNode.h"
+#include "Test_ClusterNode.h"
 
 using namespace std::placeholders;
 
@@ -144,6 +145,17 @@ void WSN_UnitTests_Config::TestConfig::runSensorNodeTest(const QString &reportFi
     QTest::qExec(&test_sensor, log);
 }
 
+void WSN_UnitTests_Config::TestConfig::runClusterNodeTest(const QString &reportFile, bool report)
+{
+    Test_ClusterNode test_cluster;
+    QStringList log;
+    if(report)
+    {
+        log << "." <<"-o" << reportFile;
+    }
+    QTest::qExec(&test_cluster, log);
+}
+
 bool WSN_UnitTests_Config::TestConfig::getTestFunction(std::function<void(const QString&, bool)> &testFunction, const QString &testName)
 {
     bool validTestName = true;
@@ -170,6 +182,10 @@ bool WSN_UnitTests_Config::TestConfig::getTestFunction(std::function<void(const 
     else if(testName == "SensorNodeTest")
     {
         testFunction = std::bind(&WSN_UnitTests_Config::TestConfig::runSensorNodeTest, this, _1, _2);
+    }
+    else if(testName == "ClusterNodeTest")
+    {
+        testFunction = std::bind(&WSN_UnitTests_Config::TestConfig::runClusterNodeTest, this, _1, _2);
     }
     else
     {

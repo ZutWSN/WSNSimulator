@@ -162,7 +162,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                             break;
                         case DataFrame::RxData::NEW_DATA:
                             txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
-                            emit broacastDataToSensors(txData.getMsg());
+                            emit broadcastDataToSensors(txData);
                             break;
                         case DataFrame::RxData::NEIGHBOUR_PATH:
                             if(m_neighbourPathsCounter < m_connectedNodes.size())

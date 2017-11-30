@@ -15,8 +15,14 @@ class Test_ClusterNode : public QObject
 {
     Q_OBJECT
 public slots:
-    void test_broadCastDataToSensors();
-    void test_processNewData();
+    void test_connectToNode();
+    void test_sendSinkPathReq();
+    void test_disconnectFromNode();
+    void test_getNumOfSensors();
+    void test_checkIfConnectedToSensor();
+    void test_getNodeType();
+    void test_onReceivedDataFromSensor();
+    //later add methods for connecting and communication with the sink
 };
 
 #endif // TEST_CLUSTERNODE_H

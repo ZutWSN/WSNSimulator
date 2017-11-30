@@ -38,7 +38,7 @@ bool SensorNode::connectToNode(NetworkNode *node)
                     if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
                     {
                         ClusterNode *cluster = static_cast<ClusterNode*>(node);
-                        connected = static_cast<bool>(connect(cluster, SIGNAL(broacastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
+                        connected = static_cast<bool>(connect(cluster, SIGNAL(broadcastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
                         connected &= static_cast<bool>(connect(this, SIGNAL(clusterDataSend(QByteArray)), cluster, SLOT(onReceivedDataFromSensor(QByteArray))));
                         if(connected)
                         {

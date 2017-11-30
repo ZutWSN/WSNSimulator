@@ -42,7 +42,7 @@ public:
 public slots:
     void onReceivedDataFromSensor(const QByteArray &data);
 signals:
-    void broacastDataToSensors(const QByteArray &data);
+    void broadcastDataToSensors(const DataFrame &data);
 private:
     quint16 getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path);
     void processNewData(const DataFrame &rxData);
