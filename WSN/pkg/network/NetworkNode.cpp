@@ -33,8 +33,16 @@ NetworkNode::NetworkNode(const NetworkNode &other)
         m_node_position = other.m_node_position;
         m_range = other.m_range;
         m_connectedToWidget = connectToNodeWidget(other.m_Widget);
-        m_Widget = (m_connectedToWidget) ? other.m_Widget : nullptr;
-        m_sendDataReceived = (m_connectedToWidget) ? other.m_sendDataReceived : false;
+        m_pendingSendDataFrames.clear();
+        if(m_connectedToWidget)
+        {
+            m_Widget = other.m_Widget;
+            m_pendingSendDataFrames = m_pendingSendDataFrames;
+        }
+        else
+        {
+            m_Widget = nullptr;
+        }
     }
 }
 
@@ -47,8 +55,16 @@ NetworkNode& NetworkNode::operator=(const NetworkNode &other)
         m_node_position = other.m_node_position;
         m_range = other.m_range;
         m_connectedToWidget = connectToNodeWidget(other.m_Widget);
-        m_Widget = (m_connectedToWidget) ? other.m_Widget : nullptr;
-        m_sendDataReceived = (m_connectedToWidget) ? other.m_sendDataReceived : false;
+        m_pendingSendDataFrames.clear();
+        if(m_connectedToWidget)
+        {
+            m_Widget = other.m_Widget;
+            m_pendingSendDataFrames = m_pendingSendDataFrames;
+        }
+        else
+        {
+            m_Widget = nullptr;
+        }
     }
     return *this;
 }
@@ -65,7 +81,7 @@ bool NetworkNode::sendData(const DataFrame &txData)
     {
         emit dataSend(txData);
         result = true;
-        m_pendingSendDataFrames(txData);
+        m_pendingSendDataFrames.push_back(txData);
     }
     return result;
 }
@@ -84,19 +100,6 @@ bool NetworkNode::processReceiveAcknowledged(const DataFrame &rxData)
         }
     }
     return deletedPending;
-}
-
-NetworkNode *NetworkNode::getNodeByID(quint16 id)
-{
-    NetworkNode *retNode = nullptr;
-    for(NetworkNode *node : m_connectedNodes)
-    {
-        if(node->getNodeID() == id)
-        {
-            retNode = node;
-        }
-    }
-    return retNode;
 }
 
 bool NetworkNode::addNode(NetworkNode *node)
@@ -238,11 +241,6 @@ bool NetworkNode::disconnectFromNode(NetworkNode *node)
         }
     }
     return disconnected;
-}
-
-bool NetworkNode::getSendDataReceived() const
-{
-    return m_sendDataReceived;
 }
 
 NetworkNode::NodeType NetworkNode::getNodeType() const

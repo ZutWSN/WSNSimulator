@@ -7,23 +7,6 @@
 #include "NetworkNode.h"
 #include <QScopedPointer>
 
-void Test_NetworkNodes::test_sendData()
-{
-    NetworkNode sensor;
-    //for signals and slots - has to register non Qt object type
-    qRegisterMetaType<DataFrame>();
-    //register for signals and store count
-    QSignalSpy spy(&sensor, SIGNAL(dataSend(const DataFrame&)));
-    //set message
-    DataFrame frame1;
-    frame1.setMsg(QByteArray("Here's Johnny!"));
-    frame1.setMsgType(DataFrame::RxData::NEW_DATA);
-    //test if data send
-    QCOMPARE(spy.count(), 0);
-    QCOMPARE(sensor.sendData(frame1), true);
-    QCOMPARE(spy.count(), 1);
-}
-
 void Test_NetworkNodes::test_connectToNode()
 {
     NetworkNode sender(0);
@@ -78,39 +61,24 @@ void Test_NetworkNodes::test_connectToNodeWidget()
     QCOMPARE(node1.connectToNodeWidget(widgetPtr.data()), true);
 }
 
-void Test_NetworkNodes::test_onReceivedData()
+void Test_NetworkNodes::test_sendData()
 {
+    NetworkNode sensor, cluster;
+    //for signals and slots - has to register non Qt object type
     qRegisterMetaType<DataFrame>();
-    //test if not added to layer
-    NetworkNode sender(0);
-    NetworkNode receiver(1);
-    sender.setLayer(0);
-    receiver.setLayer(0);
-    QSignalSpy senderSendMonitor(&sender, SIGNAL(dataSend(const DataFrame&)));
-    QCOMPARE(senderSendMonitor.count(), 0);
-    //test case NEW DATA
-    QCOMPARE(sender.connectToNode(&receiver), true);
-    QSignalSpy receivedNewDataMonitor(&receiver, SIGNAL(receivedNewData(const DataFrame&)));
+    sensor.connectToNode(&cluster);
+    //register for signals and store count
+    QSignalSpy sensorSendData(&sensor, SIGNAL(dataSend(const DataFrame&)));
+    QSignalSpy clusterSendData(&cluster, SIGNAL(dataSend(const DataFrame&)));
+    //set message
     DataFrame frame1;
-    frame1.setMsg(QByteArray("I'am your father"));
+    frame1.setMsg(QByteArray("Here's Johnny!"));
     frame1.setMsgType(DataFrame::RxData::NEW_DATA);
-    QCOMPARE(receivedNewDataMonitor.count(), 0);
-    sender.sendData(frame1);
-    QCOMPARE(senderSendMonitor.count(), 1);
-    QCOMPARE(receivedNewDataMonitor.count(), 1);
-
-    //test case RECEIVED DATA - receiver sends back to sender that it received and processed data
-    QSignalSpy receiverSendMonitor(&receiver, SIGNAL(dataSend(const DataFrame&)));
-    DataFrame frame2;
-    frame2.setMsg(QByteArray("No it's impossible!"));
-    frame2.setMsgType(DataFrame::RxData::RECEIVED_DATA);
-    QCOMPARE(receiverSendMonitor.count(), 0);
-    QCOMPARE(sender.getSendDataReceived(), false);
-    receiver.sendData(frame2);
-    QCOMPARE(receiverSendMonitor.count(), 1);
-    QCOMPARE(receivedNewDataMonitor.count(), 1);
-    QCOMPARE(sender.getSendDataReceived(), true);
-
-    QVERIFY(sender.getNumOfPendingDataFrames() == 0);
-    QVERIFY(receiver.getNumOfPendingDataFrames() == 0);
+    //test if data send
+    QCOMPARE(sensorSendData.count(), 0);
+    QCOMPARE(clusterSendData.count(), 0);
+    QCOMPARE(sensor.sendData(frame1), true);
+    QCOMPARE(sensorSendData.count(), 1);
+    //check if received acknowledged
+    QCOMPARE(clusterSendData.count(), 1);
 }

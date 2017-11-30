@@ -138,6 +138,8 @@ bool NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
             case NetworkNode::NodeType::Cluster:
                 new_node = new ClusterNode(node_id);
                 break;
+            default:
+                break;
         }
         if(new_node != nullptr)
         {
@@ -237,12 +239,14 @@ NetworkNode* NetworkLayer::copyNetworkNode(const NetworkNode *node) const
     NetworkNode *new_node = nullptr;
     switch(node->getNodeType())
     {
-    case NetworkNode::Sensor:
-        new_node = new SensorNode(*(reinterpret_cast<const SensorNode*>(node)));
-        break;
-    case NetworkNode::Cluster:
-        new_node = new ClusterNode(*(reinterpret_cast<const ClusterNode*>(node)));
-        break;
+        case NetworkNode::Sensor:
+            new_node = new SensorNode(*(reinterpret_cast<const SensorNode*>(node)));
+            break;
+        case NetworkNode::Cluster:
+            new_node = new ClusterNode(*(reinterpret_cast<const ClusterNode*>(node)));
+            break;
+        default:
+            break;
     }
     return new_node;
 }

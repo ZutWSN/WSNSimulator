@@ -1,12 +1,11 @@
 #include "DataFrame.h"
 #include <utility>
-#include <QPair>
-#include <QVector>
 
 DataFrame::DataFrame():
     m_Msg(QByteArray()),
     m_Type(RxData::NO_DATA),
-    m_desination_id(0)
+    m_sender(QPair<quint16, quint16>(0xFF, 0xFF)),
+    m_desination(QPair<quint16, quint16>(0xFF, 0xFF))
 {
 
 }
@@ -18,8 +17,8 @@ DataFrame::DataFrame(const QByteArray &msg,
                      quint16 sender_id):
     m_Msg(msg),
     m_Type(type),
-    m_desination(qMakePair(destination_id, layer_id)),
-    m_sender(qMakePair(sender_id, layer_id))
+    m_sender(qMakePair(sender_id, layer_id)),
+      m_desination(qMakePair(destination_id, layer_id))
 {
 
 }
@@ -30,7 +29,9 @@ DataFrame::DataFrame(const DataFrame &other)
     {
         m_Msg = other.m_Msg;
         m_Type = other.m_Type;
-        m_desination_id = other.m_desination_id;
+        m_sender = other.m_sender;
+        m_desination = other.m_desination;
+        m_path = other.m_path;
     }
 }
 
@@ -40,10 +41,9 @@ DataFrame::DataFrame(DataFrame &&other)
     {
         m_Msg = other.m_Msg;
         m_Type = other.m_Type;
-        m_desination_id = other.m_desination_id;
-        other.m_Msg = QByteArray();
-        other.m_desination_id = 0;
-        other.m_Type = RxData::NO_DATA;
+        m_sender = std::move(other.m_sender);
+        other.m_Msg = std::move(other.m_Msg);
+        other.m_Type = other.m_Type;
     }
 }
 
@@ -53,7 +53,9 @@ DataFrame& DataFrame::operator=(const DataFrame &other)
     {
         m_Msg = other.m_Msg;
         m_Type = other.m_Type;
-        m_desination_id = other.m_desination_id;
+        m_sender = other.m_sender;
+        m_desination = other.m_desination;
+        m_path = other.m_path;
     }
     return *this;
 }
@@ -64,10 +66,9 @@ DataFrame& DataFrame::operator=(DataFrame &&other)
     {
         m_Msg = other.m_Msg;
         m_Type = other.m_Type;
-        m_desination_id = other.m_desination_id;
-        other.m_Msg = QByteArray();
-        other.m_desination_id = 0;
-        other.m_Type = RxData::NO_DATA;
+        m_sender = std::move(other.m_sender);
+        other.m_Msg = std::move(other.m_Msg);
+        other.m_Type = other.m_Type;
     }
     return *this;
 }
@@ -123,14 +124,17 @@ QPair<quint16, quint16> DataFrame::getSender() const
     return m_sender;
 }
 
-QPair<quint16, quint16> DataFrame::getNextChainNode(quint16 currentNodeID) const
+QPair<quint16, quint16> DataFrame::getNextChainNode(quint16 currentNodeID, quint16 currentNodeLayer) const
 {
     QPair<quint16, quint16> nextNode;
-    for(quint16 i = 0; i < m_path.size(); i++)
+    if(m_desination.first == currentNodeID && m_desination.second == currentNodeLayer)
     {
-        if(currentNodeID == m_path[i].first)
+        for(quint16 i = 0; i < m_path.size(); i++)
         {
-            nextNode = m_path[i + 1];
+            if(currentNodeID == m_path[i])
+            {
+                nextNode = qMakePair(m_path[i + 1], currentNodeLayer);
+            }
         }
     }
     return nextNode;
@@ -148,6 +152,11 @@ bool DataFrame::frameEmpty() const
 
 bool DataFrame::isFinalDestination(const QPair<quint16, quint16> &nodeLayerAndID) const
 {
-    return (m_path.indexOf(nodeLayerAndID) == (m_path.size() - 1));
+    bool finalDest = false;
+    if(nodeLayerAndID.second == m_sender.second)
+    {
+        finalDest = (m_path.indexOf(nodeLayerAndID.first) == (m_path.size() - 1));
+    }
+    return finalDest;
 }
 

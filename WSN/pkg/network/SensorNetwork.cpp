@@ -142,11 +142,6 @@ bool SensorNetwork::checkIfHasLayer(qint16 layer_id) const
     return hasLayer;
 }
 
-bool SensorNetwork::createSyncMessage()
-{
-
-}
-
 NetworkLayer* SensorNetwork::getLayer(qint16 layer_id) const
 {
     NetworkLayer* layerPtr = nullptr;

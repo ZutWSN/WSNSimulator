@@ -26,7 +26,7 @@ public:
         PATH_SEEKING,
         CONNECTED,
         WAITING_FOR_RESPONSE
-    }
+    };
 
     ClusterNode(quint16 node_id);
     ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);

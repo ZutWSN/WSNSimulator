@@ -22,6 +22,8 @@ DragWidget *WidgetFactory::getNewDragWidget(DragWidget::DragWidgetType type, QWi
         case DragWidget::DragWidgetType::Sink :
             newWidget = new SinkWidget(parent, rootWidget);
             break;
+        default:
+            break;
     }
 
     return newWidget;

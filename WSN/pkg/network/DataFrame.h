@@ -2,6 +2,8 @@
 #define DATAFRAME_H
 #include <QByteArray>
 #include <QMetaType>
+#include <QPair>
+#include <QVector>
 
 class DataFrame
 {
@@ -41,7 +43,7 @@ public:
     DataFrame::RxData getMsgType() const;
     QPair<quint16, quint16> getDestination() const;
     QPair<quint16, quint16> getSender() const;
-    QPair<quint16, quint16> getNextChainNode(quint16 currentNodeID) const;
+    QPair<quint16, quint16> getNextChainNode(quint16 currentNodeID, quint16 currentNodeLayer) const;
     bool frameEmpty() const;
     bool isFinalDestination(const QPair<quint16, quint16> &nodeLayerAndID) const;
 
@@ -49,8 +51,8 @@ public:
 private:
     QByteArray m_Msg;
     DataFrame::RxData m_Type;
-    QPair<quint16, quint16> m_desination;
     QPair<quint16, quint16> m_sender;
+    QPair<quint16, quint16> m_desination;
     QVector<quint16> m_path;
 };
 

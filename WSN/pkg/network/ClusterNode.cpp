@@ -2,11 +2,13 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QList>
 
-const QString LAYER_ID  = "Layer_ID";
-const QString NODE_ID   = "Node_ID";
-const QString PATH      = "Path";
-const QString PATHS     = "Paths";
+const QString LAYER_ID      = "Layer_ID";
+const QString NODE_ID       = "Node_ID";
+const QString PATH          = "Path";
+const QString PATHS         = "Paths";
+const QString PATH_LENGTH   = "Path_Length";
 
 ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id),
@@ -51,6 +53,7 @@ bool ClusterNode::connectToNode(NetworkNode *node)
             }
         }
     }
+    return connected;
 }
 
 bool ClusterNode::sendSinkPathReq()
@@ -134,14 +137,13 @@ void ClusterNode::processNewData(const DataFrame &rxData)
     NetworkNode::processNewData(rxData);
     DataFrame txData(rxData);
     txData.setSender(qMakePair(m_node_id, m_layer_id));
-    if(getMsgType() == DataFrame::RxData::NEIGHBOUR_PATH_REQ)
+    if(txData.getMsgType() == DataFrame::RxData::NEIGHBOUR_PATH_REQ)
     {
         txData.setMsgType(DataFrame::RxData::NEIGHBOUR_PATH);
         txData.setDestination(rxData.getSender());
-        QVector<quint16> path = {rxData.getSender()};
+        QVector<quint16> path = {rxData.getSender().first};
         txData.setPath(path);
         sendData(txData);
-        break;
     }
     else
     {
@@ -156,7 +158,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                     switch(rxData.getMsgType())
                     {
                         case DataFrame::RxData::PATH_SYNC:
-                            m_sinkPath = extractPathFromMsg(rxData.getMsg());
+                            extractPathFromMsg(rxData.getMsg());
                             break;
                         case DataFrame::RxData::NEW_DATA:
                             txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
@@ -200,7 +202,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                 else
                 {
                     //forward data
-                    QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id);
+                    QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id, m_layer_id);
                     if(checkIfConnectedToNode(nextNode))
                     {
                         txData.setDestination(nextNode);
@@ -216,7 +218,7 @@ quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<qu
 {
     quint16 pathLength= 0;
     QJsonDocument jsonData = QJsonDocument::fromBinaryData(rxData.getMsg(), QJsonDocument::Validate);
-    if(jsonData)
+    if(!jsonData.isNull())
     {
         QJsonObject jsonObj = jsonData.object();
         quint16 node_id, layer_id;
@@ -245,7 +247,7 @@ quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<qu
             }
             else if(key == PATH_LENGTH)
             {
-                pathLength = static_cast<quint16>(path[key].toInt());
+                pathLength = static_cast<quint16>(jsonObj[key].toInt());
             }
         }
         if(node_id == rxData.getSender().first && layer_id == rxData.getSender().second)
@@ -269,7 +271,7 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
 {
     bool pathExtracted = false;
     QJsonDocument jsonData = QJsonDocument::fromBinaryData(pathMsg, QJsonDocument::Validate);
-    if(jsonData)
+    if(!jsonData.isNull())
     {
         QJsonObject jsonObj = jsonData.object();
         quint16 node_id, layer_id;
@@ -287,21 +289,22 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
                     {
                         if(path.isObject())
                         {
-                            auto pathKeys = path.toObject().keys();
+                            auto pathObj = path.toObject();
+                            auto pathKeys = pathObj.keys();
                             for(auto && pKey : pathKeys)
                             {
                                 if(pKey == NODE_ID)
                                 {
-                                    node_id = static_cast<quint16>(path[key].toInt());
+                                    node_id = static_cast<quint16>(pathObj[pKey].toInt());
                                 }
                                 else if(pKey == LAYER_ID)
                                 {
-                                    layer_id = static_cast<quint16>(path[key].toInt());
+                                    layer_id = static_cast<quint16>(pathObj[pKey].toInt());
                                 }
                                 else if(pKey == PATH)
                                 {
                                     nodePath.clear();
-                                    for(auto && id: path[key].toArray())
+                                    for(auto && id: pathObj[key].toArray())
                                     {
                                         if(id.isDouble())
                                         {
@@ -311,7 +314,7 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
                                 }
                                 else if(pKey == PATH_LENGTH)
                                 {
-                                    pathLength = static_cast<quint16>(path[key].toInt());
+                                    pathLength = static_cast<quint16>(pathObj[pKey].toInt());
                                 }
                             }
                         }
@@ -340,7 +343,11 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
 bool ClusterNode::createClusterPathMsg(QByteArray &msg)
 {
     bool created = false;
-    QJsonArray path = QJsonArray::fromVariantList(m_sinkPath);
+    QJsonArray path;
+    for(auto && node : m_sinkPath)
+    {
+        path.append(QJsonValue(node));
+    }
     QJsonObject clusterPathObj =
     {
         {NODE_ID, m_node_id},

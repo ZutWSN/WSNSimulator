@@ -40,7 +40,6 @@ public:
     qint16 getNodeLayer() const;
     QPoint getNodePostion() const;
     quint16 getNodeRange() const;
-    bool getSendDataReceived() const;
     virtual NetworkNode::NodeType getNodeType() const;
     bool checkIfInRange(const QPoint &position) const;
     quint16 getDistanceFromNode(const QPoint &position) const;
@@ -57,7 +56,7 @@ signals:
 protected:
     virtual void processNewData(const DataFrame &rxData);
     bool processReceiveAcknowledged(const DataFrame &rxData);
-private:
+protected:
     quint16 m_range;
     quint16 m_node_id;
     qint16 m_layer_id;

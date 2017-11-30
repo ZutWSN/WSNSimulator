@@ -88,6 +88,17 @@ bool SensorNode::isConnectedToCluster() const
     return m_connectedToCluster;
 }
 
+void SensorNode::onReceivedDataFromCluster(const DataFrame &rxData)
+{
+    if(rxData.getMsgType() == DataFrame::RxData::SENSOR_BROADCAST)
+    {
+        if(rxData.getSender().first == m_cluster_id && rxData.getSender().second == m_layer_id)
+        {
+            processNewData(rxData);
+        }
+    }
+}
+
 void SensorNode::processNewData(const DataFrame &rxData)
 {
     //check data - process frame information - > will
