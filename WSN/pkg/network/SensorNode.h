@@ -11,8 +11,10 @@ public:
     //add for this and cluster node assignment operators and copy constructor definitions, using base class ones inside
     ~SensorNode();
 
-    bool disconnectFromNode(NetworkNode *node);
     bool connectToNode(NetworkNode *node);
+    bool disconnectFromNode(NetworkNode *node);
+    bool sendDataToCluster(const QByteArray &data);
+
     NetworkNode::NodeType getNodeType() const;
     bool isConnectedToCluster() const;
 public slots:

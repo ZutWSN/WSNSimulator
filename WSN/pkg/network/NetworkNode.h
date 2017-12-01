@@ -42,7 +42,7 @@ public:
     qint16 getNodeLayer() const;
     QPoint getNodePostion() const;
     quint16 getNodeRange() const;
-    quint16 getDistanceFromNode(const QPoint &position) const;
+    double getDistanceFromNode(const QPoint &position) const;
     quint16 getDistanceFromConnectedNode(quint16 node_id) const;
     virtual NetworkNode::NodeType getNodeType() const;
     quint16 getNumOfPendingDataFrames() const;

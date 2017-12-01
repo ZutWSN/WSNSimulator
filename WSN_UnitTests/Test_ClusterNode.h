@@ -14,14 +14,14 @@
 class Test_ClusterNode : public QObject
 {
     Q_OBJECT
-public slots:
-    void test_connectToNode();
-    void test_sendSinkPathReq();
+private slots:
+    void test_connectToNode();    
     void test_disconnectFromNode();
     void test_getNumOfSensors();
     void test_checkIfConnectedToSensor();
-    void test_getNodeType();
     void test_onReceivedDataFromSensor();
+    void test_onReceivedData();
+    void test_sendSinkPathReq();
     //later add methods for connecting and communication with the sink
 };
 

@@ -254,12 +254,17 @@ NetworkNode::NodeType NetworkNode::getNodeType() const
 
 bool NetworkNode::checkIfInRange(const QPoint &position) const
 {
-    return getDistanceFromNode(position) <= m_range ;
+    return getDistanceFromNode(position) <= static_cast<double>(m_range);
 }
 
-quint16 NetworkNode::getDistanceFromNode(const QPoint &position) const
+double NetworkNode::getDistanceFromNode(const QPoint &position) const
 {
-    return pow((pow(abs(position.x() - m_node_position.x()), 2) + pow(abs(position.y() - m_node_position.y()), 2)), 0.5);
+    double node_x = static_cast<double>(position.x());
+    double node_y = static_cast<double>(position.y());
+    double x = static_cast<double>(m_node_position.x());
+    double y = static_cast<double>(m_node_position.y());
+    double result = pow((pow(abs(node_x - x), 2) + pow(abs(node_y - y), 2)), 0.5);
+    return result;
 }
 
 quint16 NetworkNode::getDistanceFromConnectedNode(quint16 node_id) const

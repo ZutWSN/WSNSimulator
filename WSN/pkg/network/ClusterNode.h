@@ -35,8 +35,10 @@ public:
     bool connectToNode(NetworkNode *node);
     bool sendSinkPathReq();
     bool disconnectFromNode(NetworkNode *node);
+    bool setSinkPath(const QVector<quint16> &path);
 
     quint16 getNumOfSensors() const;
+    quint16 getNumOfSensorPendingMsgs() const;
     bool checkIfConnectedToSensor(NetworkNode *sensor) const;
     NetworkNode::NodeType getNodeType() const;
 public slots:

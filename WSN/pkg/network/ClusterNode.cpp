@@ -84,8 +84,8 @@ void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
     {
         DataFrame frame(m_mesgData, DataFrame::RxData::NEW_DATA, m_sinkPath[0], m_layer_id, m_node_id);
         frame.setPath(m_sinkPath);
-        sendData(frame);
         m_sensorDataCounter = 0;
+        sendData(frame);
     }
 }
 
@@ -113,9 +113,25 @@ bool ClusterNode::disconnectFromNode(NetworkNode *node)
     return disconnected;
 }
 
+bool ClusterNode::setSinkPath(const QVector<quint16> &path)
+{
+    bool success = false;
+    if(!path.isEmpty())
+    {
+        m_sinkPath = path;
+        success = true;
+    }
+    return success;
+}
+
 quint16 ClusterNode::getNumOfSensors() const
 {
     return m_sensors.size();
+}
+
+quint16 ClusterNode::getNumOfSensorPendingMsgs() const
+{
+    return m_sensorDataCounter;
 }
 
 bool ClusterNode::checkIfConnectedToSensor(NetworkNode *sensor) const

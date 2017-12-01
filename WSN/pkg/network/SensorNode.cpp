@@ -78,6 +78,17 @@ bool SensorNode::disconnectFromNode(NetworkNode *node)
     return disconnected;
 }
 
+bool SensorNode::sendDataToCluster(const QByteArray &data)
+{
+    bool dataSend = false;
+    if(!data.isEmpty())
+    {
+        dataSend = true;
+        emit clusterDataSend(data);
+    }
+    return dataSend;
+}
+
 NetworkNode::NodeType SensorNode::getNodeType() const
 {
     return NodeType::Sensor;
