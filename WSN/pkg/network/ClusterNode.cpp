@@ -124,6 +124,11 @@ bool ClusterNode::setSinkPath(const QVector<quint16> &path)
     return success;
 }
 
+void ClusterNode::setPathLength(quint16 length)
+{
+    m_pathLength = length;
+}
+
 quint16 ClusterNode::getNumOfSensors() const
 {
     return m_sensors.size();
@@ -132,6 +137,11 @@ quint16 ClusterNode::getNumOfSensors() const
 quint16 ClusterNode::getNumOfSensorPendingMsgs() const
 {
     return m_sensorDataCounter;
+}
+
+QVector<quint16> ClusterNode::getSinkPath() const
+{
+    return m_sinkPath;
 }
 
 bool ClusterNode::checkIfConnectedToSensor(NetworkNode *sensor) const
@@ -157,9 +167,15 @@ void ClusterNode::processNewData(const DataFrame &rxData)
     {
         txData.setMsgType(DataFrame::RxData::NEIGHBOUR_PATH);
         txData.setDestination(rxData.getSender());
-        QVector<quint16> path = {rxData.getSender().first};
-        txData.setPath(path);
-        sendData(txData);
+        txData.setPath({rxData.getSender().first});
+        QVector<quint16> path = m_sinkPath;
+        path.insert(path.begin(), m_node_id);
+        QByteArray pathMsg;
+        if(createClusterPathMsg(path, pathMsg))
+        {
+            txData.setMsg(pathMsg);
+            sendData(txData);
+        }
     }
     else
     {
@@ -200,7 +216,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                                         QByteArray clusterPathMsg;
                                         //send newly found sinkpath to sink for it to recognize that new cluster has been
                                         //added to its cluster network and so that sink can send messages to it
-                                        if(createClusterPathMsg(clusterPathMsg))
+                                        if(createClusterPathMsg(m_sinkPath, clusterPathMsg))
                                         {
                                             DataFrame frame(clusterPathMsg, DataFrame::RxData::CLUSTER_PATH, m_sinkPath[0], m_layer_id, m_node_id);
                                             frame.setPath(m_sinkPath);
@@ -273,7 +289,6 @@ quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<qu
             {
                 m_sinkPath.clear();
                 path = std::move(nodePath);
-                path.insert(path.begin(), node_id);
                 pathLength += distance;
             }
         }
@@ -356,19 +371,19 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
     return pathExtracted;
 }
 
-bool ClusterNode::createClusterPathMsg(QByteArray &msg)
+bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray &msg)
 {
     bool created = false;
-    QJsonArray path;
-    for(auto && node : m_sinkPath)
+    QJsonArray jsonPath;
+    for(auto && node : path)
     {
-        path.append(QJsonValue(node));
+        jsonPath.append(QJsonValue(node));
     }
     QJsonObject clusterPathObj =
     {
         {NODE_ID, m_node_id},
         {LAYER_ID, m_layer_id},
-        {PATH, path},
+        {PATH, jsonPath},
         {PATH_LENGTH, m_pathLength}
     };
     QJsonDocument jsonMsg(clusterPathObj);

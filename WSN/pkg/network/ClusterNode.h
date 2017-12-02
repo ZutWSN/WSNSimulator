@@ -35,10 +35,13 @@ public:
     bool connectToNode(NetworkNode *node);
     bool sendSinkPathReq();
     bool disconnectFromNode(NetworkNode *node);
+    //those two methods will be deleted after completed testing
     bool setSinkPath(const QVector<quint16> &path);
+    void setPathLength(quint16 length);
 
     quint16 getNumOfSensors() const;
     quint16 getNumOfSensorPendingMsgs() const;
+    QVector<quint16> getSinkPath() const;
     bool checkIfConnectedToSensor(NetworkNode *sensor) const;
     NetworkNode::NodeType getNodeType() const;
 public slots:
@@ -49,7 +52,7 @@ private:
     quint16 getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path);
     void processNewData(const DataFrame &rxData);
     bool extractPathFromMsg(const QByteArray &pathMsg);
-    bool createClusterPathMsg(QByteArray &msg);
+    bool createClusterPathMsg(const QVector<quint16> &path, QByteArray &msg);
 private:
     QVector<quint16> m_sinkPath;
     QVector<NetworkNode*> m_sensors;

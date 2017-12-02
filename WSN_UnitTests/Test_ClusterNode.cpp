@@ -106,13 +106,23 @@ void Test_ClusterNode::test_sendSinkPathReq()
 {
     ClusterNode cluster(0, 15, 0, QPoint(0, 0));
     ClusterNode neighbourCluster(1, 15, 0, QPoint(10, 10));
-    neighbourCluster.setSinkPath({2, 3});
+    cluster.setSinkPath({4, 5});
+    cluster.setPathLength(0);
+    QVector<quint16> new_path = {2, 3};
+    neighbourCluster.setSinkPath(new_path);
+    neighbourCluster.setPathLength(7);
     qRegisterMetaType<DataFrame>();
 
-    cluster.connectToNode(neighbourCluster);
+    cluster.connectToNode(&neighbourCluster);
 
     QSignalSpy clusterSendData(&cluster, SIGNAL(dataSend(DataFrame)));
     QSignalSpy neighbourClusterSendData(&neighbourCluster, SIGNAL(dataSend(DataFrame)));
-    cluster.sendSinkPathReq();
-    //c.d signal checks and so on
+    //rxreceived msg, neighbour path, forward new path  - 3 sends
+    //send request for path, send path received, send new sink path to sink - 3 sends
+    QCOMPARE(cluster.sendSinkPathReq(), true);
+    QCOMPARE(clusterSendData.count(), 3);
+    QCOMPARE(neighbourClusterSendData.count(), 3);
+
+    new_path.insert(new_path.begin(), neighbourCluster.getNodeID());
+    QVERIFY(cluster.getSinkPath() == new_path);
 }

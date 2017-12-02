@@ -77,7 +77,7 @@ NetworkNode::~NetworkNode()
 bool NetworkNode::sendData(const DataFrame &txData)
 {
     bool result = false;
-    if(!txData.frameEmpty())
+    if(txData.getMsgType() != DataFrame::RxData::NO_DATA)
     {
         result = true;
         if(txData.getMsgType() != DataFrame::RxData::RECEIVED_DATA)
