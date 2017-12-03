@@ -50,7 +50,8 @@ SOURCES += \
     Test_DataFrame.cpp \
     Test_SensorNode.cpp \
     testconfig.cpp \
-    Test_ClusterNode.cpp
+    Test_ClusterNode.cpp \
+    test_sinknode.cpp
 
 
 HEADERS  += \
@@ -75,6 +76,7 @@ HEADERS  += \
     testconfig.h \
     Test_DataFrame.h \
     Test_SensorNode.h \
-    Test_ClusterNode.h
+    Test_ClusterNode.h \
+    test_sinknode.h
 
 RESOURCES += WSN.qrc

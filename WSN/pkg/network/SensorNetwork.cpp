@@ -155,4 +155,14 @@ NetworkLayer* SensorNetwork::getLayer(qint16 layer_id) const
     return layerPtr;
 }
 
+void SensorNetwork::onNewClusterAdded(quint16 cluster_id, quint16 layer_id)
+{
+
+}
+
+void SensorNetwork::onNewSensorAdded(quint16 sensor_id, quint16 layer_id)
+{
+
+}
+
 

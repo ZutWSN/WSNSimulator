@@ -1,6 +1,7 @@
 #ifndef SENSORNETWORK_H
 #define SENSORNETWORK_H
 #include "NetworkLayer.h"
+#include "sinknode.h"
 
 class SensorNetwork
 {
@@ -26,6 +27,7 @@ private:
     bool synchronizeNetwork();
 private:
     QVector<NetworkLayer*> m_layers;
+    SinkNode *m_sink;
 };
 
 #endif // SENSORNETWORK_H
