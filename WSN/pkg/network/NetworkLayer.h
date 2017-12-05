@@ -13,7 +13,7 @@ public:
     NetworkLayer& operator=(const NetworkLayer &other);
     NetworkLayer& operator=(NetworkLayer &&other);
 
-    bool createNode(NetworkNode::NodeType nodeType, quint16 node_id);
+    NetworkNode* createNode(NetworkNode::NodeType nodeType, quint16 node_id);
     bool connectNodes(quint16 first_node, quint16 second_node);
     bool connectNodeWidget(quint16 node_id, QWidget* widget);
     bool disconnectNodeWidget(quint16 node_id);
@@ -22,6 +22,7 @@ public:
     void setLayerId(quint16 id);
     qint16 getLayerId() const;
     quint16 getNumOfNodes() const;
+    NetworkNode* getNode(quint16 id) const;
     //make sensor network a friend so it can access layer nodes via private getter or directly from vector m_nodes
 private:
     qint16 checkIfHasNode(quint16 node_id) const;

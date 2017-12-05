@@ -16,12 +16,14 @@ public:
 
     bool addDirectCluster(NetworkNode *cluster);
     bool removeDirectCluster(NetworkNode *cluster);
+    void sendNewPaths();
 
     void setPosition(const QPoint &pos);
     void setRange(const QPoint &range);
 
     void getNumOfInRangeCusters() const;
     void getNumOfConnectedLayers() const;
+    bool checkIfHasCluster(NetworkNode *cluster) const;
 private:
     SinkNode(){};
     SinkNode(const SinkNode&) = delete;
@@ -41,6 +43,7 @@ private:
     quint16 m_range;
     //clusters with direct connection to sink
     QVector<NetworkNode*> m_inRangeClusters;
+    QVector<QVector<quint16> > m_clusterPaths;
     QVector<NetworkLayer*> m_layers;
 };
 

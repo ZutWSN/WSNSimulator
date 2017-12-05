@@ -124,10 +124,9 @@ quint16 NetworkLayer::getNumOfNodes() const
     return m_nodes.size();
 }
 
-bool NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
+NetworkNode* NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
 {
     NetworkNode *new_node = nullptr;
-    bool addedNode = false;
     if(checkIfHasNode(node_id) < 0)
     {      
         switch(nodeType)
@@ -145,10 +144,9 @@ bool NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
         {
             new_node->setLayer(m_layer_id);
             m_nodes.push_back(new_node);
-            addedNode = true;
         }
     }
-    return addedNode;
+    return new_node;
 }
 
 bool NetworkLayer::connectNodes(quint16 first_node, quint16 second_node)
