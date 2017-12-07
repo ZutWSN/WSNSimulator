@@ -80,12 +80,21 @@ void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
 {
     m_mesgData += data;
     ++m_sensorDataCounter;
-    if(m_sensorDataCounter == m_sensors.size())
+    if(m_sensorDataCounter >= m_sensors.size())
     {
-        DataFrame frame(m_mesgData, DataFrame::RxData::NEW_DATA, m_sinkPath[0], m_layer_id, m_node_id);
-        frame.setPath(m_sinkPath);
-        m_sensorDataCounter = 0;
-        sendData(frame);
+        if(m_state == ClusterStates::CONNECTED_TO_SINK)
+        {
+            DataFrame frame(m_mesgData, DataFrame::RxData::NEW_DATA, 0, 0, 0);
+            m_sensorDataCounter = 0;
+            emit sendDataToSink(frame);
+        }
+        else if(!m_sinkPath.isEmpty() && m_pathLength > 0)
+        {
+            DataFrame frame(m_mesgData, DataFrame::RxData::NEW_DATA, m_sinkPath[0], m_layer_id, m_node_id);
+            frame.setPath(m_sinkPath);
+            m_sensorDataCounter = 0;
+            sendData(frame);
+        }
     }
 }
 
@@ -127,6 +136,20 @@ bool ClusterNode::setSinkPath(const QVector<quint16> &path)
 void ClusterNode::setPathLength(quint16 length)
 {
     m_pathLength = length;
+}
+
+bool ClusterNode::setConnectedToSink(SinkNode *sink)
+{
+    bool changedState = false;
+    if(sink)
+    {
+        if(sink->checkIfHasCluster(this))
+        {
+            m_state = ClusterStates::CONNECTED_TO_SINK;
+            changedState = true;
+        }
+    }
+    return changedState;
 }
 
 quint16 ClusterNode::getNumOfSensors() const
@@ -179,6 +202,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
     }
     else
     {
+
         QPair<quint16, quint16> destination = rxData.getDestination();
         if(destination.second == m_layer_id)
         {
@@ -193,8 +217,15 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                             extractPathFromMsg(rxData.getMsg());
                             break;
                         case DataFrame::RxData::NEW_DATA:
-                            txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
-                            emit broadcastDataToSensors(txData);
+                            if(m_state == ClusterStates::CONNECTED_TO_SINK)
+                            {
+                                emit sendDataToSink(txData);
+                            }
+                            else
+                            {
+                                txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
+                                emit broadcastDataToSensors(txData);
+                            }
                             break;
                         case DataFrame::RxData::NEIGHBOUR_PATH:
                             if(m_neighbourPathsCounter < m_connectedNodes.size())

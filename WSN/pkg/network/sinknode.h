@@ -6,16 +6,25 @@
 #include "NetworkNode.h"
 #include "NetworkLayer.h"
 #include "DataFrame.h"
-//maybe make a singleton??always just one sink for entire network
-//make copy, move constructors and assignment operators private
+
 class SinkNode : public QObject
 {
     Q_OBJECT
 public:
-    static SinkNode *getSinkInstance(const QPoint &node_position, quint16 range);
+    struct MappedClusterNode
+    {
+        quint16 node_id;
+        quint16 layer_id;
+        QPoint position;
+        QVector<quint16> sinkPath;
+    }
+
+    static SinkNode *getSinkInstance();
 
     bool addDirectCluster(NetworkNode *cluster);
     bool removeDirectCluster(NetworkNode *cluster);
+    bool connectToNodeWidget(QWidget *widget);
+    bool disconnectFromWidget();
     void sendNewPaths();
 
     void setPosition(const QPoint &pos);
@@ -23,6 +32,7 @@ public:
 
     void getNumOfInRangeCusters() const;
     void getNumOfConnectedLayers() const;
+    DataFrame getLastMsg() const;
     bool checkIfHasCluster(NetworkNode *cluster) const;
 private:
     SinkNode(){};
@@ -35,16 +45,17 @@ signals:
     void receivedData(const DataFrame &data); //to widget
     void sendData(const DataFrame &data);
 private:
-    void processNewData(const DataFrame &data);
     void broadCastDataToClusters(const DataFrame &data);
     void calculateNetworkPaths();
+    void updateClusterPath(const DataFrame &data);
 private:
     QPoint m_position;
     quint16 m_range;
     //clusters with direct connection to sink
     QVector<NetworkNode*> m_inRangeClusters;
-    QVector<QVector<quint16> > m_clusterPaths;
+    QVector<MappedClusterNode> m_clusterPathMap;
     QVector<NetworkLayer*> m_layers;
+    DataFrame m_lastMsg;
 };
 
 #endif // SINKNODE_H

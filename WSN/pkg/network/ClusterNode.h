@@ -1,6 +1,7 @@
 #ifndef CLUSTERNODE_H
 #define CLUSTERNODE_H
 #include "NetworkNode.h"
+#include "sinknode.h"
 #include <QString>
 
 /*Adding new cluster :
@@ -25,7 +26,7 @@ public:
         CREATED = 0,
         PATH_SEEKING,
         CONNECTED,
-        WAITING_FOR_RESPONSE
+        CONNECTED_TO_SINK
     };
 
     ClusterNode(quint16 node_id);
@@ -38,6 +39,7 @@ public:
     //those two methods will be deleted after completed testing
     bool setSinkPath(const QVector<quint16> &path);
     void setPathLength(quint16 length);
+    bool setConnectedToSink(SinkNode *sink);
 
     quint16 getNumOfSensors() const;
     quint16 getNumOfSensorPendingMsgs() const;
@@ -48,6 +50,7 @@ public slots:
     void onReceivedDataFromSensor(const QByteArray &data);
 signals:
     void broadcastDataToSensors(const DataFrame &data);
+    void sendDataToSink(const DataFrame &data);
 private:
     quint16 getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path);
     void processNewData(const DataFrame &rxData);
@@ -61,7 +64,6 @@ private:
     quint16 m_neighbourPathsCounter;
     quint16 m_pathLength;
     ClusterStates m_state;
-
 };
 
 #endif // CLUSTERNODE_H
