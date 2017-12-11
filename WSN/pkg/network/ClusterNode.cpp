@@ -4,12 +4,6 @@
 #include <QJsonArray>
 #include <QList>
 
-const QString LAYER_ID      = "Layer_ID";
-const QString NODE_ID       = "Node_ID";
-const QString PATH          = "Path";
-const QString PATHS         = "Paths";
-const QString PATH_LENGTH   = "Path_Length";
-
 ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id),
     m_sensorDataCounter(0),

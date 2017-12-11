@@ -21,6 +21,14 @@ class ClusterNode : public NetworkNode
 {
     Q_OBJECT
 public:
+    const QString LAYER_ID      = "Layer_ID";
+    const QString NODE_ID       = "Node_ID";
+    const QString NODE_POSITION_X = "Position_X";
+    const QString NODE_POSITION_Y = "Position_Y";
+    const QString PATH          = "Path";
+    const QString PATHS         = "Paths";
+    const QString PATH_LENGTH   = "Path_Length";
+
     enum ClusterStates
     {
         CREATED = 0,

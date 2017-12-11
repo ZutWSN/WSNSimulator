@@ -42,6 +42,8 @@ public:
     qint16 getNodeLayer() const;
     QPoint getNodePostion() const;
     quint16 getNodeRange() const;
+    quint16 getNumOfConnectedNodes() const;
+    QVector<QPair<quint16, quint16> > getNeighbours() const;
     double getDistanceFromNode(const QPoint &position) const;
     quint16 getDistanceFromConnectedNode(quint16 node_id) const;
     virtual NetworkNode::NodeType getNodeType() const;

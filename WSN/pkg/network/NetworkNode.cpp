@@ -195,6 +195,22 @@ quint16 NetworkNode::getNodeRange() const
     return m_range;
 }
 
+quint16 NetworkNode::getNumOfConnectedNodes() const
+{
+    return m_connectedNodes.size();
+}
+
+QVector<QPair<quint16, quint16> > NetworkNode::getNeighbours() const
+{
+    QVector<QPair<quint16, quint16> > neighbours;
+    for(NetworkNode *node : m_connectedNodes)
+    {
+        auto neighbour = qMakePair(node->getNodeID(), getDistanceFromConnectedNode(node->getNodeID()));
+        neighbourIDs.push_back(neighbour);
+    }
+    return neighbours;
+}
+
 bool NetworkNode::connectToNode(NetworkNode *node)
 {
     bool connected = false;

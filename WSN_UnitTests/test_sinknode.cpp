@@ -92,6 +92,14 @@ void Test_SinkNode::test_onReceivedDataFromCluster()
     QVERIFY(sink->getLastMsg().getMsg() =="Forward Sensor Data");
 }
 
+void Test_SinkNode::test_sendNewPaths()
+{
+    SinkNode *sink = SinkNode::getSinkInstance();
+    sink->setPosition(QPoint(0, 0));
+    sink->setRange(20);
+}
+/*
+ * private methods, test using test_onReceivedDataFromCluster test case
 void Test_SinkNode::test_broadCastDataToClusters()
 {
 
@@ -106,3 +114,4 @@ void Test_SinkNode::test_updateClusterPath()
 {
 
 }
+*/

@@ -8,6 +8,7 @@
 class DataFrame
 {
 public:
+    const quint8 NUM_OF_CLUSTER_MESSAGE_PARAMS = 6;
     enum RxData
     {
         NO_DATA = 0,
@@ -18,7 +19,8 @@ public:
         NEIGHBOUR_PATH_REQ,
         NEIGHBOUR_PATH,
         CLUSTER_PATH,
-        SENSOR_RESPONSE
+        SENSOR_RESPONSE,
+        REMOVE_MAPPED_NODE
     };
 
     DataFrame();
