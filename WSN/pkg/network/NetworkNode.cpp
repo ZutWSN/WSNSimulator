@@ -257,8 +257,33 @@ bool NetworkNode::disconnectFromNode(NetworkNode *node)
             if(disconnected)
             {
                 m_connectedNodes.remove(m_connectedNodes.indexOf(node));
+                disconnected &= node->removeConnectedNode(this);
             }
         }
+    }
+    return disconnected;
+}
+
+bool NetworkNode::removeConnectedNode(NetworkNode *node)
+{
+    bool removedNode = false;
+    if(checkIfConnectedToNode(node))
+    {
+        if(!node->checkIfConnectedToNode(this))
+        {
+            m_connectedNodes.remove(m_connectedNodes.indexOf(node));
+            removedNode = true;
+        }
+    }
+    return removedNode;
+}
+
+bool NetworkNode::disconnectFromNetwork()
+{
+    bool disconnected = false;
+    for(NetworkNode *node : m_connectedNodes)
+    {
+        disconnected &= node->disconnectFromNode(this);
     }
     return disconnected;
 }

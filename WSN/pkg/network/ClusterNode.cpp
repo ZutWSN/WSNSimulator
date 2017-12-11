@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QList>
+#include "SensorNode.h"
 
 ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id),
@@ -40,11 +41,7 @@ bool ClusterNode::connectToNode(NetworkNode *node)
         }
         else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
         {
-            if(node->connectToNode(this))
-            {
-                connected = true;
-                m_sensors.push_back(node);
-            }
+            connected = node->connectToNode(this);
         }
     }
     return connected;
@@ -114,6 +111,55 @@ bool ClusterNode::disconnectFromNode(NetworkNode *node)
         }
     }
     return disconnected;
+}
+
+bool ClusterNode::disconnectFromNetwork()
+{
+    bool disconnected = NetworkNode::disconnectFromNetwork();
+    for(NetworkNode *sensor : m_sensors)
+    {
+        disconnected &= sensor->disconnectFromNode(this);
+        disconnected &= removeSensor(sensor);
+    }
+    return disconnected;
+}
+
+bool ClusterNode::addNode(NetworkNode *node)
+{
+    bool addedNode = false;
+    if(node)
+    {
+        if(node->getNodeType() == NetworkNode::NodeType::Cluster)
+        {
+            addedNode = NetworkNode::addNode(node);
+        }
+        else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
+        {
+            if(node->getNodeLayer() == m_layer_id)
+            {
+                if(checkIfConnectedToSensor(node))
+                {
+                    m_sensors.push_back(node);
+                    addedNode = true;
+                }
+            }
+        }
+    }
+}
+
+bool ClusterNode::removeSensor(NetworkNode *sensor)
+{
+    bool removed = false;
+    int idx = m_sensors.indexOf(sensor);
+    if(idx >= 0)
+    {
+        if(!static_cast<SensorNode*>(sensor)->isConnectedToCluster())
+        {
+            m_sensors.remove(idx);
+            removed = true;
+        }
+    }
+    return removed;
 }
 
 bool ClusterNode::setSinkPath(const QVector<quint16> &path)
@@ -211,6 +257,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                             extractPathFromMsg(rxData.getMsg());
                             break;
                         case DataFrame::RxData::NEW_DATA:
+                        case DataFrame::RxData::REMOVED_NODE:
                             if(m_state == ClusterStates::CONNECTED_TO_SINK)
                             {
                                 emit sendDataToSink(txData);
@@ -408,6 +455,8 @@ bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray 
     {
         {NODE_ID, m_node_id},
         {LAYER_ID, m_layer_id},
+        {NODE_POSITION_X, m_node_position.x()},
+        {NODE_POSITION_Y, m_node_position.y()},
         {PATH, jsonPath},
         {PATH_LENGTH, m_pathLength}
     };

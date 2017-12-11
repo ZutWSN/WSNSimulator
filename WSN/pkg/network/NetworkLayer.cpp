@@ -2,6 +2,10 @@
 #include "NetworkNode.h"
 #include "SensorNode.h"
 #include "ClusterNode.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QList>
 #include <memory>
 
 NetworkLayer::NetworkLayer(qint16 layer_id):
@@ -204,8 +208,12 @@ bool NetworkLayer::removeNode(quint16 node_id)
     qint16 node_idx = checkIfHasNode(node_id);
     if(node_idx >= 0)
     {
-        delete m_nodes[node_id];
-        m_nodes.remove(node_id);
+        DataFrame nodeRemovedMsg = createNodeRemovalMsg(node_id);
+        m_nodes[node_idx]->sendData(nodeRemovedMsg);
+        m_nodes[node_idx]->disconnectFromWidget();
+        m_nodes[node_idx]->disconnectFromNetwork();
+        delete m_nodes[node_idx];
+        m_nodes.remove(node_idx);
         removedNode = true;
     }
     return removedNode;
@@ -247,4 +255,34 @@ NetworkNode* NetworkLayer::copyNetworkNode(const NetworkNode *node) const
             break;
     }
     return new_node;
+}
+
+DataFrame NetworkLayer::createNodeRemovalMsg(quint16 node_id) const
+{
+    bool created = false;
+    ClusterNode *node = static_cast<ClusterNode*>(getNode(node_id));
+    if(node)
+    {
+        QJsonArray jsonPath;
+        for(auto && node : node->getSinkPath())
+        {
+            jsonPath.append(QJsonValue(node));
+        }
+        QJsonObject clusterPathObj =
+        {
+            {NODE_ID, m_node_id},
+            {LAYER_ID, m_layer_id},
+            {PATH, jsonPath},
+            {PATH_LENGTH, m_pathLength}
+        };
+        QJsonDocument jsonMsg(clusterPathObj);
+        msg = jsonMsg.toBinaryData();
+        if(!msg.isEmpty() && !msg.isNull())
+        {
+            created = true;
+        }
+        created = true;
+    }
+
+    return created;
 }

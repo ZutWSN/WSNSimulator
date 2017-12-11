@@ -20,6 +20,7 @@ public:
     NetworkNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     NetworkNode(const NetworkNode &other);
     NetworkNode& operator=(const NetworkNode &rhs);
+
     //maybe add move constructor and move assignment operator
     virtual ~NetworkNode();
 
@@ -28,8 +29,10 @@ public:
     bool addNode(NetworkNode *node);
     virtual bool connectToNode(NetworkNode *node);
     virtual bool disconnectFromNode(NetworkNode *node);
+    virtual bool disconnectFromNetwork();
     bool connectToNodeWidget(QWidget *widget);
     bool disconnectFromWidget();
+    bool removeConnectedNode(NetworkNode *node);
 
     //setters
     void setNodeID(quint16 node_id);

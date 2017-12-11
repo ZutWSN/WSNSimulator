@@ -40,6 +40,7 @@ bool SensorNode::connectToNode(NetworkNode *node)
                         ClusterNode *cluster = static_cast<ClusterNode*>(node);
                         connected = static_cast<bool>(connect(cluster, SIGNAL(broadcastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
                         connected &= static_cast<bool>(connect(this, SIGNAL(clusterDataSend(QByteArray)), cluster, SLOT(onReceivedDataFromSensor(QByteArray))));
+                        connected &= cluster->addNode(this);
                         if(connected)
                         {
                             m_connectedToCluster = true;

@@ -44,6 +44,9 @@ public:
     bool connectToNode(NetworkNode *node);
     bool sendSinkPathReq();
     bool disconnectFromNode(NetworkNode *node);
+    bool disconnectFromNetwork();
+    bool addNode(NetworkNode *node);
+    bool removeSensor(NetworkNode *sensor);
     //those two methods will be deleted after completed testing
     bool setSinkPath(const QVector<quint16> &path);
     void setPathLength(quint16 length);

@@ -27,6 +27,7 @@ public:
 private:
     qint16 checkIfHasNode(quint16 node_id) const;
     NetworkNode* copyNetworkNode(const NetworkNode *node) const;
+    DataFrame createNodeRemovalMsg(quint16 node_id) const;
 private:
     QVector<NetworkNode*> m_nodes;
     qint16 m_layer_id;

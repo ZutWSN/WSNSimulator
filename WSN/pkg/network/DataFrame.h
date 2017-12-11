@@ -20,7 +20,7 @@ public:
         NEIGHBOUR_PATH,
         CLUSTER_PATH,
         SENSOR_RESPONSE,
-        REMOVE_MAPPED_NODE
+        REMOVED_NODE
     };
 
     DataFrame();
