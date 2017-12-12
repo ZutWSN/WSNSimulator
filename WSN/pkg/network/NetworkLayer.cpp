@@ -263,19 +263,15 @@ DataFrame NetworkLayer::createNodeRemovalMsg(quint16 node_id) const
     ClusterNode *node = static_cast<ClusterNode*>(getNode(node_id));
     if(node)
     {
-        QJsonArray jsonPath;
-        for(auto && node : node->getSinkPath())
+        QJsonObject removeNodeObj =
         {
-            jsonPath.append(QJsonValue(node));
-        }
-        QJsonObject clusterPathObj =
-        {
-            {NODE_ID, m_node_id},
-            {LAYER_ID, m_layer_id},
-            {PATH, jsonPath},
-            {PATH_LENGTH, m_pathLength}
+            {ClusterNode::NODE_ID, node_id},
+            {ClusterNode::LAYER_ID, m_layer_id},
+            {ClusterNode::NODE_POSITION_X, node->getNodePostion().x()},
+            {ClusterNode::NODE_POSITION_Y, node->getNodePostion().y()},
+            {ClusterNode::NODE_STATE, node->getCurrentState()}
         };
-        QJsonDocument jsonMsg(clusterPathObj);
+        QJsonDocument jsonMsg(removeNodeObj);
         msg = jsonMsg.toBinaryData();
         if(!msg.isEmpty() && !msg.isNull())
         {
@@ -283,6 +279,5 @@ DataFrame NetworkLayer::createNodeRemovalMsg(quint16 node_id) const
         }
         created = true;
     }
-
     return created;
 }

@@ -21,13 +21,20 @@ class ClusterNode : public NetworkNode
 {
     Q_OBJECT
 public:
-    const QString LAYER_ID      = "Layer_ID";
-    const QString NODE_ID       = "Node_ID";
-    const QString NODE_POSITION_X = "Position_X";
-    const QString NODE_POSITION_Y = "Position_Y";
-    const QString PATH          = "Path";
-    const QString PATHS         = "Paths";
-    const QString PATH_LENGTH   = "Path_Length";
+    const QString LAYER_ID              = "Layer_ID";
+    const QString NODE_ID               = "Node_ID";
+    const QString NODE_POSITION_X       = "Position_X";
+    const QString NODE_POSITION_Y       = "Position_Y";
+    const QString NODE_STATE            = "Node_State";
+    const QString PATH                  = "Path";
+    const QString PATH_LENGTH           = "Path_Length";
+    const QString NEIGHBOURS_IDS        = "NeighbourIDs";
+    const QString NEIGHBOURS_DISTANCES  = "NeighbourDistances";
+
+    const quint8 NUM_OF_PATH_MESSAGE_PARAMS = 8;
+    const quint8 NUM_OF_REMOVE_MESSAGE_PARAMS = 5;
+
+    const QString PATHS = "Paths";
 
     enum ClusterStates
     {
@@ -40,6 +47,14 @@ public:
     ClusterNode(quint16 node_id);
     ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     ~ClusterNode();
+
+    bool operator==(const ClusterNode &other)
+    {
+        bool equal = (node_id == other.node_id);
+        equal &= (layer_id == other.layer_id);
+        equal &= (position == other.position);
+        return equal;
+    }
 
     bool connectToNode(NetworkNode *node);
     bool sendSinkPathReq();
@@ -54,7 +69,9 @@ public:
 
     quint16 getNumOfSensors() const;
     quint16 getNumOfSensorPendingMsgs() const;
+    ClusterStates getCurrentState() const;
     QVector<quint16> getSinkPath() const;
+
     bool checkIfConnectedToSensor(NetworkNode *sensor) const;
     NetworkNode::NodeType getNodeType() const;
 public slots:

@@ -145,21 +145,23 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
             break;
         case DataFrame::RxData::REMOVED_NODE:
             QByteArray msg;
-            removeNode(msg);
-            if(!m_inRangeClusters.isEmpty())
+            if(removeNode(msg))
             {
-                if(calculateNetworkPaths(data, msg))
+                if(!m_inRangeClusters.isEmpty())
                 {
-                    DataFrame pathUpdate(msg, DataFrame::RxData::PATH_SYNC);
-                    emit broadCastDataToClusters(pathUpdate);
+                    if(calculateNetworkPaths(data, msg))
+                    {
+                        DataFrame pathUpdate(msg, DataFrame::RxData::PATH_SYNC);
+                        emit broadCastDataToClusters(pathUpdate);
+                    }
                 }
-            }
-            else
-            {
-                //do nothing until some in range cluster is added
-                //to forward network data. After that send path update
-                //message to connect rest of the network again -
-                //once more calculate networkPaths and update local memebers.
+                else    //node removed was last in range cluster
+                {
+                    //do nothing until some in range cluster is added
+                    //to forward network data. After that send path update
+                    //message to connect rest of the network again -
+                    //once more calculate networkPaths and update local memebers.
+                }
             }
             break;
         default:
@@ -170,7 +172,7 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
 bool SinkNode::calculateNetworkPaths(const DataFrame &data, QByteArray &updateMsg)
 {
     bool createdUpdateMsg = false;
-
+    QVector<Vertice> graph = createGraph();
     return createdUpdateMsg;
 }
 
@@ -185,30 +187,32 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
         quint8 parameters = 0;
         QPoint position;
         QVector<quint16> nodePath;
+        QVector<quint16> neighbourIDs;
+        QVector<quint16> neighbourDistances;
         auto keys = jsonObj.keys();
         for(auto && key : keys)
         {
-            if(key == NODE_ID)
+            if(key == ClusterNode::NODE_ID)
             {
                 node_id = static_cast<quint16>(jsonObj[key].toInt());
                 ++parameters;
             }
-            else if(key == LAYER_ID)
+            else if(key == ClusterNode::LAYER_ID)
             {
                 layer_id = static_cast<quint16>(jsonObj[key].toInt());
                 ++parameters;
             }
-            else if(key == NODE_POSITION_X)
+            else if(key == ClusterNode::NODE_POSITION_X)
             {
                 position.setX(jsonObj[key].toInt());
                 ++parameters;
             }
-            else if(key == NODE_POSITION_Y)
+            else if(key == ClusterNode::NODE_POSITION_Y)
             {
                 position.setY(jsonObj[key].toInt());
                 ++parameters;
             }
-            else if(key == PATH)
+            else if(key == ClusterNode::PATH)
             {
                 nodePath.clear();
                 for(auto && id: jsonObj[key].toArray())
@@ -223,7 +227,37 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
                     ++parameters;
                 }
             }
-            else if(key == PATH_LENGTH)
+            else if(key == ClusterNode::NEIGHBOURS_IDS)
+            {
+                neighbourIDs.clear();
+                for(auto && id: jsonObj[key].toArray())
+                {
+                    if(id.isDouble())
+                    {
+                        neighbourIDs.push_back(static_cast<quint16>(id.toInt()));
+                    }
+                }
+                if(!neighbourIDs.isEmpty())
+                {
+                    ++parameters;
+                }
+            }
+            else if(key == ClusterNode::NEIGHBOURS_DISTANCES)
+            {
+                neighbourDistances.clear();
+                for(auto && id: jsonObj[key].toArray())
+                {
+                    if(id.isDouble())
+                    {
+                        neighbourDistances.push_back(static_cast<quint16>(id.toInt()));
+                    }
+                }
+                if(!neighbourDistances.isEmpty())
+                {
+                    ++parameters;
+                }
+            }
+            else if(key == ClusterNode::PATH_LENGTH)
             {
                 pathLength = static_cast<quint16>(jsonObj[key].toInt());
                 if(pathLength > 0)
@@ -232,21 +266,30 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
                 }
             }
         }
-        if(parameters == DataFrame::NUM_OF_CLUSTER_MESSAGE_PARAMS)
+        if(parameters == ClusterNode::NUM_OF_CLUSTER_MESSAGE_PARAMS)
         {
-            MappedClusterNode node{node_id, layer_id, position, pathLength, nodePath};
-            qint16 index = checkIfHasMappedCluster(node);
-            if(index >= 0)
+            if(neighbourDistances.size() == neighbourIDs.size())
             {
-                //update the node path
-                m_clusterPathMap[index] = node;
+                MappedClusterNode node{ node_id,
+                                        layer_id,
+                                        position,
+                                        pathLength,
+                                        neighbourIDs,
+                                        neighbourDistances,
+                                        nodePath};
+                qint16 index = checkIfHasMappedCluster(node);
+                if(index >= 0)
+                {
+                    //update the node path
+                    m_clusterPathMap[index] = node;
+                }
+                else
+                {
+                    //map new node
+                    m_clusterPathMap.push_back(node);
+                }
+                pathUpdated = true;
             }
-            else
-            {
-                //map new node
-                m_clusterPathMap.push_back(node);
-            }
-            pathUpdated = true;
         }
     }
 }
@@ -267,11 +310,134 @@ quint16 SinkNode::checkIfHasMappedCluster(const MappedClusterNode &node) const
     return index;
 }
 
-void SinkNode::removeNode(const QByteArray &msg)
+bool SinkNode::removeNode(const QByteArray &msg)
 {
     //extract from message which node was removed
     //and remove it either from direct clusters or from
     //mapped nodes
+    bool nodeRemoved = true;
+    QJsonDocument jsonData = QJsonDocument::fromBinaryData(data.getMsg(), QJsonDocument::Validate);
+    if(!jsonData.isNull())
+    {
+        QJsonObject jsonObj = jsonData.object();
+        quint16 node_id, layer_id;
+        quint8 parameters = 0;
+        QPoint position;
+        ClusterNode::ClusterStates node_state;
+        auto keys = jsonObj.keys();
+        for(auto && key : keys)
+        {
+            if(key == ClusterNode::NODE_ID)
+            {
+                node_id = static_cast<quint16>(jsonObj[key].toInt());
+                ++parameters;
+            }
+            else if(key == ClusterNode::LAYER_ID)
+            {
+                layer_id = static_cast<quint16>(jsonObj[key].toInt());
+                ++parameters;
+            }
+            else if(key == ClusterNode::NODE_POSITION_X)
+            {
+                position.setX(jsonObj[key].toInt());
+                ++parameters;
+            }
+            else if(key == ClusterNode::NODE_POSITION_Y)
+            {
+                position.setY(jsonObj[key].toInt());
+                ++parameters;
+            }
+            else if(key == ClusterNode::NODE_STATE)
+            {
+                node_state = static_cast<ClusterNode::ClusterStates>(jsonObj[key].toInt());
+                ++parameters;
+            }
+        }
+        if(parameters == ClusterNode::NUM_OF_REMOVE_MESSAGE_PARAMS)
+        {
+            if(node_state == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
+            {
+                ClusterNode clusterToRemove(node_id, 0, layer_id, position);
+                quint16 i = 0;
+                for(NetworkNode *directCluster : m_inRangeClusters)
+                {
+                    ClusterNode *cluster = static_cast<ClusterNode*>(directCluster);
+                    if(*cluster == clusterToRemove)
+                    {
+                        //remove this cluster from in range cluster array
+                        //and all mapped nodes neighbours.
+                        for(auto && neighbourNode : cluster->getNeighbours())
+                        {
+                            for(MappedClusterNode &mappedNode : m_clusterPathMap)
+                            {
+                                if(mappedNode.layer_id == cluster->getNodeLayer())
+                                {
+                                    if(neighbourNode.first == mappedNode.node_id)
+                                    {
+                                        int idx = mappedNode.neighbourIDs.indexOf(cluster->getNodeID());
+                                        if(idx >= 0)
+                                        {
+                                            mappedNode.neighbourIDs.remove(idx);
+                                            mappedNode.neighbourDistances.remove(idx);
+                                        }
+                                        else
+                                        {
+                                            nodeRemoved = false;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        m_inRangeClusters.remove(m_inRangeClusters.indexOf(directCluster));
+                    }
+                    ++i;
+                }
+            }
+            else
+            {
+                MappedClusterNode node;
+                node.node_id = node_id;
+                node.layer_id = layer_id;
+                int idx = m_clusterPathMap.indexOf(node);
+                if(idx >= 0)
+                {
+                    for(auto && neighbourID: m_clusterPathMap[idx].neighbourIDs)
+                    {
+                        for(MappedClusterNode &mappedNode : m_clusterPathMap)
+                        {
+                            if(mappedNode.layer_id == layer_id)
+                            {
+                                if(neighbourNode.first == node_id)
+                                {
+                                    int index = mappedNode.neighbourIDs.indexOf(node_id);
+                                    if(index >= 0)
+                                    {
+                                        mappedNode.neighbourIDs.remove(index);
+                                        mappedNode.neighbourDistances.remove(index);
+                                    }
+                                    else
+                                    {
+                                        nodeRemoved = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    nodeRemoved = false;
+                }
+
+            }
+
+        }
+        else
+        {
+            nodeRemoved = false;
+        }
+    }
+    return nodeRemoved;
 }
 
 void SinkNode::extractNodeData(NetworkNode *node, SinkNode::Vertice &vertice) const
@@ -286,13 +452,13 @@ void SinkNode::extractNodeData(NetworkNode *node, SinkNode::Vertice &vertice) co
 void SinkNode::extractMappedNodeData(const MappedClusterNode &node, SinkNode::Vertice &vertice) const
 {
     vertice.node_id = node.node_id;
-    for(auto && neighbour : node.neighbours)
+    for(quint16 i = 0; i < node.neighbourIDs.size(); i++)
     {
-        vertice.neighbours.push_back(neighbour);
+        vertice.neighbours.push_back(qMakePair(node.neighbourIDs[i], node.neighbourDistances[i]));
     }
 }
 
-QVector<SinkNode::Vertice> SinkNode::createGraph()
+QVector<SinkNode::Vertice> SinkNode::createGraph() const
 {
     QVector<Vertice> vertices;
     Vertice vertice;
@@ -313,7 +479,7 @@ QVector<SinkNode::Vertice> SinkNode::createGraph()
             vertice.node_id = idAndDist.first;
             int idx = vertices.indexOf(vertice);
             v.neighbourVerticesIndexes.push_back(idx);
-            v.neighbourDistances(idAndDist.second);
+            v.neighbourVerticesDistances(idAndDist.second);
         }
     }
     return vertices;

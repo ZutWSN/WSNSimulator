@@ -8,7 +8,6 @@
 class DataFrame
 {
 public:
-    const quint8 NUM_OF_CLUSTER_MESSAGE_PARAMS = 6;
     enum RxData
     {
         NO_DATA = 0,

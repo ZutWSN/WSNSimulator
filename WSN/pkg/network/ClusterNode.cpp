@@ -202,6 +202,11 @@ quint16 ClusterNode::getNumOfSensorPendingMsgs() const
     return m_sensorDataCounter;
 }
 
+ClusterNode::ClusterStates ClusterNode::getCurrentState() const
+{
+    return m_state;
+}
+
 QVector<quint16> ClusterNode::getSinkPath() const
 {
     return m_sinkPath;
@@ -447,9 +452,16 @@ bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray 
 {
     bool created = false;
     QJsonArray jsonPath;
+    QJsonArray jsonNeighbourIDs;
+    QJsonArray jsonNeighbourDistances;
     for(auto && node : path)
     {
         jsonPath.append(QJsonValue(node));
+    }
+    for(auto && neighbour : NetworkNode::getNeighbours())
+    {
+        jsonNeighbourIDs.append(QJsonValue(neighbour.first));
+        jsonNeighbourDistances.append(QJsonValue(neighbour.second));
     }
     QJsonObject clusterPathObj =
     {
@@ -458,7 +470,9 @@ bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray 
         {NODE_POSITION_X, m_node_position.x()},
         {NODE_POSITION_Y, m_node_position.y()},
         {PATH, jsonPath},
-        {PATH_LENGTH, m_pathLength}
+        {PATH_LENGTH, m_pathLength},
+        {NEIGHBOURS_IDS, jsonNeighbourIDs},
+        {NEIGHBOURS_DISTANCES, jsonNeighbourDistances}
     };
     QJsonDocument jsonMsg(clusterPathObj);
     msg = jsonMsg.toBinaryData();

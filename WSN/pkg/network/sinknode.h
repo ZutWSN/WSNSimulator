@@ -17,16 +17,14 @@ public:
         quint16 layer_id;
         QPoint position;
         quint16 pathLength;
-        QVector<QPair<quint16, quint16> > neighbours; //<id, distance>
+        QVector<quint16> neighbourIDs;
+        QVector<quint16> neighbourDistances;
         QVector<quint16> sinkPath;
 
         bool operator==(const MappedClusterNode &other)
         {
-            bool equal = (this.node_id == other.node_id);
-            equal &= (this.layer_id == other.layer_id);
-            equal &= (this.position == other.position);
-            equal &= (this.pathLength == other.pathLength);
-            equal &= (this.sinkPath == other.sinkPath);
+            bool equal = (node_id == other.node_id);
+            equal &= (layer_id == other.layer_id);
             return equal;
         }
     };
@@ -36,10 +34,10 @@ public:
         quint16 node_id;
         QVector<quint16> neighbourVerticesIndexes;
         QVector<QPair<quint16, quint16> > neighbours; // <id, distance>
-        QVector<quint16> neighbourDistances;
+        QVector<quint16> neighbourVerticesDistances;
         bool operator==(const Vertice &other)
         {
-            return (this.node_id == other.node_id);
+            return (node_id == other.node_id);
         }
     };
 
@@ -72,7 +70,7 @@ private:
     bool calculateNetworkPaths(const DataFrame &data, QByteArray &updateMsg);//TDO
     bool updateClusterPath(const DataFrame &data); //TDO
     quint16 checkIfHasMappedCluster(const MappedClusterNode &node) const;
-    void removeNode(const QByteArray &msg); //TDO
+    bool removeNode(const QByteArray &msg); //TDO
     QVector<Vertice> createGraph() const;
     void extractNodeData(NetworkNode* node, Vertice &vertice) const;
     void extractMappedNodeData(const MappedClusterNode &node, Vertice &vertice) const;
