@@ -183,7 +183,7 @@ bool ClusterNode::setConnectedToSink(SinkNode *sink)
     bool changedState = false;
     if(sink)
     {
-        if(sink->checkIfHasCluster(this))
+        if(sink->checkIfHasDirectCluster(this))
         {
             m_state = ClusterStates::CONNECTED_TO_SINK;
             changedState = true;
@@ -245,9 +245,17 @@ void ClusterNode::processNewData(const DataFrame &rxData)
             sendData(txData);
         }
     }
+    else if(txData.getMsgType() == DataFrame::RxData::PATH_SYNC)
+    {
+        if(!txData.hasVisitedNode(qMakePair(m_node_id, m_layer_id)))
+        {
+            extractPathFromMsg(rxData.getMsg());
+            txData.addVisitedNode(qMakePair(m_node_id, m_layer_id));
+            sendData(txData);
+        }
+    }
     else
     {
-
         QPair<quint16, quint16> destination = rxData.getDestination();
         if(destination.second == m_layer_id)
         {
@@ -258,9 +266,6 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                 {
                     switch(rxData.getMsgType())
                     {
-                        case DataFrame::RxData::PATH_SYNC:
-                            extractPathFromMsg(rxData.getMsg());
-                            break;
                         case DataFrame::RxData::NEW_DATA:
                         case DataFrame::RxData::REMOVED_NODE:
                             if(m_state == ClusterStates::CONNECTED_TO_SINK)

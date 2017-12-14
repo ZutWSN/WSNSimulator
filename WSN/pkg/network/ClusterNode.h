@@ -16,26 +16,25 @@
  * 3. Until the sink does not have all paths stored no communication is allowed inside the network betweem the
  * clusters, only reads from sensors, which will be stored duriing this time
 */
+//move this to some public header like a global network nodes configuration file
+const QString LAYER_ID              = "Layer_ID";
+const QString NODE_ID               = "Node_ID";
+const QString NODE_POSITION_X       = "Position_X";
+const QString NODE_POSITION_Y       = "Position_Y";
+const QString NODE_STATE            = "Node_State";
+const QString PATH                  = "Path";
+const QString PATH_LENGTH           = "Path_Length";
+const QString NEIGHBOURS_IDS        = "NeighbourIDs";
+const QString NEIGHBOURS_DISTANCES  = "NeighbourDistances";
+const QString PATHS                 = "Paths";
+
+const quint8 NUM_OF_PATH_MESSAGE_PARAMS = 8;
+const quint8 NUM_OF_REMOVE_MESSAGE_PARAMS = 5;
 
 class ClusterNode : public NetworkNode
 {
     Q_OBJECT
 public:
-    const QString LAYER_ID              = "Layer_ID";
-    const QString NODE_ID               = "Node_ID";
-    const QString NODE_POSITION_X       = "Position_X";
-    const QString NODE_POSITION_Y       = "Position_Y";
-    const QString NODE_STATE            = "Node_State";
-    const QString PATH                  = "Path";
-    const QString PATH_LENGTH           = "Path_Length";
-    const QString NEIGHBOURS_IDS        = "NeighbourIDs";
-    const QString NEIGHBOURS_DISTANCES  = "NeighbourDistances";
-
-    const quint8 NUM_OF_PATH_MESSAGE_PARAMS = 8;
-    const quint8 NUM_OF_REMOVE_MESSAGE_PARAMS = 5;
-
-    const QString PATHS = "Paths";
-
     enum ClusterStates
     {
         CREATED = 0,
@@ -48,11 +47,11 @@ public:
     ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
     ~ClusterNode();
 
-    bool operator==(const ClusterNode &other)
+    bool operator==(const ClusterNode &rhs) const
     {
-        bool equal = (node_id == other.node_id);
-        equal &= (layer_id == other.layer_id);
-        equal &= (position == other.position);
+        bool equal = (getNodeID() == rhs.getNodeID());
+        equal &= (getNodeLayer() == rhs.getNodeLayer());
+        equal &= (getNodePostion() == rhs.getNodePostion());
         return equal;
     }
 

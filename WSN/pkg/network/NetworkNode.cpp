@@ -206,7 +206,7 @@ QVector<QPair<quint16, quint16> > NetworkNode::getNeighbours() const
     for(NetworkNode *node : m_connectedNodes)
     {
         auto neighbour = qMakePair(node->getNodeID(), getDistanceFromConnectedNode(node->getNodeID()));
-        neighbourIDs.push_back(neighbour);
+        neighbours.push_back(neighbour);
     }
     return neighbours;
 }

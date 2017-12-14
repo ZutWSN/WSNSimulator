@@ -93,6 +93,14 @@ void DataFrame::setSender(const QPair<quint16, quint16> &sender)
     m_sender = sender;
 }
 
+bool DataFrame::addVisitedNode(const QPair<quint16, quint16> node)
+{
+    if(!hasVisitedNode(node))
+    {
+        m_visitedNodes.push_back(node);
+    }
+}
+
 bool DataFrame::setPath(const QVector<quint16> &path)
 {
     bool pathSet = false;
@@ -138,6 +146,11 @@ QPair<quint16, quint16> DataFrame::getNextChainNode(quint16 currentNodeID, quint
         }
     }
     return nextNode;
+}
+
+bool DataFrame::hasVisitedNode(const QPair<quint16, quint16> &node) const
+{
+    return (m_visitedNodes.indexOf(node) >= 0);
 }
 
 QPair<quint16, quint16> DataFrame::getDestination() const

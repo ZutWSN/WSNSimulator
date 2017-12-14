@@ -21,10 +21,10 @@ public:
         QVector<quint16> neighbourDistances;
         QVector<quint16> sinkPath;
 
-        bool operator==(const MappedClusterNode &other)
+        bool operator==(const MappedClusterNode &rhs) const
         {
-            bool equal = (node_id == other.node_id);
-            equal &= (layer_id == other.layer_id);
+            bool equal = (node_id == rhs.node_id);
+            equal &= (layer_id == rhs.layer_id);
             return equal;
         }
     };
@@ -32,9 +32,13 @@ public:
     struct Vertice
     {
         quint16 node_id;
-        QVector<quint16> neighbourVerticesIndexes;
+        quint16 layer_id;
+        quint16 sinkPathLength;
+        QVector<quint16> sinkPath;
         QVector<QPair<quint16, quint16> > neighbours; // <id, distance>
+        QVector<quint16> neighbourVerticesIndexes;
         QVector<quint16> neighbourVerticesDistances;
+        bool isDirectVertex = false;
         bool operator==(const Vertice &other)
         {
             return (node_id == other.node_id);
@@ -50,10 +54,10 @@ public:
     void sendNewPaths();
 
     void setPosition(const QPoint &pos);
-    void setRange(const QPoint &range);
+    void setRange(quint16 &range);
 
-    void getNumOfInRangeCusters() const;
-    void getNumOfConnectedLayers() const;
+    quint16 getNumOfInRangeCusters() const;
+    quint16 getNumOfConnectedLayers() const;
     DataFrame getLastMsg() const;
     bool checkIfHasDirectCluster(NetworkNode *cluster) const;
 private:
@@ -67,11 +71,13 @@ signals:
     void receivedData(const DataFrame &data); //to widget
     void broadCastDataToClusters(const DataFrame &data);
 private:
-    bool calculateNetworkPaths(const DataFrame &data, QByteArray &updateMsg);//TDO
+    bool calculateNetworkPaths(QByteArray &updateMsg);//TDO
     bool updateClusterPath(const DataFrame &data); //TDO
     quint16 checkIfHasMappedCluster(const MappedClusterNode &node) const;
     bool removeNode(const QByteArray &msg); //TDO
-    QVector<Vertice> createGraph() const;
+    QVector<Vertice> createGraphAndFindPaths() const;
+    bool updatePathsAndCreateSyncMsg(const QVector<Vertice> &vertices, QByteArray &updateMsg);
+
     void extractNodeData(NetworkNode* node, Vertice &vertice) const;
     void extractMappedNodeData(const MappedClusterNode &node, Vertice &vertice) const;
 private:
@@ -82,6 +88,8 @@ private:
     QVector<MappedClusterNode> m_clusterPathMap;
     QVector<NetworkLayer*> m_layers;
     DataFrame m_lastMsg;
+    QWidget *m_Widget;
+    bool m_connectedToWidget;
 };
 
 #endif // SINKNODE_H

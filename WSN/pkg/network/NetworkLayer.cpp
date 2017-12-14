@@ -265,11 +265,11 @@ DataFrame NetworkLayer::createNodeRemovalMsg(quint16 node_id) const
     {
         QJsonObject removeNodeObj =
         {
-            {ClusterNode::NODE_ID, node_id},
-            {ClusterNode::LAYER_ID, m_layer_id},
-            {ClusterNode::NODE_POSITION_X, node->getNodePostion().x()},
-            {ClusterNode::NODE_POSITION_Y, node->getNodePostion().y()},
-            {ClusterNode::NODE_STATE, node->getCurrentState()}
+            {NODE_ID, node_id},
+            {LAYER_ID, m_layer_id},
+            {NODE_POSITION_X, node->getNodePostion().x()},
+            {NODE_POSITION_Y, node->getNodePostion().y()},
+            {NODE_STATE, node->getCurrentState()}
         };
         QJsonDocument jsonMsg(removeNodeObj);
         msg = jsonMsg.toBinaryData();

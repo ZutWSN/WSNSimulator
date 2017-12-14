@@ -3,7 +3,7 @@
 #include <utility>
 #include <algorithm>
 #include <iterator>
-
+#include <numeric>
 
 struct Vertice
 {
@@ -30,11 +30,8 @@ int main()
     Vertice cluster5{8, 8, UINT16_MAX, {1, 3}, {2, 4}};
 
     std::vector<Vertice> vertices{sink, directCluster1, directCluster2, directCluster3, cluster1, cluster2, cluster3, cluster4, cluster5};
-    std::vector<uint16_t> unvisitedVertices;
-    for(uint16_t i = 0; i < vertices.size(); i++)
-    {
-        unvisitedVertices.push_back(i);
-    }
+    std::vector<uint16_t> unvisitedVertices(vertices.size());
+    std::iota(unvisitedVertices.begin(), unvisitedVertices.end(), 0);
     while(!unvisitedVertices.empty())
     {
         uint16_t closestVertexIndex = 0;
@@ -51,7 +48,6 @@ int main()
         }
         uint16_t initDistance = (minDistance != UINT16_MAX) ? minDistance : 0;
         uint16_t pathLength = UINT16_MAX;
-        uint16_t nextVertexIndex = 0;
         for(uint16_t i = 0; i < vertices[closestVertexIndex].neighbourVerticesIndexes.size(); i++)
         {
             auto currentIndex = vertices[closestVertexIndex].neighbourVerticesIndexes[i];
@@ -66,26 +62,11 @@ int main()
                     if(distance < pathLength)
                     {
                         pathLength = distance;
-                        nextVertexIndex = currentIndex;
                     }
                 }
             }
         }
         unvisitedVertices.erase(unvisitedVertices.begin() + unvisitedIndex);
-        for(uint16_t i = 0; i < vertices[nextVertexIndex].neighbourVerticesIndexes.size(); i++)
-        {
-            auto idx = vertices[nextVertexIndex].neighbourVerticesIndexes[i];
-            if(std::find(unvisitedVertices.begin(), unvisitedVertices.end(), idx) != std::end(unvisitedVertices))
-            {
-                if(vertices[idx].sinkPathLength > (pathLength + vertices[nextVertexIndex].neighbourVerticesDistances[i]))
-                {
-                   vertices[idx].sinkPathLength = pathLength + vertices[nextVertexIndex].neighbourVerticesDistances[i];
-                   vertices[idx].sinkPath = {vertices[nextVertexIndex].sinkPath};
-                   vertices[idx].sinkPath.insert(vertices[idx].sinkPath.begin(), vertices[nextVertexIndex].node_id);
-                }
-            }
-        }
-
     }
 
     //show results:
@@ -96,7 +77,7 @@ int main()
         {
             std::cout << node << " ";
         }
-        std::cout << "\n";
+        std::cout << "\nPath length : " << vertice.sinkPathLength << "\n";
     }
     return 0;
 }
