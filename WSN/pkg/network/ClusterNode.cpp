@@ -137,7 +137,7 @@ bool ClusterNode::addNode(NetworkNode *node)
         {
             if(node->getNodeLayer() == m_layer_id)
             {
-                if(checkIfConnectedToSensor(node))
+                if(!checkIfConnectedToSensor(node))
                 {
                     m_sensors.push_back(node);
                     addedNode = true;
@@ -145,6 +145,7 @@ bool ClusterNode::addNode(NetworkNode *node)
             }
         }
     }
+    return addedNode;
 }
 
 bool ClusterNode::removeSensor(NetworkNode *sensor)
@@ -309,6 +310,12 @@ void ClusterNode::processNewData(const DataFrame &rxData)
 
                             }
                             break;
+                        case DataFrame::RxData::CLUSTER_PATH:
+                            if(m_state == ClusterStates::CONNECTED_TO_SINK)
+                            {
+                                sendDataToSink(txData);
+                            }
+                        break;
                         default:
                             break;
                     }
@@ -319,7 +326,6 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                     QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id, m_layer_id);
                     if(checkIfConnectedToNode(nextNode))
                     {
-                        txData.setDestination(nextNode);
                         sendData(txData);
                     }
                 }

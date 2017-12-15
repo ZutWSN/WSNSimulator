@@ -58,22 +58,23 @@ void Test_SinkNode::test_receivedDataFromCluster()
     forwardSensor->setNodePosition(QPoint(0, 28));
     forwardSensor->setNodeRange(5);
     //connect clusters and sensors
-    directSensor->connectToNode(directCluster);
-    forwardSensor->connectToNode(forwardCluster);
-    directCluster->connectToNode(forwardCluster);
+    QCOMPARE(directSensor->connectToNode(directCluster), true);
+    QCOMPARE(forwardSensor->connectToNode(forwardCluster), true);
+    QCOMPARE(directCluster->connectToNode(forwardCluster), true);
 
     //connect directCluster to sink
     QCOMPARE(sink->addDirectCluster(directCluster), true);
 
     //register for signals and store count
     QSignalSpy sinkReceivedData(sink, SIGNAL(receivedData(DataFrame)));
-    QSignalSpy directClusterSendData(directCluster, SIGNAL(sendDataToSink(DataFrame)));
+    QSignalSpy directClusterSendDataToSink(directCluster, SIGNAL(sendDataToSink(DataFrame)));
+    QSignalSpy directClusterSendDataToNeighbour(directCluster, SIGNAL(dataSend(DataFrame)));
     QSignalSpy forwardClusterSendData(forwardCluster, SIGNAL(dataSend(DataFrame)));
 
     //direct sensor sends data to its cluster and it forwards to sink
-    QCOMPARE(directClusterSendData.count(), 0);
+    QCOMPARE(directClusterSendDataToSink.count(), 0);
     directSensor->sendDataToCluster("Direct Sensor Data");
-    QCOMPARE(directClusterSendData.count(), 1);
+    QCOMPARE(directClusterSendDataToSink.count(), 1);
     QCOMPARE(sinkReceivedData.count(), 1);
     QVERIFY(sink->getLastMsg().getMsg() == "Direct Sensor Data");
 
@@ -81,13 +82,16 @@ void Test_SinkNode::test_receivedDataFromCluster()
     QCOMPARE(forwardClusterSendData.count(), 0);
     //get path to sink from directCluster neighbour
     forwardCluster->sendSinkPathReq();
-    //1 send - path request, 2 - send after receiving path, sends it to sink, sink
+    //1 send - path request, 2 - send after receiving path, 3- sends it to sink, sink
     //updates node cluster path
-    QCOMPARE(forwardClusterSendData.count(), 2);
-    QCOMPARE(directClusterSendData.count(), 2);
-    forwardSensor->sendDataToCluster("Forward Sensor Data");
     QCOMPARE(forwardClusterSendData.count(), 3);
-    QCOMPARE(directClusterSendData.count(), 3);
+    //sends received msg acknowledge and sink path, then send acknowledge and forward new
+    //sink path
+    QCOMPARE(directClusterSendDataToNeighbour.count(), 3);
+    QCOMPARE(directClusterSendDataToSink.count(), 2);
+    forwardSensor->sendDataToCluster("Forward Sensor Data");
+    QCOMPARE(forwardClusterSendData.count(), 4);
+    QCOMPARE(directClusterSendDataToSink.count(), 3);
     QCOMPARE(sinkReceivedData.count(), 2);
     QVERIFY(sink->getLastMsg().getMsg() =="Forward Sensor Data");
 }

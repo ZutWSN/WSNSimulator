@@ -25,6 +25,7 @@ namespace WSN_UnitTests_Config
         void runSensorNetworkTest(const QString &reportFile, bool report);
         void runDataFrameTest(const QString &reportFile, bool report);
         void runWidgetsTest(const QString &reportFile, bool report);
+        void runSinkNodeTest(const QString &reportFile, bool report);
 
         bool getTestFunction(std::function<void(const QString&, bool)> &testFunction, const QString &testName);
     };

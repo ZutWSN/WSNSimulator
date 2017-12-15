@@ -8,6 +8,7 @@
 #include "Test_DataFrame.h"
 #include "Test_SensorNode.h"
 #include "Test_ClusterNode.h"
+#include "test_sinknode.h"
 
 using namespace std::placeholders;
 
@@ -134,6 +135,17 @@ void WSN_UnitTests_Config::TestConfig::runWidgetsTest(const QString &reportFile,
     QTest::qExec(&test_widgets, log);
 }
 
+void WSN_UnitTests_Config::TestConfig::runSinkNodeTest(const QString &reportFile, bool report)
+{
+    Test_SinkNode test_sink;
+    QStringList log;
+    if(report)
+    {
+        log << "." <<"-o" << reportFile;
+    }
+    QTest::qExec(&test_sink, log);
+}
+
 void WSN_UnitTests_Config::TestConfig::runSensorNodeTest(const QString &reportFile, bool report)
 {
     Test_SensorNode test_sensor;
@@ -186,6 +198,10 @@ bool WSN_UnitTests_Config::TestConfig::getTestFunction(std::function<void(const 
     else if(testName == "ClusterNodeTest")
     {
         testFunction = std::bind(&WSN_UnitTests_Config::TestConfig::runClusterNodeTest, this, _1, _2);
+    }
+    else if(testName == "SinkNodeTest")
+    {
+        testFunction = std::bind(&WSN_UnitTests_Config::TestConfig::runSinkNodeTest, this, _1, _2);
     }
     else
     {

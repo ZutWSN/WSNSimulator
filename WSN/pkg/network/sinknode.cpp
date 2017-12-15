@@ -27,11 +27,12 @@ bool SinkNode::addDirectCluster(NetworkNode *cluster)
         if(cluster->checkIfInRange(m_position))
         {
             addedCluster = static_cast<bool>(connect(this, SIGNAL(broadCastDataToClusters(DataFrame)), clusterNode, SLOT(onReceivedData(DataFrame))));
-            addedCluster &= static_cast<bool>(connect(clusterNode, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
+            addedCluster &= static_cast<bool>(connect(clusterNode, SIGNAL(sendDataToSink(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
             if(addedCluster)
             {
                 m_inRangeClusters.push_back(cluster);
                 clusterNode->setConnectedToSink(this);
+                clusterNode->setPathLength(clusterNode->getDistanceFromNode(m_position));
             }
         }
     }
