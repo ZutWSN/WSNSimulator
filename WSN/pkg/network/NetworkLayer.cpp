@@ -128,6 +128,20 @@ quint16 NetworkLayer::getNumOfNodes() const
     return m_nodes.size();
 }
 
+NetworkNode *NetworkLayer::getNode(quint16 id) const
+{
+    NetworkNode *retNode = nullptr;
+    for(NetworkNode *node : m_nodes)
+    {
+        if(node->getNodeID() == id)
+        {
+            retNode = node;
+            break;
+        }
+    }
+    return retNode;
+}
+
 NetworkNode* NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
 {
     NetworkNode *new_node = nullptr;
@@ -208,13 +222,18 @@ bool NetworkLayer::removeNode(quint16 node_id)
     qint16 node_idx = checkIfHasNode(node_id);
     if(node_idx >= 0)
     {
-        DataFrame nodeRemovedMsg = createNodeRemovalMsg(node_id);
-        m_nodes[node_idx]->sendData(nodeRemovedMsg);
-        m_nodes[node_idx]->disconnectFromWidget();
-        m_nodes[node_idx]->disconnectFromNetwork();
-        delete m_nodes[node_idx];
-        m_nodes.remove(node_idx);
-        removedNode = true;
+        QByteArray nodeRemovedMsg = createNodeRemovalMsg(node_id);
+        if(!nodeRemovedMsg.isEmpty())
+        {
+            ClusterNode *cluster = static_cast<ClusterNode*>(m_nodes[node_idx]);
+            DataFrame frame(nodeRemovedMsg, DataFrame::RxData::REMOVED_NODE, cluster->getSinkPath()[0], m_layer_id, node_id);
+            m_nodes[node_idx]->sendData(frame);
+            m_nodes[node_idx]->disconnectFromWidget();
+            m_nodes[node_idx]->disconnectFromNetwork();
+            delete m_nodes[node_idx];
+            m_nodes.remove(node_idx);
+            removedNode = true;
+        }
     }
     return removedNode;
 }
@@ -257,9 +276,9 @@ NetworkNode* NetworkLayer::copyNetworkNode(const NetworkNode *node) const
     return new_node;
 }
 
-DataFrame NetworkLayer::createNodeRemovalMsg(quint16 node_id) const
+QByteArray NetworkLayer::createNodeRemovalMsg(quint16 node_id) const
 {
-    bool created = false;
+    QByteArray msg;
     ClusterNode *node = static_cast<ClusterNode*>(getNode(node_id));
     if(node)
     {
@@ -273,11 +292,6 @@ DataFrame NetworkLayer::createNodeRemovalMsg(quint16 node_id) const
         };
         QJsonDocument jsonMsg(removeNodeObj);
         msg = jsonMsg.toBinaryData();
-        if(!msg.isEmpty() && !msg.isNull())
-        {
-            created = true;
-        }
-        created = true;
     }
-    return created;
+    return msg;
 }

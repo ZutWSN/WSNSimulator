@@ -9,7 +9,9 @@ class Test_SinkNode : public QObject
 private slots:
     void test_getSinkInstance();
     void test_addRemoveDirectCluster();
-    void test_onReceivedDataFromCluster();
+    void test_receivedDataFromCluster();
+    void test_receivedNodeRemoved();
+    void test_receivedClusterPath();
     void test_sendNewPaths();
 };
 

@@ -38,7 +38,7 @@ public:
     void setMsgType(DataFrame::RxData type);
     void setDestination(const QPair<quint16, quint16> &destination);
     void setSender(const QPair<quint16, quint16> &sender);
-    bool addVisitedNode(const QPair<quint16, quint16> node);
+    bool addVisitedNode(const QPair<quint16, quint16> &node);
     bool setPath(const QVector<quint16> &path);
 
     QByteArray getMsg() const;
@@ -57,7 +57,7 @@ private:
     QPair<quint16, quint16> m_sender;
     QPair<quint16, quint16> m_desination;
     QVector<quint16> m_path;
-    QVector<quint16> m_visitedNodes;
+    QVector<QPair<quint16, quint16> > m_visitedNodes;
 };
 
 Q_DECLARE_METATYPE(DataFrame)

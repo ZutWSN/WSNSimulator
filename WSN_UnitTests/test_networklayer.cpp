@@ -8,14 +8,14 @@ void Test_NetworkLayer::test_createNode()
     NetworkLayer layer(0);
     quint16 sensor_id = 0, cluster_id = 1;
     QCOMPARE(layer.getNumOfNodes(), static_cast<quint16>(0));
-    QCOMPARE(layer.createNode(NetworkNode::NodeType::Sensor, sensor_id), true);
+    QVERIFY(layer.createNode(NetworkNode::NodeType::Sensor, sensor_id) !=  nullptr);
     QCOMPARE(layer.getNumOfNodes(), static_cast<quint16>(1));
-    QCOMPARE(layer.createNode(NetworkNode::NodeType::Cluster, cluster_id), true);
+    QVERIFY(layer.createNode(NetworkNode::NodeType::Cluster, cluster_id) != nullptr);
     QCOMPARE(layer.getNumOfNodes(), static_cast<quint16>(2));
-    QCOMPARE(layer.createNode(NetworkNode::NodeType::Cluster, cluster_id), false);
-    QCOMPARE(layer.createNode(NetworkNode::NodeType::Sensor, cluster_id), false);
+    QVERIFY(layer.createNode(NetworkNode::NodeType::Cluster, cluster_id) == nullptr);
+    QVERIFY(layer.createNode(NetworkNode::NodeType::Sensor, cluster_id) == nullptr);
     QCOMPARE(layer.getNumOfNodes(), static_cast<quint16>(2));
-    QCOMPARE(layer.createNode(NetworkNode::NodeType::NoType, 10), false);
+    QVERIFY(layer.createNode(NetworkNode::NodeType::NoType, 10) == nullptr);
 }
 
 void Test_NetworkLayer::test_connectNodes()

@@ -32,7 +32,7 @@ void Test_SinkNode::test_addRemoveDirectCluster()
     QCOMPARE(sink->removeDirectCluster(cluster2), false);
 }
 
-void Test_SinkNode::test_onReceivedDataFromCluster()
+void Test_SinkNode::test_receivedDataFromCluster()
 {
     SinkNode *sink = SinkNode::getSinkInstance();
     sink->setPosition(QPoint(0, 0));
@@ -90,6 +90,16 @@ void Test_SinkNode::test_onReceivedDataFromCluster()
     QCOMPARE(directClusterSendData.count(), 3);
     QCOMPARE(sinkReceivedData.count(), 2);
     QVERIFY(sink->getLastMsg().getMsg() =="Forward Sensor Data");
+}
+
+void Test_SinkNode::test_receivedNodeRemoved()
+{
+
+}
+
+void Test_SinkNode::test_receivedClusterPath()
+{
+
 }
 
 void Test_SinkNode::test_sendNewPaths()

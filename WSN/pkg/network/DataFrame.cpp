@@ -93,7 +93,7 @@ void DataFrame::setSender(const QPair<quint16, quint16> &sender)
     m_sender = sender;
 }
 
-bool DataFrame::addVisitedNode(const QPair<quint16, quint16> node)
+bool DataFrame::addVisitedNode(const QPair<quint16, quint16> &node)
 {
     if(!hasVisitedNode(node))
     {

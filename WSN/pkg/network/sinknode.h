@@ -54,7 +54,7 @@ public:
     void sendNewPaths();
 
     void setPosition(const QPoint &pos);
-    void setRange(quint16 &range);
+    void setRange(quint16 range);
 
     quint16 getNumOfInRangeCusters() const;
     quint16 getNumOfConnectedLayers() const;
@@ -74,7 +74,7 @@ private:
     bool calculateNetworkPaths(QByteArray &updateMsg);//TDO
     bool updateClusterPath(const DataFrame &data); //TDO
     quint16 checkIfHasMappedCluster(const MappedClusterNode &node) const;
-    bool removeNode(const QByteArray &msg); //TDO
+    void removeNode(const QByteArray &msg); //TDO
     QVector<Vertice> createGraphAndFindPaths() const;
     bool updatePathsAndCreateSyncMsg(const QVector<Vertice> &vertices, QByteArray &updateMsg);
 
