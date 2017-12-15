@@ -1,25 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TestConfig>
     <TestCases>
-        <Test enabled="true">
+        <Test enabled="false">
             <name>NetworkNodesTest</name>
-            <saveReport>true</saveReport>
+            <saveReport>false</saveReport>
             <reportFile>NetworkNodesTest.log</reportFile>
         </Test>
         <Test enabled="false">
             <name>WidgetsTest</name>
-            <saveReport>true</saveReport>
+            <saveReport>false</saveReport>
             <reportFile>WidgetsTest.log</reportFile>
         </Test>
         <Test enabled="false">
             <name>NetworkLayerTest</name>
-            <saveReport>true</saveReport>
+            <saveReport>false</saveReport>
             <reportFile>NetworkLayerTest.log</reportFile>
         </Test>
         <Test enabled="false">
             <name>SensorNetworkTest</name>
-            <saveReport>true</saveReport>
+            <saveReport>false</saveReport>
             <reportFile>SensorNetworkTest.log</reportFile>
+        </Test>
+        <Test enabled="false">
+            <name>DataFrameTest</name>
+            <saveReport>false</saveReport>
+            <reportFile>DataFrameTest.log</reportFile>
+        </Test>
+        <Test enabled="false">
+            <name>SensorNodeTest</name>
+            <saveReport>false</saveReport>
+            <reportFile>SensorNodeTest.log</reportFile>
+        </Test>
+        <Test enabled="false">
+            <name>ClusterNodeTest</name>
+            <saveReport>false</saveReport>
+            <reportFile>ClusterNodeTest.log</reportFile>
+        </Test>
+        <Test enabled="true">
+            <name>SinkNodeTest</name>
+            <saveReport>false</saveReport>
+            <reportFile>SinkNodeTest.log</reportFile>
         </Test>
     </TestCases>
 </TestConfig>

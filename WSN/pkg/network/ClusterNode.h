@@ -40,7 +40,8 @@ public:
         CREATED = 0,
         PATH_SEEKING,
         CONNECTED,
-        CONNECTED_TO_SINK
+        CONNECTED_TO_SINK,
+        DANGLING
     };
 
     ClusterNode(quint16 node_id);

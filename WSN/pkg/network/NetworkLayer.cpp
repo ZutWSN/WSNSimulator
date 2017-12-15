@@ -226,8 +226,23 @@ bool NetworkLayer::removeNode(quint16 node_id)
         if(!nodeRemovedMsg.isEmpty())
         {
             ClusterNode *cluster = static_cast<ClusterNode*>(m_nodes[node_idx]);
-            DataFrame frame(nodeRemovedMsg, DataFrame::RxData::REMOVED_NODE, cluster->getSinkPath()[0], m_layer_id, node_id);
-            m_nodes[node_idx]->sendData(frame);
+            DataFrame frame;
+            frame.setMsg(nodeRemovedMsg);
+            frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
+            frame.setSender(qMakePair(node_id, m_layer_id);
+            if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
+            {
+                cluster->sendDataToSink(frame);
+            }
+            else
+            {
+                if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
+                {
+                    frame.setPath(cluster->getSinkPath());
+                    frame.setDestination(cluster->getSinkPath()[0]);
+                    m_nodes[node_idx]->sendData(frame);
+                }
+            }
             m_nodes[node_idx]->disconnectFromWidget();
             m_nodes[node_idx]->disconnectFromNetwork();
             delete m_nodes[node_idx];

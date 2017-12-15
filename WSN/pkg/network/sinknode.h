@@ -60,6 +60,7 @@ public:
     quint16 getNumOfConnectedLayers() const;
     DataFrame getLastMsg() const;
     bool checkIfHasDirectCluster(NetworkNode *cluster) const;
+    bool checkIfHasMappedCluster(quint16 node_id, quint16 layer_id) const;
 private:
     SinkNode(){};
     SinkNode(const SinkNode&) = delete;

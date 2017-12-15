@@ -141,6 +141,14 @@ bool SinkNode::checkIfHasDirectCluster(NetworkNode *cluster) const
     return present;
 }
 
+bool SinkNode::checkIfHasMappedCluster(quint16 node_id, quint16 layer_id) const
+{
+    MappedClusterNode node;
+    node.node_id = node_id;
+    node.layer_id = layer_id;
+    return (m_clusterPathMap.indexOf(node) >= 0);
+}
+
 void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
 {
     m_lastMsg = data;
