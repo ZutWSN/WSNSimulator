@@ -41,7 +41,7 @@ public:
         PATH_SEEKING,
         CONNECTED,
         CONNECTED_TO_SINK,
-        DANGLING
+        DISCONNECTED
     };
 
     ClusterNode(quint16 node_id);

@@ -229,7 +229,7 @@ bool NetworkLayer::removeNode(quint16 node_id)
             DataFrame frame;
             frame.setMsg(nodeRemovedMsg);
             frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
-            frame.setSender(qMakePair(node_id, m_layer_id);
+            frame.setSender(qMakePair(node_id, m_layer_id));
             if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
             {
                 cluster->sendDataToSink(frame);
@@ -239,7 +239,7 @@ bool NetworkLayer::removeNode(quint16 node_id)
                 if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
                 {
                     frame.setPath(cluster->getSinkPath());
-                    frame.setDestination(cluster->getSinkPath()[0]);
+                    frame.setDestination(qMakePair(cluster->getSinkPath()[0], m_layer_id));
                     m_nodes[node_idx]->sendData(frame);
                 }
             }

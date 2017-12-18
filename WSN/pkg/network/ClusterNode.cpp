@@ -9,7 +9,7 @@ ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id),
     m_sensorDataCounter(0),
     m_neighbourPathsCounter(0),
-    m_pathLength(0),
+    m_pathLength(UINT16_MAX),
     m_state(ClusterStates::CREATED)
 {
 
@@ -53,11 +53,8 @@ bool ClusterNode::sendSinkPathReq()
     if(m_state == ClusterStates::CREATED)
     {
         DataFrame frame(QByteArray(), DataFrame::RxData::NEIGHBOUR_PATH_REQ, 0, m_layer_id, m_node_id);
-        if(sendData(frame))
-        {
-            seekingPath = true;
-            m_state = ClusterStates::PATH_SEEKING;
-        }
+        m_state = ClusterStates::PATH_SEEKING;
+        sendData(frame);
     }
     return seekingPath;
 }
@@ -237,8 +234,12 @@ void ClusterNode::processNewData(const DataFrame &rxData)
         txData.setMsgType(DataFrame::RxData::NEIGHBOUR_PATH);
         txData.setDestination(rxData.getSender());
         txData.setPath({rxData.getSender().first});
-        QVector<quint16> path = m_sinkPath;
-        path.insert(path.begin(), m_node_id);
+        QVector<quint16> path;
+        if(!m_sinkPath.isEmpty() || (m_state == ClusterStates::CONNECTED_TO_SINK))
+        {
+            path = m_sinkPath;
+            path.insert(path.begin(), m_node_id);
+        }
         QByteArray pathMsg;
         if(createClusterPathMsg(path, pathMsg))
         {
@@ -286,7 +287,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                                 quint16 pathLength = getPathFromNeighbourMsg(rxData, path);
                                 if(pathLength > 0)
                                 {
-                                    if(pathLength < m_pathLength || m_pathLength == 0)
+                                    if(pathLength < m_pathLength)
                                     {
                                         m_pathLength = pathLength;
                                         m_sinkPath = path;
@@ -326,6 +327,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                     QPair<quint16, quint16> nextNode = rxData.getNextChainNode(m_node_id, m_layer_id);
                     if(checkIfConnectedToNode(nextNode))
                     {
+                        txData.setDestination(nextNode);
                         sendData(txData);
                     }
                 }
@@ -373,9 +375,8 @@ quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<qu
         if(node_id == rxData.getSender().first && layer_id == rxData.getSender().second)
         {
             quint16 distance = getDistanceFromConnectedNode(node_id);
-            if(distance > 0 && pathLength > 0)
+            if(distance > 0 && pathLength > 0 && pathLength < UINT16_MAX)
             {
-                m_sinkPath.clear();
                 path = std::move(nodePath);
                 pathLength += distance;
             }
@@ -440,7 +441,7 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
                         if(m_node_id == node_id && m_layer_id == layer_id)
                         {
                             //for now path can be only sent by neighbour but later can be send by sink
-                            //so it has to be checked and calculeted differently
+                            //so it has to be checked and calculated differently
                             m_sinkPath = std::move(nodePath);
                             m_pathLength = pathLength;
                             pathExtracted = true;

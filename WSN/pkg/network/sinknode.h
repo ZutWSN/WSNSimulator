@@ -44,8 +44,8 @@ public:
             return (node_id == other.node_id);
         }
     };
-
-    static SinkNode* getSinkInstance();
+    SinkNode();
+    SinkNode(const QPoint &position, quint16 range);
 
     bool addDirectCluster(NetworkNode *cluster);
     bool removeDirectCluster(NetworkNode *cluster);
@@ -62,10 +62,9 @@ public:
     bool checkIfHasDirectCluster(NetworkNode *cluster) const;
     bool checkIfHasMappedCluster(quint16 node_id, quint16 layer_id) const;
 private:
-    SinkNode(){};
+    //makes class not copyable
     SinkNode(const SinkNode&) = delete;
     SinkNode& operator=(const SinkNode&) = delete;
-    static SinkNode *m_sinkInstance;
 public slots:
     void onReceivedDataFromCluster(const DataFrame &data);
 signals:

@@ -7,15 +7,17 @@
 #include <algorithm>
 
 const quint16 SINK_ID = UINT16_MAX;
-SinkNode *SinkNode::m_sinkInstance;
 
-SinkNode *SinkNode::getSinkInstance()
+SinkNode::SinkNode()
 {
-    if(!m_sinkInstance)
-    {
-        m_sinkInstance = new SinkNode;
-    }
-    return m_sinkInstance;
+
+}
+
+SinkNode::SinkNode(const QPoint &position, quint16 range):
+    m_position(position),
+    m_range(range)
+{
+
 }
 
 bool SinkNode::addDirectCluster(NetworkNode *cluster)
@@ -464,6 +466,9 @@ QVector<SinkNode::Vertice> SinkNode::createGraphAndFindPaths() const
     quint16 index = 0;
     vertice.sinkPathLength = UINT16_MAX;
     vertice.isDirectVertex = true;
+    sinkVertice.node_id = SINK_ID;
+    sinkVertice.sinkPathLength = 0;
+    sinkVertice.neighbourVerticesIndexes = QVector<quint16>(m_inRangeClusters.size());
     //create sink start vertice and put its neighbours in vertices vector
     for(NetworkNode* directNode : m_inRangeClusters)
     {
@@ -477,17 +482,22 @@ QVector<SinkNode::Vertice> SinkNode::createGraphAndFindPaths() const
         extractNodeData(directNode, vertice);
 
         vertices.push_back(vertice);
+        vertice.neighbourVerticesIndexes.clear();
+        vertice.neighbourVerticesDistances.clear();
+        vertice.neighbours.clear();
         ++index;
     }
     //save sink vertice in vertices vector
-    sinkVertice.node_id = SINK_ID;
-    sinkVertice.sinkPathLength = 0;
     vertices.insert(vertices.begin(), sinkVertice);
     vertice.isDirectVertex = false;
     for(auto && mappedNode : m_clusterPathMap)
     {
+        //neighbours extraction error
         extractMappedNodeData(mappedNode, vertice);
         vertices.push_back(vertice);
+        vertice.neighbourVerticesIndexes.clear();
+        vertice.neighbourVerticesDistances.clear();
+        vertice.neighbours.clear();
     }
     //connect vertices
     for(auto && v : vertices)
@@ -528,7 +538,10 @@ QVector<SinkNode::Vertice> SinkNode::createGraphAndFindPaths() const
                 {
                     vertices[currentIndex].sinkPathLength = distance;
                     vertices[currentIndex].sinkPath = {vertices[closestVertexIndex].sinkPath};
-                    vertices[currentIndex].sinkPath.insert(vertices[currentIndex].sinkPath.begin(), vertices[closestVertexIndex].node_id);
+                    if(vertices[closestVertexIndex].node_id != SINK_ID) // don't add sink id to message paths
+                    {
+                       vertices[currentIndex].sinkPath.insert(vertices[currentIndex].sinkPath.begin(), vertices[closestVertexIndex].node_id);
+                    }
                     if(distance < pathLength)
                     {
                         pathLength = distance;

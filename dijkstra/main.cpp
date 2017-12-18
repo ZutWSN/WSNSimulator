@@ -30,8 +30,14 @@ int main()
     Vertice cluster5{8, 8, UINT16_MAX, {1, 3}, {2, 4}};
 
     std::vector<Vertice> vertices{sink, directCluster1, directCluster2, directCluster3, cluster1, cluster2, cluster3, cluster4, cluster5};
-    std::vector<uint16_t> unvisitedVertices(vertices.size());
-    std::iota(unvisitedVertices.begin(), unvisitedVertices.end(), 0);
+    std::vector<uint16_t> unvisitedVertices;
+    for(uint16_t i = 0; i < vertices.size(); i++)
+    {
+        if(i != 5 && i != 3)
+        {
+            unvisitedVertices.push_back(i);
+        }
+    }
     while(!unvisitedVertices.empty())
     {
         uint16_t closestVertexIndex = 0;
@@ -58,7 +64,10 @@ int main()
                 {
                     vertices[currentIndex].sinkPathLength = distance;
                     vertices[currentIndex].sinkPath = {vertices[closestVertexIndex].sinkPath};
-                    vertices[currentIndex].sinkPath.insert(vertices[currentIndex].sinkPath.begin(), vertices[closestVertexIndex].node_id);
+                    if(vertices[closestVertexIndex].node_id != sinkID)
+                    {
+                        vertices[currentIndex].sinkPath.insert(vertices[currentIndex].sinkPath.begin(), vertices[closestVertexIndex].node_id);
+                    }
                     if(distance < pathLength)
                     {
                         pathLength = distance;

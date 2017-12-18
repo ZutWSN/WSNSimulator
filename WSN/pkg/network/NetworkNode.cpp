@@ -372,7 +372,7 @@ bool NetworkNode::checkIfConnectedToNode(const QPair<quint16, quint16> &node) co
     for(NetworkNode* connected_node : m_connectedNodes)
     {
         if(node.first == connected_node->getNodeID() &&
-           node.second == connected_node->getNodeID())
+           node.second == connected_node->getNodeLayer())
         {
             connected = true;
             break;
