@@ -53,6 +53,10 @@ bool SinkNode::removeDirectCluster(NetworkNode *cluster)
             if(removed)
             {
                 m_inRangeClusters.remove(m_inRangeClusters.indexOf(cluster));
+                if(cluster->getNumOfConnectedNodes() == 0)
+                {
+                    static_cast<ClusterNode*>(cluster)->removeFromSyncPath();
+                }
             }
         }
     }

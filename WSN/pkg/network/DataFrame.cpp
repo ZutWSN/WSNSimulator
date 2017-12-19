@@ -18,7 +18,7 @@ DataFrame::DataFrame(const QByteArray &msg,
     m_Msg(msg),
     m_Type(type),
     m_sender(qMakePair(sender_id, layer_id)),
-      m_desination(qMakePair(destination_id, layer_id))
+    m_desination(qMakePair(destination_id, layer_id))
 {
 
 }
@@ -32,6 +32,7 @@ DataFrame::DataFrame(const DataFrame &other)
         m_sender = other.m_sender;
         m_desination = other.m_desination;
         m_path = other.m_path;
+        m_visitedNodes = other.m_visitedNodes;
     }
 }
 
@@ -43,6 +44,7 @@ DataFrame::DataFrame(DataFrame &&other)
         m_Type = other.m_Type;
         m_sender = std::move(other.m_sender);
         other.m_Msg = std::move(other.m_Msg);
+        m_visitedNodes = std::move(other.m_visitedNodes);
         other.m_Type = other.m_Type;
     }
 }
@@ -56,6 +58,7 @@ DataFrame& DataFrame::operator=(const DataFrame &other)
         m_sender = other.m_sender;
         m_desination = other.m_desination;
         m_path = other.m_path;
+        m_visitedNodes = other.m_visitedNodes;
     }
     return *this;
 }
@@ -68,6 +71,7 @@ DataFrame& DataFrame::operator=(DataFrame &&other)
         m_Type = other.m_Type;
         m_sender = std::move(other.m_sender);
         other.m_Msg = std::move(other.m_Msg);
+        m_visitedNodes = std::move(other.m_visitedNodes);
         other.m_Type = other.m_Type;
     }
     return *this;

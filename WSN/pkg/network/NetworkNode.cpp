@@ -111,7 +111,7 @@ bool NetworkNode::addNode(NetworkNode *node)
     bool success = false;
     if(node && (m_layer_id == node->getNodeLayer()))
     {
-        if(m_connectedNodes.indexOf(node) == -1)
+        if(m_connectedNodes.indexOf(node) < 0)
         {
             m_connectedNodes.push_back(node);
             success = true;

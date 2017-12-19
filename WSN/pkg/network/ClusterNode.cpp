@@ -5,6 +5,8 @@
 #include <QList>
 #include "SensorNode.h"
 
+QVector<ClusterNode::SyncLayer> ClusterNode::m_networkClusterSyncNodes;
+
 ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id),
     m_sensorDataCounter(0),
@@ -38,6 +40,8 @@ bool ClusterNode::connectToNode(NetworkNode *node)
         if(node->getNodeType() == NetworkNode::NodeType::Cluster)
         {
             connected = NetworkNode::connectToNode(node);
+            addToSyncNodePath(this);
+            addToSyncNodePath(node);
         }
         else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
         {
@@ -62,6 +66,19 @@ bool ClusterNode::sendSinkPathReq()
 NetworkNode::NodeType ClusterNode::getNodeType() const
 {
     return NodeType::Cluster;
+}
+
+bool ClusterNode::removeFromSyncPath()
+{
+    bool removed = false;
+    int layerIndex = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
+    int nodeIndex = m_networkClusterSyncNodes[layerIndex].syncNodes.indexOf(SyncNode(this));
+    if(nodeIndex >= 0)
+    {
+        m_networkClusterSyncNodes[layerIndex].syncNodes.remove(nodeIndex);
+        removed = true;
+    }
+    return removed;
 }
 
 void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
@@ -105,6 +122,10 @@ bool ClusterNode::disconnectFromNode(NetworkNode *node)
         else if(node->getNodeType() == NetworkNode::NodeType::Cluster)
         {
             disconnected = NetworkNode::disconnectFromNode(node);
+            if(getNumOfConnectedNodes() == 0 && m_state != ClusterStates::CONNECTED_TO_SINK)
+            {
+                removeFromSyncPath();
+            }
         }
     }
     return disconnected;
@@ -117,6 +138,12 @@ bool ClusterNode::disconnectFromNetwork()
     {
         disconnected &= sensor->disconnectFromNode(this);
         disconnected &= removeSensor(sensor);
+    }
+    int layerIndex = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
+    int nodeIndex = m_networkClusterSyncNodes[layerIndex].syncNodes.indexOf(SyncNode(this));
+    if(nodeIndex >= 0)
+    {
+        m_networkClusterSyncNodes[layerIndex].syncNodes.remove(nodeIndex);
     }
     return disconnected;
 }
@@ -184,6 +211,7 @@ bool ClusterNode::setConnectedToSink(SinkNode *sink)
         if(sink->checkIfHasDirectCluster(this))
         {
             m_state = ClusterStates::CONNECTED_TO_SINK;
+            addToSyncNodePath(this);
             changedState = true;
         }
     }
@@ -226,6 +254,9 @@ bool ClusterNode::checkIfConnectedToSensor(NetworkNode *sensor) const
 
 void ClusterNode::processNewData(const DataFrame &rxData)
 {
+    bool sendToSink = false;
+    bool sendTxData = false;
+    bool sendDataToSensors = false;
     NetworkNode::processNewData(rxData);
     DataFrame txData(rxData);
     txData.setSender(qMakePair(m_node_id, m_layer_id));
@@ -244,16 +275,20 @@ void ClusterNode::processNewData(const DataFrame &rxData)
         if(createClusterPathMsg(path, pathMsg))
         {
             txData.setMsg(pathMsg);
-            sendData(txData);
+            sendTxData = true;
         }
     }
     else if(txData.getMsgType() == DataFrame::RxData::PATH_SYNC)
     {
-        if(!txData.hasVisitedNode(qMakePair(m_node_id, m_layer_id)))
-        {
+        if(!checkIfVisitedThisNode())
+        {           
             extractPathFromMsg(rxData.getMsg());
             txData.addVisitedNode(qMakePair(m_node_id, m_layer_id));
-            sendData(txData);
+            setThisNodeVisited();
+            if(!checkIfAllSyncNodesVisited())
+            {
+                sendTxData = true;
+            }
         }
     }
     else
@@ -272,12 +307,12 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                         case DataFrame::RxData::REMOVED_NODE:
                             if(m_state == ClusterStates::CONNECTED_TO_SINK)
                             {
-                                emit sendDataToSink(txData);
+                                sendToSink = true;
                             }
                             else
                             {
                                 txData.setMsgType(DataFrame::RxData::SENSOR_BROADCAST);
-                                emit broadcastDataToSensors(txData);
+                                sendDataToSensors = true;
                             }
                             break;
                         case DataFrame::RxData::NEIGHBOUR_PATH:
@@ -304,7 +339,8 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                                         {
                                             DataFrame frame(clusterPathMsg, DataFrame::RxData::CLUSTER_PATH, m_sinkPath[0], m_layer_id, m_node_id);
                                             frame.setPath(m_sinkPath);
-                                            sendData(frame);
+                                            txData = frame;
+                                            sendTxData = true;
                                         }
                                     }
                                 }
@@ -314,7 +350,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                         case DataFrame::RxData::CLUSTER_PATH:
                             if(m_state == ClusterStates::CONNECTED_TO_SINK)
                             {
-                                sendDataToSink(txData);
+                                sendToSink = true;
                             }
                         break;
                         default:
@@ -328,11 +364,23 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                     if(checkIfConnectedToNode(nextNode))
                     {
                         txData.setDestination(nextNode);
-                        sendData(txData);
+                        sendTxData = true;
                     }
                 }
             }
         }
+    }
+    if(sendToSink)
+    {
+        emit sendDataToSink(txData);
+    }
+    else if(sendTxData)
+    {
+        sendData(txData);
+    }
+    else if(sendDataToSensors)
+    {
+        emit broadcastDataToSensors(txData);
     }
 }
 
@@ -424,7 +472,7 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
                                 else if(pKey == PATH)
                                 {
                                     nodePath.clear();
-                                    for(auto && id: pathObj[key].toArray())
+                                    for(auto && id: pathObj[pKey].toArray())
                                     {
                                         if(id.isDouble())
                                         {
@@ -493,5 +541,65 @@ bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray 
         created = true;
     }
     return created;
+}
+
+bool ClusterNode::checkIfVisitedThisNode() const
+{
+    bool visited = false;
+    int layer_idx = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
+    int nodeIndex = m_networkClusterSyncNodes[layer_idx].syncNodes.indexOf(SyncNode(this));
+    if(nodeIndex >= 0)
+    {
+        visited = m_networkClusterSyncNodes[layer_idx].syncNodes[nodeIndex].visited;
+    }
+    return visited;
+}
+
+bool ClusterNode::setThisNodeVisited()
+{
+    bool setVisited = false;
+    int layer_idx = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
+    int nodeIndex = m_networkClusterSyncNodes[layer_idx].syncNodes.indexOf(SyncNode(this));
+    if(nodeIndex >= 0)
+    {
+        m_networkClusterSyncNodes[layer_idx].syncNodes[nodeIndex].visited = true;
+        setVisited = true;
+    }
+    return setVisited;
+}
+
+bool ClusterNode::checkIfAllSyncNodesVisited() const
+{
+    bool allVisited = true;
+    //get current layer index
+    int layer_idx = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
+    for(auto && syncNode : m_networkClusterSyncNodes[layer_idx].syncNodes)
+    {
+        if(!syncNode.visited)
+        {
+            allVisited = false;
+            break;
+        }
+    }
+    return allVisited;
+}
+
+bool ClusterNode::addToSyncNodePath(NetworkNode *node)
+{
+    bool added = false;
+    SyncNode syncNode(static_cast<ClusterNode*>(node));
+    int layer_idx = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
+    if(layer_idx < 0)
+    {
+       m_networkClusterSyncNodes.push_back(SyncLayer(m_layer_id));
+       layer_idx = m_networkClusterSyncNodes.size() - 1;
+    }
+    int nodeIndex = m_networkClusterSyncNodes[layer_idx].syncNodes.indexOf(syncNode);
+    if(nodeIndex < 0)
+    {
+        m_networkClusterSyncNodes[layer_idx].syncNodes.push_back(syncNode);
+        added = true;
+    }
+    return added;
 }
 

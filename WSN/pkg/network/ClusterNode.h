@@ -35,6 +35,60 @@ class ClusterNode : public NetworkNode
 {
     Q_OBJECT
 public:
+    struct SyncNode
+    {
+        // should be additionally represented with
+        quint64 clusterAdress;
+        quint16 node_id;
+        quint16 layer_id;
+        bool visited;
+
+        SyncNode():
+            clusterAdress(0),
+            node_id(UINT16_MAX),
+            layer_id(UINT16_MAX),
+            visited(false)
+        {
+
+        }
+
+        SyncNode(const ClusterNode *cluster):
+            clusterAdress(reinterpret_cast<quint64>(cluster)),
+            node_id(cluster->getNodeID()),
+            layer_id(cluster->getNodeLayer()),
+            visited(false)
+        {
+
+        }
+
+        bool operator==(const SyncNode &other)
+        {
+            return (clusterAdress == other.clusterAdress);
+        }
+    };
+
+    struct SyncLayer
+    {
+        quint16 layer_id;
+        QVector<SyncNode> syncNodes;
+
+        SyncLayer()
+        {
+
+        }
+
+        SyncLayer(quint16 id):
+            layer_id(id)
+        {
+
+        }
+
+        bool operator==(const SyncLayer &other)
+        {
+            return (layer_id == other.layer_id);
+        }
+    };
+
     enum ClusterStates
     {
         CREATED = 0,
@@ -74,6 +128,7 @@ public:
 
     bool checkIfConnectedToSensor(NetworkNode *sensor) const;
     NetworkNode::NodeType getNodeType() const;
+    bool removeFromSyncPath();
 public slots:
     void onReceivedDataFromSensor(const QByteArray &data);
 signals:
@@ -84,7 +139,12 @@ private:
     void processNewData(const DataFrame &rxData);
     bool extractPathFromMsg(const QByteArray &pathMsg);
     bool createClusterPathMsg(const QVector<quint16> &path, QByteArray &msg);
+    bool checkIfVisitedThisNode() const;
+    bool setThisNodeVisited();
+    bool checkIfAllSyncNodesVisited() const;
+    bool addToSyncNodePath(NetworkNode *node);
 private:
+    static QVector<SyncLayer> m_networkClusterSyncNodes;
     QVector<quint16> m_sinkPath;
     QVector<NetworkNode*> m_sensors;
     QByteArray m_mesgData;
