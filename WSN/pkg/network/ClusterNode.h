@@ -27,6 +27,7 @@ const QString PATH_LENGTH           = "Path_Length";
 const QString NEIGHBOURS_IDS        = "NeighbourIDs";
 const QString NEIGHBOURS_DISTANCES  = "NeighbourDistances";
 const QString PATHS                 = "Paths";
+const QString DIRECT_CLUSTERS       = "DirectClusters";
 
 const quint8 NUM_OF_PATH_MESSAGE_PARAMS = 8;
 const quint8 NUM_OF_REMOVE_MESSAGE_PARAMS = 5;
@@ -129,6 +130,7 @@ public:
     bool checkIfConnectedToSensor(NetworkNode *sensor) const;
     NetworkNode::NodeType getNodeType() const;
     bool removeFromSyncPath();
+    static void resetBroadCastSyncVector(quint16 layer_id);
 public slots:
     void onReceivedDataFromSensor(const QByteArray &data);
 signals:
@@ -143,10 +145,14 @@ private:
     bool setThisNodeVisited();
     bool checkIfAllSyncNodesVisited() const;
     bool addToSyncNodePath(NetworkNode *node);
+    bool checkIfHadConnectedToDirectCluster() const;
+    void addDirectClusterConnection(quint16 node_id);
+    bool removeDirectClusterConnection(quint16 node_id);
 private:
     static QVector<SyncLayer> m_networkClusterSyncNodes;
     QVector<quint16> m_sinkPath;
     QVector<NetworkNode*> m_sensors;
+    QVector<quint16> m_directNodesConnections;
     QByteArray m_mesgData;
     quint16 m_sensorDataCounter;
     quint16 m_neighbourPathsCounter;

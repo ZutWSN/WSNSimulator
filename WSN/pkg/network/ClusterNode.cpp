@@ -42,6 +42,10 @@ bool ClusterNode::connectToNode(NetworkNode *node)
             connected = NetworkNode::connectToNode(node);
             addToSyncNodePath(this);
             addToSyncNodePath(node);
+            if(static_cast<ClusterNode*>(node)->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
+            {
+                addDirectClusterConnection(node->getNodeID());
+            }
         }
         else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
         {
@@ -79,6 +83,15 @@ bool ClusterNode::removeFromSyncPath()
         removed = true;
     }
     return removed;
+}
+
+void ClusterNode::resetBroadCastSyncVector(quint16 layer_id)
+{
+    int layer_idx = m_networkClusterSyncNodes.indexOf(SyncLayer(layer_id));
+    for(auto && syncNode : m_networkClusterSyncNodes[layer_idx].syncNodes)
+    {
+        syncNode.visited = false;
+    }
 }
 
 void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
@@ -260,7 +273,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
     NetworkNode::processNewData(rxData);
     DataFrame txData(rxData);
     txData.setSender(qMakePair(m_node_id, m_layer_id));
-    if(txData.getMsgType() == DataFrame::RxData::NEIGHBOUR_PATH_REQ)
+    if(rxData.getMsgType() == DataFrame::RxData::NEIGHBOUR_PATH_REQ)
     {
         txData.setMsgType(DataFrame::RxData::NEIGHBOUR_PATH);
         txData.setDestination(rxData.getSender());
@@ -278,7 +291,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
             sendTxData = true;
         }
     }
-    else if(txData.getMsgType() == DataFrame::RxData::PATH_SYNC)
+    else if(rxData.getMsgType() == DataFrame::RxData::PATH_SYNC)
     {
         if(!checkIfVisitedThisNode())
         {           
@@ -289,6 +302,54 @@ void ClusterNode::processNewData(const DataFrame &rxData)
             {
                 sendTxData = true;
             }
+
+        }
+    }
+    else if(rxData.getMsgType() == DataFrame::RxData::NO_SINK_CONNECTION)
+    {
+        //network broadcast
+        if(!checkIfVisitedThisNode())
+        {
+            txData.addVisitedNode(qMakePair(m_node_id, m_layer_id));
+            setThisNodeVisited();
+            if(m_state != ClusterStates::CONNECTED_TO_SINK)
+            {
+                //clear sink path and its length, change state to disconnected
+                if(m_state != ClusterStates::DISCONNECTED)
+                {
+                    m_sinkPath.clear();
+                    m_pathLength = UINT16_MAX;
+                    m_state = ClusterStates::DISCONNECTED;
+                    m_directNodesConnections.clear();
+                }
+            }
+            if(!checkIfAllSyncNodesVisited())
+            {
+                sendTxData = true;
+            }
+        }
+    }
+    else if(rxData.getMsgType() == DataFrame::RxData::DIRECT_CLUSTER_REMOVED)
+    {
+        if(!checkIfVisitedThisNode())
+        {
+            if(m_state != ClusterStates::CONNECTED_TO_SINK)
+            {
+                if(removeDirectClusterConnection(rxData.getSender().first))
+                {
+                    //connection has been removed inform other nodes
+                    txData.setSender(rxData.getSender());
+                    //update node state and reset sinkPath
+                    if(m_directNodesConnections.isEmpty())
+                    {
+                        m_state = ClusterStates::DISCONNECTED;
+                        m_sinkPath.clear();
+                        m_pathLength = UINT16_MAX;
+                    }
+                    sendTxData = true;
+                }
+            }
+            setThisNodeVisited();
         }
     }
     else
@@ -419,6 +480,16 @@ quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<qu
             {
                 pathLength = static_cast<quint16>(jsonObj[key].toInt());
             }
+            else if(key == DIRECT_CLUSTERS)
+            {
+                for(auto && id: jsonObj[key].toArray())
+                {
+                    if(id.isDouble())
+                    {
+                        addDirectClusterConnection(static_cast<quint16>(id.toInt()));
+                    }
+                }
+            }
         }
         if(node_id == rxData.getSender().first && layer_id == rxData.getSender().second)
         {
@@ -514,6 +585,7 @@ bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray 
     QJsonArray jsonPath;
     QJsonArray jsonNeighbourIDs;
     QJsonArray jsonNeighbourDistances;
+    QJsonArray jsonDirectClusters;
     for(auto && node : path)
     {
         jsonPath.append(QJsonValue(node));
@@ -523,6 +595,17 @@ bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray 
         jsonNeighbourIDs.append(QJsonValue(neighbour.first));
         jsonNeighbourDistances.append(QJsonValue(neighbour.second));
     }
+
+    for(auto && directCluster : m_directNodesConnections)
+    {
+        jsonDirectClusters.append(QJsonValue(directCluster));
+    }
+
+    if(m_state == ClusterStates::CONNECTED_TO_SINK)
+    {
+       jsonDirectClusters.append(QJsonValue(m_node_id));
+    }
+
     QJsonObject clusterPathObj =
     {
         {NODE_ID, m_node_id},
@@ -532,7 +615,8 @@ bool ClusterNode::createClusterPathMsg(const QVector<quint16> &path, QByteArray 
         {PATH, jsonPath},
         {PATH_LENGTH, m_pathLength},
         {NEIGHBOURS_IDS, jsonNeighbourIDs},
-        {NEIGHBOURS_DISTANCES, jsonNeighbourDistances}
+        {NEIGHBOURS_DISTANCES, jsonNeighbourDistances},
+        {DIRECT_CLUSTERS, jsonDirectClusters}
     };
     QJsonDocument jsonMsg(clusterPathObj);
     msg = jsonMsg.toBinaryData();
@@ -601,5 +685,25 @@ bool ClusterNode::addToSyncNodePath(NetworkNode *node)
         added = true;
     }
     return added;
+}
+
+void ClusterNode::addDirectClusterConnection(quint16 node_id)
+{
+    if(m_directNodesConnections.indexOf(node_id) < 0)
+    {
+        m_directNodesConnections.push_back(node_id);
+    }
+}
+
+bool ClusterNode::removeDirectClusterConnection(quint16 node_id)
+{
+    bool removed = false;
+    int index = m_directNodesConnections.indexOf(node_id);
+    if(index >= 0)
+    {
+        m_directNodesConnections.remove(index);
+        removed = true;
+    }
+    return removed;
 }
 

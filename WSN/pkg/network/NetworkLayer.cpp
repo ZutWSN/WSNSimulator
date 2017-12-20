@@ -228,16 +228,23 @@ bool NetworkLayer::removeNode(quint16 node_id)
             ClusterNode *cluster = static_cast<ClusterNode*>(m_nodes[node_idx]);
             DataFrame frame;
             frame.setMsg(nodeRemovedMsg);
-            frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
             frame.setSender(qMakePair(node_id, m_layer_id));
             if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
             {
-                cluster->sendDataToSink(frame);
+                //broadcast to all nodes that this cluster is not available
+                ClusterNode::resetBroadCastSyncVector(m_layer_id);
+                frame.setMsgType(DataFrame::RxData::DIRECT_CLUSTER_REMOVED);
+                cluster->sendData(frame);
+                //sink sends new paths to all nodes that are connected
+                //else it sets all of their states to disconnected
+                frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
+                cluster->sendDataToSink(frame);                
             }
             else
             {
                 if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
                 {
+                    frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
                     frame.setPath(cluster->getSinkPath());
                     frame.setDestination(qMakePair(cluster->getSinkPath()[0], m_layer_id));
                     m_nodes[node_idx]->sendData(frame);

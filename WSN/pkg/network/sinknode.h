@@ -77,7 +77,7 @@ private:
     void removeNode(const QByteArray &msg); //TDO
     QVector<Vertice> createGraphAndFindPaths() const;
     bool updatePathsAndCreateSyncMsg(const QVector<Vertice> &vertices, QByteArray &updateMsg);
-
+    void resetMappedSinkPaths();
     void extractNodeData(NetworkNode* node, Vertice &vertice) const;
     void extractMappedNodeData(const MappedClusterNode &node, Vertice &vertice) const;
 private:
