@@ -281,8 +281,9 @@ bool NetworkNode::removeConnectedNode(NetworkNode *node)
 bool NetworkNode::disconnectFromNetwork()
 {
     bool disconnected = false;
-    for(NetworkNode *node : m_connectedNodes)
+    while(!m_connectedNodes.isEmpty())
     {
+        auto node = m_connectedNodes[0];
         disconnected &= node->disconnectFromNode(this);
     }
     return disconnected;
@@ -308,9 +309,9 @@ double NetworkNode::getDistanceFromNode(const QPoint &position) const
     return result;
 }
 
-quint16 NetworkNode::getDistanceFromConnectedNode(quint16 node_id) const
+double NetworkNode::getDistanceFromConnectedNode(double node_id) const
 {
-    quint16 distance = 0;
+    double distance = 0;
     for(NetworkNode* node : m_connectedNodes)
     {
         if(node->getNodeID() == node_id)

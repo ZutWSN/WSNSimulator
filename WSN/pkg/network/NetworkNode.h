@@ -48,7 +48,7 @@ public:
     quint16 getNumOfConnectedNodes() const;
     QVector<QPair<quint16, quint16> > getNeighbours() const;
     double getDistanceFromNode(const QPoint &position) const;
-    quint16 getDistanceFromConnectedNode(quint16 node_id) const;
+    double getDistanceFromConnectedNode(double node_id) const;
     virtual NetworkNode::NodeType getNodeType() const;
     quint16 getNumOfPendingDataFrames() const;
 

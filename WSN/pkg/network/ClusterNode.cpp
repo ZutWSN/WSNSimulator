@@ -11,7 +11,7 @@ ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id),
     m_sensorDataCounter(0),
     m_neighbourPathsCounter(0),
-    m_pathLength(UINT16_MAX),
+    m_pathLength(UINT64_MAX),
     m_state(ClusterStates::CREATED)
 {
 
@@ -58,7 +58,7 @@ bool ClusterNode::connectToNode(NetworkNode *node)
 bool ClusterNode::sendSinkPathReq()
 {
     bool seekingPath = false;
-    if(m_state == ClusterStates::CREATED)
+    if(m_state != ClusterStates::CONNECTED_TO_SINK)
     {
         DataFrame frame(QByteArray(), DataFrame::RxData::NEIGHBOUR_PATH_REQ, 0, m_layer_id, m_node_id);
         m_state = ClusterStates::PATH_SEEKING;
@@ -211,7 +211,7 @@ bool ClusterNode::setSinkPath(const QVector<quint16> &path)
     return success;
 }
 
-void ClusterNode::setPathLength(quint16 length)
+void ClusterNode::setPathLength(double length)
 {
     m_pathLength = length;
 }
@@ -318,7 +318,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                 if(m_state != ClusterStates::DISCONNECTED)
                 {
                     m_sinkPath.clear();
-                    m_pathLength = UINT16_MAX;
+                    m_pathLength = UINT64_MAX;
                     m_state = ClusterStates::DISCONNECTED;
                     m_directNodesConnections.clear();
                 }
@@ -344,7 +344,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                     {
                         m_state = ClusterStates::DISCONNECTED;
                         m_sinkPath.clear();
-                        m_pathLength = UINT16_MAX;
+                        m_pathLength = UINT64_MAX;
                     }
                     sendTxData = true;
                 }
@@ -380,7 +380,7 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                             if(m_neighbourPathsCounter < m_connectedNodes.size())
                             {
                                 QVector<quint16> path;
-                                quint16 pathLength = getPathFromNeighbourMsg(rxData, path);
+                                double pathLength = getPathFromNeighbourMsg(rxData, path);
                                 if(pathLength > 0)
                                 {
                                     if(pathLength < m_pathLength)
@@ -445,9 +445,9 @@ void ClusterNode::processNewData(const DataFrame &rxData)
     }
 }
 
-quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path)
+double ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path)
 {
-    quint16 pathLength= 0;
+    double pathLength= 0;
     QJsonDocument jsonData = QJsonDocument::fromBinaryData(rxData.getMsg(), QJsonDocument::Validate);
     if(!jsonData.isNull())
     {
@@ -478,7 +478,7 @@ quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<qu
             }
             else if(key == PATH_LENGTH)
             {
-                pathLength = static_cast<quint16>(jsonObj[key].toInt());
+                pathLength = jsonObj[key].toDouble();
             }
             else if(key == DIRECT_CLUSTERS)
             {
@@ -493,8 +493,8 @@ quint16 ClusterNode::getPathFromNeighbourMsg(const DataFrame &rxData, QVector<qu
         }
         if(node_id == rxData.getSender().first && layer_id == rxData.getSender().second)
         {
-            quint16 distance = getDistanceFromConnectedNode(node_id);
-            if(distance > 0 && pathLength > 0 && pathLength < UINT16_MAX)
+            double distance = getDistanceFromConnectedNode(node_id);
+            if(distance > 0 && pathLength > 0 && pathLength < UINT64_MAX)
             {
                 path = std::move(nodePath);
                 pathLength += distance;
@@ -515,7 +515,7 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
         QJsonObject jsonObj = jsonData.object();
         quint16 node_id, layer_id;
         QVector<quint16> nodePath;
-        quint16 pathLength = 0;
+        double pathLength = 0;
         auto keys = jsonObj.keys();
         for(auto && key : keys)
         {
@@ -553,7 +553,7 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
                                 }
                                 else if(pKey == PATH_LENGTH)
                                 {
-                                    pathLength = static_cast<quint16>(pathObj[pKey].toInt());
+                                    pathLength = pathObj[pKey].toDouble();
                                 }
                             }
                         }

@@ -119,7 +119,7 @@ public:
     bool removeSensor(NetworkNode *sensor);
     //those two methods will be deleted after completed testing
     bool setSinkPath(const QVector<quint16> &path);
-    void setPathLength(quint16 length);
+    void setPathLength(double length);
     bool setConnectedToSink(SinkNode *sink);
 
     quint16 getNumOfSensors() const;
@@ -137,7 +137,7 @@ signals:
     void broadcastDataToSensors(const DataFrame &data);
     void sendDataToSink(const DataFrame &data);
 private:
-    quint16 getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path);
+    double getPathFromNeighbourMsg(const DataFrame &rxData, QVector<quint16> &path);
     void processNewData(const DataFrame &rxData);
     bool extractPathFromMsg(const QByteArray &pathMsg);
     bool createClusterPathMsg(const QVector<quint16> &path, QByteArray &msg);
@@ -156,7 +156,7 @@ private:
     QByteArray m_mesgData;
     quint16 m_sensorDataCounter;
     quint16 m_neighbourPathsCounter;
-    quint16 m_pathLength;
+    double m_pathLength;
     ClusterStates m_state;
 };
 

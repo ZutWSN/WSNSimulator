@@ -22,7 +22,7 @@ void Test_SinkNode::test_addRemoveDirectCluster()
     QCOMPARE(sink.removeDirectCluster(cluster1), true);
     QCOMPARE(sink.removeDirectCluster(cluster2), false);
 }
-/*
+
 void Test_SinkNode::test_receivedDataFromCluster()
 {
     SinkNode sink;
@@ -86,9 +86,8 @@ void Test_SinkNode::test_receivedDataFromCluster()
     QCOMPARE(sinkReceivedData.count(), 2);
     QVERIFY(sink.getLastMsg().getMsg() =="Forward Sensor Data");
 }
-*/
-//TDO
-void Test_SinkNode::test_receivedNodeRemoved()
+
+void Test_SinkNode::test_onReceivedNetworkChange()
 {
     SinkNode sink;
     sink.setPosition(QPoint(10, 10));
@@ -150,6 +149,7 @@ void Test_SinkNode::test_receivedNodeRemoved()
     //obtain sink paths for mapped clusters
     forwardCluster1->sendSinkPathReq();
     forwardCluster2->sendSinkPathReq();
+    forwardCluster1->sendSinkPathReq();
     //forwardowanie nie dziala - poprawic
     forwardCluster3->sendSinkPathReq();
     forwardCluster4->sendSinkPathReq();
@@ -263,32 +263,3 @@ void Test_SinkNode::test_receivedNodeRemoved()
     QVERIFY(forwardCluster4->getSinkPath() == sinkPath6);
     QVERIFY(forwardCluster5->getSinkPath() == sinkPath6);
 }
-
-void Test_SinkNode::test_receivedClusterPath()
-{
-
-}
-
-void Test_SinkNode::test_sendNewPaths()
-{
-    SinkNode sink;
-    sink.setPosition(QPoint(0, 0));
-    sink.setRange(20);
-}
-/*
- * private methods, test using test_onReceivedDataFromCluster test case
-void Test_SinkNode::test_broadCastDataToClusters()
-{
-
-}
-
-void Test_SinkNode::test_calculateNetworkPaths()
-{
-
-}
-
-void Test_SinkNode::test_updateClusterPath()
-{
-
-}
-*/

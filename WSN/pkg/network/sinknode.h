@@ -16,9 +16,9 @@ public:
         quint16 node_id;
         quint16 layer_id;
         QPoint position;
-        quint16 pathLength;
+        double pathLength;
         QVector<quint16> neighbourIDs;
-        QVector<quint16> neighbourDistances;
+        QVector<double> neighbourDistances;
         QVector<quint16> sinkPath;
 
         bool operator==(const MappedClusterNode &rhs) const
@@ -33,11 +33,11 @@ public:
     {
         quint16 node_id;
         quint16 layer_id;
-        quint16 sinkPathLength;
+        double sinkPathLength;
         QVector<quint16> sinkPath;
-        QVector<QPair<quint16, quint16> > neighbours; // <id, distance>
+        QVector<QPair<quint16, double> > neighbours; // <id, distance>
         QVector<quint16> neighbourVerticesIndexes;
-        QVector<quint16> neighbourVerticesDistances;
+        QVector<double> neighbourVerticesDistances;
         bool isDirectVertex = false;
         bool operator==(const Vertice &other)
         {

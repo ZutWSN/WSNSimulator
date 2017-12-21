@@ -212,11 +212,11 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
         QJsonObject jsonObj = jsonData.object();
         quint16 node_id, layer_id;
         quint8 parameters = 0;
-        quint16 pathLength = 0;
+        double pathLength = 0;
         QPoint position;
         QVector<quint16> nodePath;
         QVector<quint16> neighbourIDs;
-        QVector<quint16> neighbourDistances;
+        QVector<double> neighbourDistances;
         auto keys = jsonObj.keys();
         for(auto && key : keys)
         {
@@ -277,7 +277,7 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
                 {
                     if(id.isDouble())
                     {
-                        neighbourDistances.push_back(static_cast<quint16>(id.toInt()));
+                        neighbourDistances.push_back(id.toDouble());
                     }
                 }
                 if(!neighbourDistances.isEmpty())
@@ -287,7 +287,7 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
             }
             else if(key == PATH_LENGTH)
             {
-                pathLength = static_cast<quint16>(jsonObj[key].toInt());
+                pathLength = jsonObj[key].toDouble();
                 if(pathLength > 0)
                 {
                     ++parameters;
@@ -525,7 +525,7 @@ QVector<SinkNode::Vertice> SinkNode::createGraphAndFindPaths() const
     {
         quint16 closestVertexIndex = 0;
         quint16 unvisitedIndex = 0;
-        quint16 minDistance = UINT16_MAX;
+        double minDistance = UINT64_MAX;
         for(quint16 i = 0; i < unvisitedVertices.size(); i++)
         {
             if(vertices[unvisitedVertices[i]].sinkPathLength < minDistance)
@@ -535,13 +535,13 @@ QVector<SinkNode::Vertice> SinkNode::createGraphAndFindPaths() const
                 minDistance = vertices[unvisitedVertices[i]].sinkPathLength;
             }
         }
-        quint16 pathLength = UINT16_MAX;
+        double pathLength = UINT64_MAX;
         for(quint16 i = 0; i < vertices[closestVertexIndex].neighbourVerticesIndexes.size(); i++)
         {
             auto currentIndex = vertices[closestVertexIndex].neighbourVerticesIndexes[i];
             if(unvisitedVertices.indexOf(currentIndex) >= 0)
             {
-                quint16 distance = minDistance + vertices[closestVertexIndex].neighbourVerticesDistances[i];
+                double distance = minDistance + vertices[closestVertexIndex].neighbourVerticesDistances[i];
                 if(vertices[currentIndex].sinkPathLength > distance)
                 {
                     vertices[currentIndex].sinkPathLength = distance;
@@ -615,7 +615,7 @@ void SinkNode::resetMappedSinkPaths()
     for(MappedClusterNode &mappedNode : m_clusterPathMap)
     {
         mappedNode.sinkPath.clear();
-        mappedNode.pathLength = UINT16_MAX;
+        mappedNode.pathLength = UINT64_MAX;
     }
 }
 
