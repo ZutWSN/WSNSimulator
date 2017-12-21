@@ -5,6 +5,7 @@
 
 class Test_SensorNode : public QObject
 {
+    Q_OBJECT
 private slots:
     void test_connectToCluster();
     void test_disconnectFromCluster();

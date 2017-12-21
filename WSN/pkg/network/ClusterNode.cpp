@@ -21,7 +21,7 @@ ClusterNode::ClusterNode(quint16 node_id, quint16 range, qint16 layer_id, const 
     NetworkNode(node_id, range, layer_id, node_position),
     m_sensorDataCounter(0),
     m_neighbourPathsCounter(0),
-    m_pathLength(0),
+    m_pathLength(UINT64_MAX),
     m_state(ClusterStates::CREATED)
 {
 
@@ -57,14 +57,18 @@ bool ClusterNode::connectToNode(NetworkNode *node)
 
 bool ClusterNode::sendSinkPathReq()
 {
-    bool seekingPath = false;
+    bool pathFound = false;
     if(m_state != ClusterStates::CONNECTED_TO_SINK)
     {
         DataFrame frame(QByteArray(), DataFrame::RxData::NEIGHBOUR_PATH_REQ, 0, m_layer_id, m_node_id);
         m_state = ClusterStates::PATH_SEEKING;
         sendData(frame);
+        if(m_state == ClusterStates::CONNECTED)
+        {
+            pathFound = true;
+        }
     }
-    return seekingPath;
+    return pathFound;
 }
 
 NetworkNode::NodeType ClusterNode::getNodeType() const
@@ -147,16 +151,20 @@ bool ClusterNode::disconnectFromNode(NetworkNode *node)
 bool ClusterNode::disconnectFromNetwork()
 {
     bool disconnected = NetworkNode::disconnectFromNetwork();
-    for(NetworkNode *sensor : m_sensors)
+    while(!m_sensors.isEmpty())
     {
+        auto sensor = m_sensors[0];
         disconnected &= sensor->disconnectFromNode(this);
         disconnected &= removeSensor(sensor);
     }
     int layerIndex = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
-    int nodeIndex = m_networkClusterSyncNodes[layerIndex].syncNodes.indexOf(SyncNode(this));
-    if(nodeIndex >= 0)
+    if(layerIndex >= 0)
     {
-        m_networkClusterSyncNodes[layerIndex].syncNodes.remove(nodeIndex);
+        int nodeIndex = m_networkClusterSyncNodes[layerIndex].syncNodes.indexOf(SyncNode(this));
+        if(nodeIndex >= 0)
+        {
+            m_networkClusterSyncNodes[layerIndex].syncNodes.remove(nodeIndex);
+        }
     }
     return disconnected;
 }

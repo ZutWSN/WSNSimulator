@@ -281,10 +281,17 @@ bool NetworkNode::removeConnectedNode(NetworkNode *node)
 bool NetworkNode::disconnectFromNetwork()
 {
     bool disconnected = false;
-    while(!m_connectedNodes.isEmpty())
+    if(!m_connectedNodes.isEmpty())
     {
-        auto node = m_connectedNodes[0];
-        disconnected &= node->disconnectFromNode(this);
+        while(!m_connectedNodes.isEmpty())
+        {
+            auto node = m_connectedNodes[0];
+            disconnected &= node->disconnectFromNode(this);
+        }
+    }
+    else
+    {
+        disconnected = true;
     }
     return disconnected;
 }

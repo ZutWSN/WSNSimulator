@@ -66,6 +66,7 @@ void Test_ClusterNode::test_checkIfConnectedToSensor()
 
 void Test_ClusterNode::test_onReceivedDataFromSensor()
 {
+    SinkNode sink(QPoint(1, 2), 10);
     ClusterNode cluster(0, 15, 0, QPoint(0, 0));
     SensorNode sensor1(2, 2, 0, QPoint(1, 1));
     SensorNode sensor2(3, 2, 0, QPoint(1, 0));
@@ -74,10 +75,12 @@ void Test_ClusterNode::test_onReceivedDataFromSensor()
 
     cluster.connectToNode(&sensor1);
     cluster.connectToNode(&sensor2);
+    sink.addDirectCluster(&cluster);
+    QCOMPARE(cluster.getCurrentState(), ClusterNode::ClusterStates::CONNECTED_TO_SINK);
     //register for signals and store count
     QSignalSpy sensor1SendData(&sensor1, SIGNAL(clusterDataSend(QByteArray)));
     QSignalSpy sensor2SendData(&sensor2, SIGNAL(clusterDataSend(QByteArray)));
-    QSignalSpy clusterSendData(&cluster, SIGNAL(dataSend(DataFrame)));
+    QSignalSpy clusterSendData(&cluster, SIGNAL(sendDataToSink(DataFrame)));
     //check if everything wasn't called yet
     QCOMPARE(sensor1SendData.count(), 0);
     QCOMPARE(sensor2SendData.count(), 0);
@@ -104,25 +107,26 @@ void Test_ClusterNode::test_onReceivedData()
 
 void Test_ClusterNode::test_sendSinkPathReq()
 {
-    ClusterNode cluster(0, 15, 0, QPoint(0, 0));
-    ClusterNode neighbourCluster(1, 15, 0, QPoint(10, 10));
-    cluster.setSinkPath({4, 5});
-    cluster.setPathLength(0);
-    QVector<quint16> new_path = {2, 3};
-    neighbourCluster.setSinkPath(new_path);
-    neighbourCluster.setPathLength(7);
+    ClusterNode cluster(0, 10, 0, QPoint(0, 0));
+    ClusterNode neighbourCluster(1, 15, 0, QPoint(10, 0));
+    SinkNode sink(QPoint(15, 0), 15);
+    sink.addDirectCluster(&neighbourCluster);
+
     qRegisterMetaType<DataFrame>();
-
-    cluster.connectToNode(&neighbourCluster);
-
     QSignalSpy clusterSendData(&cluster, SIGNAL(dataSend(DataFrame)));
     QSignalSpy neighbourClusterSendData(&neighbourCluster, SIGNAL(dataSend(DataFrame)));
-    //rxreceived msg, neighbour path, forward new path  - 3 sends
-    //send request for path, send path received, send new sink path to sink - 3 sends
+
+    QCOMPARE(clusterSendData.count(), 0);
+    QCOMPARE(cluster.sendSinkPathReq(), false);
+    QCOMPARE(clusterSendData.count(), 1);
+    cluster.connectToNode(&neighbourCluster);
     QCOMPARE(cluster.sendSinkPathReq(), true);
-    QCOMPARE(clusterSendData.count(), 3);
+    //send sinkPath request, send new path received , send new clusterpath to sink
+    QCOMPARE(clusterSendData.count(), 4);
+    //send received sinkPath request, send back the path to sink, send back received new
+    //cluster path and send it to sink
     QCOMPARE(neighbourClusterSendData.count(), 3);
 
-    new_path.insert(new_path.begin(), neighbourCluster.getNodeID());
-    QVERIFY(cluster.getSinkPath() == new_path);
+    QVector<quint16> path{neighbourCluster.getNodeID()};
+    QVERIFY(cluster.getSinkPath() == path);
 }
