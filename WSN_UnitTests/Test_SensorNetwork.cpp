@@ -26,25 +26,19 @@ void Test_SensorNetwork::test_checkIfHasLayer()
 
 void Test_SensorNetwork::test_onNewClusterAdded()
 {
-
+    //connect it to all neighbour clusters -> clusters in range
+    //go through all of them and connect only to those in range
+    //then get sink path
+    //and send it to sink to update it network mapping
 }
 
 void Test_SensorNetwork::test_onNewSensorAdded()
 {
-
+    //connect to nearest cluster in range
+    //if not clusters in range set as dangling disconnected sensor
 }
 
 void Test_SensorNetwork::test_connectSensorToNearestCluster()
-{
-
-}
-
-void Test_SensorNetwork::test_synchronizeNetwork()
-{
-
-}
-
-void Test_SensorNetwork::test_calculateNetworkPaths()
 {
 
 }
