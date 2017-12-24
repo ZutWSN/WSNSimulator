@@ -1,7 +1,9 @@
 #include "SensorNetwork.h"
+#include "SensorWindow.h"
 #include <utility>
 
-SensorNetwork::SensorNetwork()
+SensorNetwork::SensorNetwork():
+    m_sink(nullptr)
 {
 
 }
@@ -10,7 +12,14 @@ SensorNetwork::~SensorNetwork()
 {
     for (NetworkLayer *layer : m_layers)
     {
-        delete layer;
+        if(layer)
+        {
+            delete layer;
+        }
+    }
+    if(m_sink)
+    {
+        delete m_sink;
     }
 }
 
@@ -122,7 +131,6 @@ bool SensorNetwork::addLayer(qint16 layer_id)
 }
 
 
-
 quint16 SensorNetwork::getNumberOfLayers() const
 {
     return static_cast<quint16>(m_layers.size());
@@ -155,14 +163,48 @@ NetworkLayer* SensorNetwork::getLayer(qint16 layer_id) const
     return layerPtr;
 }
 
-void SensorNetwork::onNewClusterAdded(quint16 cluster_id, quint16 layer_id)
+void SensorNetwork::onSinkAdded(const QPoint &position, quint16 range)
+{
+    if(!networkHasSink())
+    {
+        //don't add new one or move this one, if sink already added
+        m_sink = new SinkNode(position, range);
+    }
+}
+
+void SensorNetwork::onNewClusterAdded(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range)
 {
 
 }
 
-void SensorNetwork::onNewSensorAdded(quint16 sensor_id, quint16 layer_id)
+void SensorNetwork::onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range)
 {
 
+}
+
+void SensorNetwork::onSinkRemoved()
+{
+    if(networkHasSink())
+    {
+        m_sink->disconnectFromWidget();
+        m_sink->disconnectSinkFromNetwork();
+        delete m_sink;
+    }
+}
+
+void SensorNetwork::onNewClusterRemoved(quint16 cluster_id, quint16 layer_id)
+{
+
+}
+
+void SensorNetwork::onNewSensorRemoved(quint16 sensor_id, quint16 layer_id)
+{
+
+}
+
+bool SensorNetwork::networkHasSink() const
+{
+    return m_sink != nullptr;
 }
 
 

@@ -3,8 +3,9 @@
 #include "NetworkLayer.h"
 #include "sinknode.h"
 
-class SensorNetwork
+class SensorNetwork : public QObject
 {
+    Q_OBJECT
 public:
     SensorNetwork();
     ~SensorNetwork();
@@ -17,14 +18,18 @@ public:
 
     quint16 getNumberOfLayers() const;
     NetworkLayer* getLayer(qint16 layer_id) const;
+    bool networkHasSink() const;
 public slots:
-    void onNewClusterAdded(quint16 cluster_id, quint16 layer_id);
-    void onNewSensorAdded(quint16 sensor_id, quint16 layer_id);
+    void onSinkAdded(const QPoint &position, quint16 range);
+    void onNewClusterAdded(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range);
+    void onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range);
+    void onSinkRemoved();
+    void onNewClusterRemoved(quint16 cluster_id, quint16 layer_id);
+    void onNewSensorRemoved(quint16 sensor_id, quint16 layer_id);
+
 private:
     bool checkIfHasLayer(qint16 layer_id) const;
     bool connectSensorToNearestCluster();
-    bool calculateNetworkPaths();
-    bool synchronizeNetwork();
 private:
     QVector<NetworkLayer*> m_layers;
     SinkNode *m_sink;

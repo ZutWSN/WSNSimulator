@@ -263,3 +263,118 @@ void Test_SinkNode::test_onReceivedNetworkChange()
     QVERIFY(forwardCluster4->getSinkPath() == sinkPath6);
     QVERIFY(forwardCluster5->getSinkPath() == sinkPath6);
 }
+//TDO
+void Test_SinkNode::test_disconnectSinkFromNetwork()
+{
+    //set all connected network states to disconnected and disable communication until
+    // new sink added in range of at least one cluster
+    SinkNode sink;
+    sink.setPosition(QPoint(10, 10));
+    sink.setRange(4);
+    qRegisterMetaType<DataFrame>();
+
+    NetworkLayer layer(0);
+    ClusterNode *directCluster1 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 1));
+    ClusterNode *directCluster2 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 2));
+    ClusterNode *directCluster3 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 3));
+    ClusterNode *forwardCluster1 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 4));
+    ClusterNode *forwardCluster2 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 5));
+    ClusterNode *forwardCluster3 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 6));
+    ClusterNode *forwardCluster4 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 7));
+    ClusterNode *forwardCluster5 = static_cast<ClusterNode*>(layer.createNode(NetworkNode::NodeType::Cluster, 8));
+
+    //set node parameters
+    //direct clusters
+    directCluster1->setNodePosition(QPoint(10, 7));
+    directCluster1->setNodeRange(15);
+    directCluster2->setNodePosition(QPoint(10, 14));
+    directCluster2->setNodeRange(15);
+    directCluster3->setNodePosition(QPoint(12, 10));
+    directCluster3->setNodeRange(15);
+    //mapped clusters
+    forwardCluster1->setNodePosition(QPoint(11, 7));
+    forwardCluster1->setNodeRange(15);
+    forwardCluster2->setNodePosition(QPoint(10, 5));
+    forwardCluster2->setNodeRange(15);
+    forwardCluster3->setNodePosition(QPoint(11, 5));
+    forwardCluster3->setNodeRange(15);
+    forwardCluster4->setNodePosition(QPoint(16, 10));
+    forwardCluster4->setNodeRange(15);
+    forwardCluster5->setNodePosition(QPoint(12, 15));
+    forwardCluster5->setNodeRange(15);
+    //Connecting cluster nodes-------------------------------------
+    //connect mapped clusters
+    //C1
+    QCOMPARE(forwardCluster1->connectToNode(forwardCluster2), true);
+    QCOMPARE(forwardCluster1->connectToNode(forwardCluster3), true);
+    QCOMPARE(forwardCluster1->connectToNode(directCluster1), true);
+    //C2
+    QCOMPARE(forwardCluster2->connectToNode(forwardCluster3), true);
+    QCOMPARE(forwardCluster2->connectToNode(directCluster1), true);
+    QCOMPARE(forwardCluster2->connectToNode(directCluster2), true);
+    //C3
+    QCOMPARE(forwardCluster3->connectToNode(directCluster2), true);
+    //C4
+    QCOMPARE(forwardCluster4->connectToNode(directCluster1), true);
+    QCOMPARE(forwardCluster4->connectToNode(directCluster3), true);
+    //C5
+    QCOMPARE(forwardCluster5->connectToNode(directCluster2), true);
+    QCOMPARE(forwardCluster5->connectToNode(directCluster3), true);
+    //connect direct clusters to sink
+    QCOMPARE(sink.addDirectCluster(directCluster1), true);
+    QCOMPARE(sink.addDirectCluster(directCluster2), true);
+    QCOMPARE(sink.addDirectCluster(directCluster3), true);
+    //-------------------------------------------------------------
+    //obtain sink paths for mapped clusters
+    forwardCluster1->sendSinkPathReq();
+    forwardCluster2->sendSinkPathReq();
+    forwardCluster1->sendSinkPathReq();
+    //forwardowanie nie dziala - poprawic
+    forwardCluster3->sendSinkPathReq();
+    forwardCluster4->sendSinkPathReq();
+    forwardCluster5->sendSinkPathReq();
+    //check if clusters are mapped by sink
+    QCOMPARE(sink.checkIfHasDirectCluster(directCluster1), true);
+    QCOMPARE(sink.checkIfHasDirectCluster(directCluster2), true);
+    QCOMPARE(sink.checkIfHasDirectCluster(directCluster3), true);
+    QCOMPARE(sink.checkIfHasMappedCluster(forwardCluster1->getNodeID(), layer.getLayerId()), true);
+    QCOMPARE(sink.checkIfHasMappedCluster(forwardCluster2->getNodeID(), layer.getLayerId()), true);
+    QCOMPARE(sink.checkIfHasMappedCluster(forwardCluster3->getNodeID(), layer.getLayerId()), true);
+    QCOMPARE(sink.checkIfHasMappedCluster(forwardCluster4->getNodeID(), layer.getLayerId()), true);
+    QCOMPARE(sink.checkIfHasMappedCluster(forwardCluster5->getNodeID(), layer.getLayerId()), true);
+    //clusters in correct states
+    QVERIFY(forwardCluster1->getCurrentState() == ClusterNode::ClusterStates::CONNECTED);
+    QVERIFY(forwardCluster2->getCurrentState() == ClusterNode::ClusterStates::CONNECTED);
+    QVERIFY(forwardCluster3->getCurrentState() == ClusterNode::ClusterStates::CONNECTED);
+    QVERIFY(forwardCluster4->getCurrentState() == ClusterNode::ClusterStates::CONNECTED);
+    QVERIFY(forwardCluster5->getCurrentState() == ClusterNode::ClusterStates::CONNECTED);
+    QVERIFY(directCluster1->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK);
+    QVERIFY(directCluster2->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK);
+    QVERIFY(directCluster3->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK);
+    //sink paths defined
+    QVERIFY(!forwardCluster1->getSinkPath().isEmpty());
+    QVERIFY(!forwardCluster2->getSinkPath().isEmpty());
+    QVERIFY(!forwardCluster3->getSinkPath().isEmpty());
+    QVERIFY(!forwardCluster4->getSinkPath().isEmpty());
+    QVERIFY(!forwardCluster5->getSinkPath().isEmpty());
+    //disconnect from all nodes
+    sink.disconnectSinkFromNetwork();
+    //all states changed
+    QVERIFY(forwardCluster1->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    QVERIFY(forwardCluster2->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    QVERIFY(forwardCluster3->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    QVERIFY(forwardCluster4->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    QVERIFY(forwardCluster5->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    QVERIFY(directCluster1->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    QVERIFY(directCluster2->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    QVERIFY(directCluster3->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
+    //sink paths reset
+    QVERIFY(forwardCluster1->getSinkPath().isEmpty());
+    QVERIFY(forwardCluster2->getSinkPath().isEmpty());
+    QVERIFY(forwardCluster3->getSinkPath().isEmpty());
+    QVERIFY(forwardCluster4->getSinkPath().isEmpty());
+    QVERIFY(forwardCluster5->getSinkPath().isEmpty());
+    QVERIFY(directCluster1->getSinkPath().isEmpty());
+    QVERIFY(directCluster2->getSinkPath().isEmpty());
+    QVERIFY(directCluster3->getSinkPath().isEmpty());
+}

@@ -51,6 +51,7 @@ public:
     bool removeDirectCluster(NetworkNode *cluster);
     bool connectToNodeWidget(QWidget *widget);
     bool disconnectFromWidget();
+    void disconnectSinkFromNetwork();
     void sendNewPaths();
 
     void setPosition(const QPoint &pos);

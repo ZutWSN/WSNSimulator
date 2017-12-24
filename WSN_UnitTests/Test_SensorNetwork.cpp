@@ -3,25 +3,16 @@
 #include "NetworkLayer.h"
 #include "NetworkNode.h"
 
-void Test_SensorNetwork::test_addLayer()
+void Test_SensorNetwork::test_onSinkAdded()
 {
+    //check if network already has sink and if it has not
+    //add it at specific position
     SensorNetwork network;
-    QVERIFY(network.getNumberOfLayers() == 0);
-    network.addLayer(0);
-    QVERIFY(network.getNumberOfLayers() == 1);
-}
-
-void Test_SensorNetwork::test_getLayer()
-{
-    SensorNetwork network;
-    network.addLayer(0);
-    QVERIFY(network.getLayer(0) != nullptr);
-    QVERIFY(network.getLayer(1) == nullptr);
-}
-
-void Test_SensorNetwork::test_checkIfHasLayer()
-{
-
+    //connect sink added signal - drag'ndrop sink widget simulation
+    connect(this, SIGNAL(addNewSink(QPoint,quint16)), &network, SLOT(onSinkAdded(QPoint,quint16)));
+    QCOMPARE(network.networkHasSink(), false);
+    emit addNewSink(QPoint(0, 0), 10);
+    QCOMPARE(network.networkHasSink(), true);
 }
 
 void Test_SensorNetwork::test_onNewClusterAdded()
@@ -38,7 +29,17 @@ void Test_SensorNetwork::test_onNewSensorAdded()
     //if not clusters in range set as dangling disconnected sensor
 }
 
-void Test_SensorNetwork::test_connectSensorToNearestCluster()
+void Test_SensorNetwork::test_onSinkRemoved()
+{
+
+}
+
+void Test_SensorNetwork::test_onNewClusterRemoved()
+{
+
+}
+
+void Test_SensorNetwork::test_onNewSensorRemoved()
 {
 
 }

@@ -103,6 +103,11 @@ bool SinkNode::disconnectFromWidget()
     return disconnected;
 }
 
+void SinkNode::disconnectSinkFromNetwork()
+{
+    //set all network nodes to disconnected state and wait for sink to be added
+}
+
 void SinkNode::sendNewPaths()
 {
 

@@ -16,7 +16,7 @@
             <saveReport>false</saveReport>
             <reportFile>NetworkLayerTest.log</reportFile>
         </Test>
-        <Test enabled="false">
+        <Test enabled="true">
             <name>SensorNetworkTest</name>
             <saveReport>false</saveReport>
             <reportFile>SensorNetworkTest.log</reportFile>
@@ -36,7 +36,7 @@
             <saveReport>false</saveReport>
             <reportFile>ClusterNodeTest.log</reportFile>
         </Test>
-        <Test enabled="true">
+        <Test enabled="false">
             <name>SinkNodeTest</name>
             <saveReport>false</saveReport>
             <reportFile>SinkNodeTest.log</reportFile>
