@@ -108,9 +108,15 @@ void SinkNode::disconnectSinkFromNetwork()
     //set all network nodes to disconnected state and wait for sink to be added
 }
 
-void SinkNode::sendNewPaths()
+void SinkNode::sendNewPaths(quint16 senderLayer)
 {
-
+    QByteArray msg;
+    if(calculateNetworkPaths(msg))
+    {
+        DataFrame pathUpdate(msg, DataFrame::RxData::PATH_SYNC, 0, 0, 0);
+        ClusterNode::resetBroadCastSyncVector(senderLayer);
+        emit broadCastDataToClusters(pathUpdate);
+    }
 }
 
 void SinkNode::setPosition(const QPoint &pos)
@@ -136,6 +142,11 @@ quint16 SinkNode::getNumOfConnectedLayers() const
 DataFrame SinkNode::getLastMsg() const
 {
     return m_lastMsg;
+}
+
+QPoint SinkNode::getSinkPosition() const
+{
+    return m_position;
 }
 
 bool SinkNode::checkIfHasDirectCluster(NetworkNode *cluster) const
@@ -175,13 +186,7 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
             removeNode(data.getMsg());
             if(!m_inRangeClusters.isEmpty())
             {
-                QByteArray msg;
-                if(calculateNetworkPaths(msg))
-                {
-                    DataFrame pathUpdate(msg, DataFrame::RxData::PATH_SYNC, 0, 0, 0);
-                    ClusterNode::resetBroadCastSyncVector(data.getSender().second);
-                    emit broadCastDataToClusters(pathUpdate);
-                }
+                sendNewPaths(data.getSender().second);
             }
             else    //node removed was last in range cluster
             {

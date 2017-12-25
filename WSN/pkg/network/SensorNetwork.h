@@ -20,9 +20,9 @@ public:
     NetworkLayer* getLayer(qint16 layer_id) const;
     bool networkHasSink() const;
 public slots:
-    void onSinkAdded(const QPoint &position, quint16 range);
-    void onNewClusterAdded(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range);
-    void onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range);
+    void onSinkAdded(const QPoint &position, quint16 range, QWidget *uiWidget);
+    void onNewClusterAdded(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
+    void onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void onSinkRemoved();
     void onNewClusterRemoved(quint16 cluster_id, quint16 layer_id);
     void onNewSensorRemoved(quint16 sensor_id, quint16 layer_id);

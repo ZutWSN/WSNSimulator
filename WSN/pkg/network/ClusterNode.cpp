@@ -399,18 +399,21 @@ void ClusterNode::processNewData(const DataFrame &rxData)
                                     ++m_neighbourPathsCounter;
                                     if(m_neighbourPathsCounter == m_connectedNodes.size())
                                     {
-                                        m_neighbourPathsCounter = 0;
-                                        m_state = ClusterStates::CONNECTED;
-                                        QByteArray clusterPathMsg;
-                                        //send newly found sinkpath to sink for it to recognize that new cluster has been
-                                        //added to its cluster network and so that sink can send messages to it
-                                        if(createClusterPathMsg(m_sinkPath, clusterPathMsg))
+                                        if(!m_sinkPath.isEmpty())
                                         {
-                                            DataFrame frame(clusterPathMsg, DataFrame::RxData::CLUSTER_PATH, m_sinkPath[0], m_layer_id, m_node_id);
-                                            frame.setPath(m_sinkPath);
-                                            txData = frame;
-                                            sendTxData = true;
+                                            m_state = ClusterStates::CONNECTED;
+                                            QByteArray clusterPathMsg;
+                                            //send newly found sinkpath to sink for it to recognize that new cluster has been
+                                            //added to its cluster network and so that sink can send messages to it
+                                            if(createClusterPathMsg(m_sinkPath, clusterPathMsg))
+                                            {
+                                                DataFrame frame(clusterPathMsg, DataFrame::RxData::CLUSTER_PATH, m_sinkPath[0], m_layer_id, m_node_id);
+                                                frame.setPath(m_sinkPath);
+                                                txData = frame;
+                                                sendTxData = true;
+                                            }
                                         }
+                                        m_neighbourPathsCounter = 0;                                       
                                     }
                                 }
 

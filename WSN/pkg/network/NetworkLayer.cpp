@@ -142,6 +142,11 @@ NetworkNode *NetworkLayer::getNode(quint16 id) const
     return retNode;
 }
 
+QVector<NetworkNode*>::const_iterator NetworkLayer::getIteratorToFirstNode()
+{
+    return m_nodes.constBegin();
+}
+
 NetworkNode* NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
 {
     NetworkNode *new_node = nullptr;
