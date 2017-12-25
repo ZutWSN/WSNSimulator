@@ -13,7 +13,7 @@ SinkNode::SinkNode()
 
 }
 
-SinkNode::SinkNode(const QPoint &position, quint16 range):
+SinkNode::SinkNode(const QPoint &position, double range):
     m_position(position),
     m_range(range)
 {
@@ -147,6 +147,11 @@ DataFrame SinkNode::getLastMsg() const
 QPoint SinkNode::getSinkPosition() const
 {
     return m_position;
+}
+
+double SinkNode::getSinkRange() const
+{
+    return m_range;
 }
 
 bool SinkNode::checkIfHasDirectCluster(NetworkNode *cluster) const

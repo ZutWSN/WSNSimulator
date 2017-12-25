@@ -45,14 +45,14 @@ public:
         }
     };
     SinkNode();
-    SinkNode(const QPoint &position, quint16 range);
+    SinkNode(const QPoint &position, double range);
 
     bool addDirectCluster(NetworkNode *cluster);
     bool removeDirectCluster(NetworkNode *cluster);
     bool connectToNodeWidget(QWidget *widget);
     bool disconnectFromWidget();
     void disconnectSinkFromNetwork();
-    void sendNewPaths();
+    void sendNewPaths(quint16 senderLayer);
 
     void setPosition(const QPoint &pos);
     void setRange(quint16 range);
@@ -61,6 +61,7 @@ public:
     quint16 getNumOfConnectedLayers() const;
     DataFrame getLastMsg() const;
     QPoint getSinkPosition() const;
+    double getSinkRange() const;
     bool checkIfHasDirectCluster(NetworkNode *cluster) const;
     bool checkIfHasMappedCluster(quint16 node_id, quint16 layer_id) const;
 private:
@@ -73,10 +74,10 @@ signals:
     void receivedData(const DataFrame &data); //to widget
     void broadCastDataToClusters(const DataFrame &data);
 private:
-    bool calculateNetworkPaths(QByteArray &updateMsg);//TDO
-    bool updateClusterPath(const DataFrame &data); //TDO
+    bool calculateNetworkPaths(QByteArray &updateMsg);
+    bool updateClusterPath(const DataFrame &data);
     quint16 checkIfHasMappedCluster(const MappedClusterNode &node) const;
-    void removeNode(const QByteArray &msg); //TDO
+    void removeNode(const QByteArray &msg);
     QVector<Vertice> createGraphAndFindPaths() const;
     bool updatePathsAndCreateSyncMsg(const QVector<Vertice> &vertices, QByteArray &updateMsg);
     void resetMappedSinkPaths();
@@ -84,7 +85,7 @@ private:
     void extractMappedNodeData(const MappedClusterNode &node, Vertice &vertice) const;
 private:
     QPoint m_position;
-    quint16 m_range;
+    double m_range;
     //clusters with direct connection to sink
     QVector<NetworkNode*> m_inRangeClusters;
     QVector<MappedClusterNode> m_clusterPathMap;

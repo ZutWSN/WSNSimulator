@@ -22,11 +22,16 @@ signals:
     void addNewSink(const QPoint &position, quint16 range, QWidget *uiWidget);
     void addNewCluster(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void addNewSensor(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
+    void removeSink();
+    void removeCluster(quint16 cluster_id, quint16 layer_id);
+    void removeSensor(quint16 cluster_id, quint16 layer_id);
 private:
     QScopedPointer<SensorNetwork> network;
     QScopedPointer<QWidget> sinkWgt;
-    QScopedPointer<QWidget> sensorWgt;
-    QScopedPointer<QWidget> clusterWgt;
+    QScopedPointer<QWidget> sensorWgt0;
+    QScopedPointer<QWidget> sensorWgt1;
+    QScopedPointer<QWidget> clusterWgt0;
+    QScopedPointer<QWidget> clusterWgt1;
 };
 
 #endif // TEST_SENSORNETWORK_H

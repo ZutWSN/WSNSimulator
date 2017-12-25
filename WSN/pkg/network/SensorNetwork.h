@@ -24,8 +24,8 @@ public slots:
     void onNewClusterAdded(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void onSinkRemoved();
-    void onNewClusterRemoved(quint16 cluster_id, quint16 layer_id);
-    void onNewSensorRemoved(quint16 sensor_id, quint16 layer_id);
+    void onClusterRemoved(quint16 cluster_id, quint16 layer_id);
+    void onSensorRemoved(quint16 sensor_id, quint16 layer_id);
 
 private:
     bool checkIfHasLayer(qint16 layer_id) const;
