@@ -308,7 +308,6 @@ void SensorNetwork::onSinkRemoved()
     {
         m_sink->sendSinkRemovedBroadcast();
         m_sink->disconnectFromWidget();
-        m_sink->disconnectSinkFromNetwork();
         delete m_sink;
         m_sink = nullptr;
     }

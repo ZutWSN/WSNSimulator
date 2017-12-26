@@ -358,7 +358,7 @@ void Test_SinkNode::test_disconnectSinkFromNetwork()
     QVERIFY(!forwardCluster4->getSinkPath().isEmpty());
     QVERIFY(!forwardCluster5->getSinkPath().isEmpty());
     //disconnect from all nodes
-    sink.disconnectSinkFromNetwork();
+    sink.sendSinkRemovedBroadcast();
     //all states changed
     QVERIFY(forwardCluster1->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
     QVERIFY(forwardCluster2->getCurrentState() == ClusterNode::ClusterStates::DISCONNECTED);
