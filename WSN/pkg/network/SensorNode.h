@@ -16,6 +16,7 @@ public:
     bool sendDataToCluster(const QByteArray &data);
 
     NetworkNode::NodeType getNodeType() const;
+    quint16 getClusterID() const;
     bool isConnectedToCluster() const;
 public slots:
     void onReceivedDataFromCluster(const DataFrame &rxData);

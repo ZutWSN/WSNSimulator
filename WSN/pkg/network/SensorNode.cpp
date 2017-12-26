@@ -35,7 +35,7 @@ bool SensorNode::connectToNode(NetworkNode *node)
 
                 if(node->getNodeID() != m_node_id)
                 {
-                    if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
+                    if(checkIfInRange(node->getNodePosition()) && node->checkIfInRange(m_node_position))
                     {
                         ClusterNode *cluster = static_cast<ClusterNode*>(node);
                         connected = static_cast<bool>(connect(cluster, SIGNAL(broadcastDataToSensors(DataFrame)), this, SLOT(onReceivedDataFromCluster(DataFrame))));
@@ -93,6 +93,11 @@ bool SensorNode::sendDataToCluster(const QByteArray &data)
 NetworkNode::NodeType SensorNode::getNodeType() const
 {
     return NodeType::Sensor;
+}
+
+quint16 SensorNode::getClusterID() const
+{
+    return m_cluster_id;
 }
 
 bool SensorNode::isConnectedToCluster() const

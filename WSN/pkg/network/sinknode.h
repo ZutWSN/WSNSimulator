@@ -53,6 +53,7 @@ public:
     bool disconnectFromWidget();
     void disconnectSinkFromNetwork();
     void sendNewPaths(quint16 senderLayer);
+    void sendSinkRemovedBroadcast();
 
     void setPosition(const QPoint &pos);
     void setRange(quint16 range);

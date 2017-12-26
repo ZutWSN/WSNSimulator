@@ -107,7 +107,7 @@ public:
     {
         bool equal = (getNodeID() == rhs.getNodeID());
         equal &= (getNodeLayer() == rhs.getNodeLayer());
-        equal &= (getNodePostion() == rhs.getNodePostion());
+        equal &= (getNodePosition() == rhs.getNodePosition());
         return equal;
     }
 
@@ -126,11 +126,13 @@ public:
     quint16 getNumOfSensorPendingMsgs() const;
     ClusterStates getCurrentState() const;
     QVector<quint16> getSinkPath() const;
+    QVector<NetworkNode*>::const_iterator getIteratorToFirstSensor() const;
 
     bool checkIfConnectedToSensor(NetworkNode *sensor) const;
     NetworkNode::NodeType getNodeType() const;
     bool removeFromSyncPath();
     static void resetBroadCastSyncVector(quint16 layer_id);
+    static void resetBroadCastAllLayers();
 public slots:
     void onReceivedDataFromSensor(const QByteArray &data);
 signals:

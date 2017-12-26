@@ -71,7 +71,7 @@ bool SinkNode::connectToNodeWidget(QWidget *widget)
     {
         if(!m_connectedToWidget)
         {
-            success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
+            success = static_cast<bool>(connect(this, SIGNAL(receivedData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
             m_connectedToWidget = success;
             if(m_connectedToWidget)
             {
@@ -117,6 +117,13 @@ void SinkNode::sendNewPaths(quint16 senderLayer)
         ClusterNode::resetBroadCastSyncVector(senderLayer);
         emit broadCastDataToClusters(pathUpdate);
     }
+}
+
+void SinkNode::sendSinkRemovedBroadcast()
+{
+    DataFrame noSinkConnection(QByteArray(), DataFrame::RxData::NO_SINK_CONNECTION, 0, 0, 0);
+    ClusterNode::resetBroadCastAllLayers();
+    emit broadCastDataToClusters(noSinkConnection);
 }
 
 void SinkNode::setPosition(const QPoint &pos)

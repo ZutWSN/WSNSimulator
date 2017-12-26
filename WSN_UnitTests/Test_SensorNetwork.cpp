@@ -63,8 +63,8 @@ void Test_SensorNetwork::test_onNewSensorAdded()
 {
     //connect to nearest cluster in range
     //if not clusters in range set as dangling disconnected sensor
-    emit addNewSensor(2, 0, QPoint(0, 12), 2, sensorWgt0);
-    emit addNewSensor(3, 0, QPoint(0, 6), 2, sensorWgt1);
+    emit addNewSensor(2, 0, QPoint(0, 12), 8, sensorWgt0.data());
+    emit addNewSensor(3, 0, QPoint(0, 6), 8, sensorWgt1.data());
     NetworkLayer *layer = network->getLayer(0);
     QVERIFY(layer->getNumOfNodes() == 4);
     SensorNode *sensor0 = static_cast<SensorNode*>(layer->getNode(2));
@@ -73,8 +73,8 @@ void Test_SensorNetwork::test_onNewSensorAdded()
     QVERIFY(sensor1 != nullptr);
     QVERIFY(sensor0->isConnectedToCluster());
     QVERIFY(sensor1->isConnectedToCluster());
-    QCOMPARE(sensor0->checkIfConnectedToNode(layer->getNode(1)), true);
-    QCOMPARE(sensor1->checkIfConnectedToNode(layer->getNode(0)), true);
+    QVERIFY(sensor0->getClusterID() == 1);
+    QVERIFY(sensor1->getClusterID() == 0);
 }
 
 void Test_SensorNetwork::test_onSinkRemoved()
@@ -115,10 +115,10 @@ void Test_SensorNetwork::test_onNewClusterRemoved()
     //remove one of the clusters
     auto cluster = static_cast<ClusterNode*>(layer->getNode(1));
     QVERIFY(layer->getNumOfNodes() == 4);
-    QVERIFY(cluster->getNumOfSensors() == 2);
+    QVERIFY(cluster->getNumOfSensors() == 1);
     emit removeCluster(0, 0);
     QVERIFY(layer->getNumOfNodes() == 3);
-    QCOMPARE(layer->getNode(0), nullptr);
+    QVERIFY(layer->getNode(0) == nullptr);
     //sensor reconnects with nearest cluster
     QVERIFY(cluster->getNumOfSensors() == 2);
     QVERIFY(!cluster->checkIfConnectedToNode(qMakePair(0, 0)));

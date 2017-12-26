@@ -185,7 +185,7 @@ qint16 NetworkNode::getNodeLayer() const
     return m_layer_id;
 }
 
-QPoint NetworkNode::getNodePostion() const
+QPoint NetworkNode::getNodePosition() const
 {
     return m_node_position;
 }
@@ -226,7 +226,7 @@ bool NetworkNode::connectToNode(NetworkNode *node)
                     if(!checkIfConnectedToNode(node))
                     {
                         //both nodes have to be in each others range for 2 way communication
-                        if(checkIfInRange(node->getNodePostion()) && node->checkIfInRange(m_node_position))
+                        if(checkIfInRange(node->getNodePosition()) && node->checkIfInRange(m_node_position))
                         {
                             connected = static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), node, SLOT(onReceivedData(DataFrame))));
                             connected &= static_cast<bool>(connect(node, SIGNAL(dataSend(DataFrame)), this, SLOT(onReceivedData(DataFrame))));
@@ -323,7 +323,7 @@ double NetworkNode::getDistanceFromConnectedNode(double node_id) const
     {
         if(node->getNodeID() == node_id)
         {
-            distance = getDistanceFromNode(node->getNodePostion());
+            distance = getDistanceFromNode(node->getNodePosition());
         }
     }
     return distance;

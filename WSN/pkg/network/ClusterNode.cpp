@@ -98,6 +98,17 @@ void ClusterNode::resetBroadCastSyncVector(quint16 layer_id)
     }
 }
 
+void ClusterNode::resetBroadCastAllLayers()
+{
+    for(auto && layer : m_networkClusterSyncNodes)
+    {
+        for(auto && syncNode : layer.syncNodes)
+        {
+            syncNode.visited = false;
+        }
+    }
+}
+
 void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
 {
     m_mesgData += data;
@@ -199,7 +210,8 @@ bool ClusterNode::removeSensor(NetworkNode *sensor)
     int idx = m_sensors.indexOf(sensor);
     if(idx >= 0)
     {
-        if(!static_cast<SensorNode*>(sensor)->isConnectedToCluster())
+        SensorNode *sensorToRemove = static_cast<SensorNode*>(sensor);
+        if(!sensorToRemove->isConnectedToCluster() || (sensorToRemove->getClusterID() != m_node_id))
         {
             m_sensors.remove(idx);
             removed = true;
@@ -257,6 +269,11 @@ ClusterNode::ClusterStates ClusterNode::getCurrentState() const
 QVector<quint16> ClusterNode::getSinkPath() const
 {
     return m_sinkPath;
+}
+
+QVector<NetworkNode*>::const_iterator ClusterNode::getIteratorToFirstSensor() const
+{
+    return m_sensors.constBegin();
 }
 
 bool ClusterNode::checkIfConnectedToSensor(NetworkNode *sensor) const
@@ -320,16 +337,13 @@ void ClusterNode::processNewData(const DataFrame &rxData)
         {
             txData.addVisitedNode(qMakePair(m_node_id, m_layer_id));
             setThisNodeVisited();
-            if(m_state != ClusterStates::CONNECTED_TO_SINK)
+            //clear sink path and its length, change state to disconnected
+            if(m_state != ClusterStates::DISCONNECTED)
             {
-                //clear sink path and its length, change state to disconnected
-                if(m_state != ClusterStates::DISCONNECTED)
-                {
-                    m_sinkPath.clear();
-                    m_pathLength = UINT64_MAX;
-                    m_state = ClusterStates::DISCONNECTED;
-                    m_directNodesConnections.clear();
-                }
+                m_sinkPath.clear();
+                m_pathLength = UINT64_MAX;
+                m_state = ClusterStates::DISCONNECTED;
+                m_directNodesConnections.clear();
             }
             if(!checkIfAllSyncNodesVisited())
             {

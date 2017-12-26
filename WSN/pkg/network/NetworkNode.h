@@ -43,7 +43,7 @@ public:
     //getters
     quint16 getNodeID() const;
     qint16 getNodeLayer() const;
-    QPoint getNodePostion() const;
+    QPoint getNodePosition() const;
     quint16 getNodeRange() const;
     quint16 getNumOfConnectedNodes() const;
     QVector<QPair<quint16, quint16> > getNeighbours() const;
