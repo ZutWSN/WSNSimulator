@@ -23,7 +23,7 @@ public:
     qint16 getLayerId() const;
     quint16 getNumOfNodes() const;
     NetworkNode *getNode(quint16 id) const;
-    bool checkIfIdAvailable(quint16 id) const;
+    static bool checkIfIdAvailable(quint16 id);
     QVector<NetworkNode*>::const_iterator getIteratorToFirstNode();
     //make sensor network a friend so it can access layer nodes via private getter or directly from vector m_nodes
 private:

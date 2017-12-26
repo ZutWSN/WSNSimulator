@@ -198,30 +198,76 @@ void SensorNetwork::onSinkAdded(const QPoint &position, quint16 range, QWidget *
 
 void SensorNetwork::onNewClusterAdded(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget)
 {
-    NetworkLayer *layer = getLayer(layer_id);
-    if(!layer)
+    if(NetworkLayer::checkIfIdAvailable(cluster_id))
     {
-        layer = new NetworkLayer(layer_id);
-        m_layers.push_back(layer);
-    }
-    layer->createNode(NetworkNode::NodeType::Cluster, cluster_id);
-    ClusterNode *newCluster = static_cast<ClusterNode*>(layer->getNode(cluster_id));
-    if(newCluster)
-    {
-        newCluster->setNodePosition(position);
-        newCluster->setNodeRange(range);
-        //connect to coresponding widget
-        newCluster->connectToNodeWidget(uiWidget);
-        bool directClusterAdded = false;
-        //check if has sink and can connect to it
-        if(m_sink)
+        NetworkLayer *layer = getLayer(layer_id);
+        if(!layer)
         {
-            double sinkDistance = newCluster->getDistanceFromNode(m_sink->getSinkPosition());
-            if(range >= sinkDistance && m_sink->getSinkRange() >= sinkDistance)
+            layer = new NetworkLayer(layer_id);
+            m_layers.push_back(layer);
+        }
+        layer->createNode(NetworkNode::NodeType::Cluster, cluster_id);
+        ClusterNode *newCluster = static_cast<ClusterNode*>(layer->getNode(cluster_id));
+        if(newCluster)
+        {
+            newCluster->setNodePosition(position);
+            newCluster->setNodeRange(range);
+            //connect to coresponding widget
+            newCluster->connectToNodeWidget(uiWidget);
+            bool directClusterAdded = false;
+            //check if has sink and can connect to it
+            if(m_sink)
             {
-                directClusterAdded = m_sink->addDirectCluster(newCluster);
+                double sinkDistance = newCluster->getDistanceFromNode(m_sink->getSinkPosition());
+                if(range >= sinkDistance && m_sink->getSinkRange() >= sinkDistance)
+                {
+                    directClusterAdded = m_sink->addDirectCluster(newCluster);
+                }
+            }
+            if(layer->getNumOfNodes() > 0)
+            {
+                //go through all cluster nodes and connect to the nearest one
+                quint16 i = 0;
+                for(QVector<NetworkNode*>::const_iterator node = layer->getIteratorToFirstNode(); i < layer->getNumOfNodes(); node++)
+                {
+                    ++i;
+                    if((*node)->getNodeID() != cluster_id)
+                    {
+                        if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
+                        {
+                            double distance = (*node)->getDistanceFromNode(position);
+                            if(distance <= range)
+                            {
+                                newCluster->connectToNode(*node);
+                            }
+                        }
+                    }
+                }
+                if(!directClusterAdded)
+                {
+                    newCluster->sendSinkPathReq();
+                }
+                else
+                {
+                    m_sink->sendNewPaths(layer_id);
+                }
             }
         }
+    }
+}
+
+void SensorNetwork::onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget)
+{
+    if(NetworkLayer::checkIfIdAvailable(sensor_id))
+    {
+        NetworkLayer *layer = getLayer(layer_id);
+        if(!layer)
+        {
+            layer = new NetworkLayer(layer_id);
+            m_layers.push_back(layer);
+        }
+        double minDistance = UINT64_MAX;
+        NetworkNode *closestCluster = nullptr;
         if(layer->getNumOfNodes() > 0)
         {
             //go through all cluster nodes and connect to the nearest one
@@ -229,76 +275,29 @@ void SensorNetwork::onNewClusterAdded(quint16 cluster_id, quint16 layer_id, cons
             for(QVector<NetworkNode*>::const_iterator node = layer->getIteratorToFirstNode(); i < layer->getNumOfNodes(); node++)
             {
                 ++i;
-                if((*node)->getNodeID() != cluster_id)
+                if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
                 {
-                    if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
+                    double distance = (*node)->getDistanceFromNode(position);
+                    if(distance <= range && distance < minDistance)
                     {
-                        double distance = (*node)->getDistanceFromNode(position);
-                        if(distance <= range)
-                        {
-                            newCluster->connectToNode(*node);
-                        }
+                        minDistance = distance;
+                        closestCluster = *node;
                     }
                 }
             }
-            if(!directClusterAdded)
-            {
-                newCluster->sendSinkPathReq();
-            }
-            else
-            {
-                m_sink->sendNewPaths(layer_id);
-            }
         }
-    }
-
-        //---------------------------------------------------------------------
-        //Later reasingning sensors so that if
-        //they are closer to this custer than previous ones connect them to this
-        //this should be done by sending message to other cluster and sending
-        //which will reasign those sensors by sending them the message of
-        //new cluster position and id
-}
-
-void SensorNetwork::onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget)
-{
-    NetworkLayer *layer = getLayer(layer_id);
-    if(!layer)
-    {
-        layer = new NetworkLayer(layer_id);
-        m_layers.push_back(layer);
-    }
-    double minDistance = UINT64_MAX;
-    NetworkNode *closestCluster = nullptr;
-    if(layer->getNumOfNodes() > 0)
-    {
-        //go through all cluster nodes and connect to the nearest one
-        quint16 i = 0;
-        for(QVector<NetworkNode*>::const_iterator node = layer->getIteratorToFirstNode(); i < layer->getNumOfNodes(); node++)
+        layer->createNode(NetworkNode::NodeType::Sensor, sensor_id);
+        NetworkNode *newSensor = layer->getNode(sensor_id);
+        if(newSensor)
         {
-            ++i;
-            if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
+            newSensor->setNodePosition(position);
+            newSensor->setNodeRange(range);
+            //connect to coresponding widget
+            newSensor->connectToNodeWidget(uiWidget);
+            if(closestCluster && minDistance < UINT64_MAX)
             {
-                double distance = (*node)->getDistanceFromNode(position);
-                if(distance <= range && distance < minDistance)
-                {
-                    minDistance = distance;
-                    closestCluster = *node;
-                }
+                newSensor->connectToNode(closestCluster);
             }
-        }
-    }
-    layer->createNode(NetworkNode::NodeType::Sensor, sensor_id);
-    NetworkNode *newSensor = layer->getNode(sensor_id);
-    if(newSensor)
-    {
-        newSensor->setNodePosition(position);
-        newSensor->setNodeRange(range);
-        //connect to coresponding widget
-        newSensor->connectToNodeWidget(uiWidget);
-        if(closestCluster && minDistance < UINT64_MAX)
-        {
-            newSensor->connectToNode(closestCluster);
         }
     }
 }
@@ -315,18 +314,13 @@ void SensorNetwork::onSinkRemoved()
     }
 }
 
-void SensorNetwork::onClusterRemoved(quint16 cluster_id, quint16 layer_id)
+void SensorNetwork::onNodeRemoved(quint16 node_id, quint16 layer_id)
 {
     NetworkLayer *layer = getLayer(layer_id);
     if(layer)
     {
-        layer->removeNode(cluster_id);
+        layer->removeNode(node_id);
     }
-}
-
-void SensorNetwork::onSensorRemoved(quint16 sensor_id, quint16 layer_id)
-{
-
 }
 
 bool SensorNetwork::networkHasSink() const

@@ -15,8 +15,7 @@ void Test_SensorNetwork::initTestCase()
     connect(this, SIGNAL(addNewCluster(quint16,quint16,QPoint,quint16,QWidget*)), network.data(), SLOT(onNewClusterAdded(quint16,quint16,QPoint,quint16,QWidget*)));
     connect(this, SIGNAL(addNewSensor(quint16,quint16,QPoint,quint16,QWidget*)), network.data(), SLOT(onNewSensorAdded(quint16,quint16,QPoint,quint16,QWidget*)));
     connect(this, SIGNAL(removeSink()), network.data(), SLOT(onSinkRemoved()));
-    connect(this, SIGNAL(removeCluster(quint16,quint16)), network.data(), SLOT(onClusterRemoved(quint16,quint16)));
-    connect(this, SIGNAL(removeSensor(quint16,quint16)), network.data(), SLOT(onSensorRemoved(quint16,quint16)));
+    connect(this, SIGNAL(removeNode(quint16,quint16)), network.data(), SLOT(onNodeRemoved(quint16,quint16)));
 
     WidgetFactory wFactory;
     sensorWgt0.reset(static_cast<QWidget*>(wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor)));
@@ -116,7 +115,7 @@ void Test_SensorNetwork::test_onNewClusterRemoved()
     auto cluster = static_cast<ClusterNode*>(layer->getNode(1));
     QVERIFY(layer->getNumOfNodes() == 4);
     QVERIFY(cluster->getNumOfSensors() == 1);
-    emit removeCluster(0, 0);
+    emit removeNode(0, 0);
     QVERIFY(layer->getNumOfNodes() == 3);
     QVERIFY(layer->getNode(0) == nullptr);
     //sensor reconnects with nearest cluster
@@ -130,7 +129,7 @@ void Test_SensorNetwork::test_onNewSensorRemoved()
     auto cluster = static_cast<ClusterNode*>(layer->getNode(1));
     QVERIFY(layer->getNumOfNodes() == 3);
     QVERIFY(cluster->getNumOfSensors() == 2);
-    emit removeSensor(2, 0);
+    emit removeNode(2, 0);
     QVERIFY(cluster->getNumOfSensors() == 1);
     QVERIFY(layer->getNumOfNodes() == 2);
 }

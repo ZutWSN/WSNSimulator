@@ -23,8 +23,7 @@ signals:
     void addNewCluster(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void addNewSensor(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void removeSink();
-    void removeCluster(quint16 cluster_id, quint16 layer_id);
-    void removeSensor(quint16 cluster_id, quint16 layer_id);
+    void removeNode(quint16 node_id, quint16 layer_id);
 private:
     QScopedPointer<SensorNetwork> network;
     QScopedPointer<QWidget> sinkWgt;

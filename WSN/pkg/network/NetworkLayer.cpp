@@ -153,7 +153,7 @@ QVector<NetworkNode*>::const_iterator NetworkLayer::getIteratorToFirstNode()
 NetworkNode* NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
 {
     NetworkNode *new_node = nullptr;
-    if(checkIfHasNode(node_id) < 0)
+    if(checkIfIdAvailable(node_id))
     {      
         switch(nodeType)
         {
@@ -273,8 +273,8 @@ bool NetworkLayer::removeNode(quint16 node_id)
                     ClusterNode *cluster = static_cast<ClusterNode*>(getNode(sensor->getClusterID()));
                     if(cluster)
                     {
-                        cluster->removeSensor(sensor);
                         sensor->disconnectFromNode(cluster);
+                        cluster->removeSensor(sensor);
                     }
                 }
             }
@@ -377,7 +377,7 @@ void NetworkLayer::reassignSensorNodes(quint16 node_id)
     }
 }
 
-bool NetworkLayer::checkIfIdAvailable(quint16 id) const
+bool NetworkLayer::checkIfIdAvailable(quint16 id)
 {
     return (m_usedIDPool.indexOf(id) < 0);
 }
