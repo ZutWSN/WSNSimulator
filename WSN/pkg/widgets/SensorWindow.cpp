@@ -18,6 +18,7 @@
 #include "widgetfactory.h"
 #include "NodeConfiguration.h"
 #include "SinkWidget.h"
+#include "ClusterNode.h"
 
 const QString MIME_DATA_FORMAT = "text/plain";
 //Define widgets position - later create separate file containing wigets position configuration
@@ -39,6 +40,12 @@ SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
 
     initializeUiWidgets();
     m_sensorNetwork.reset(new SensorNetwork);
+    //register for sensor network signals and slots
+    connect(this, SIGNAL(addNewSink(QPoint,quint16,QWidget*)), m_sensorNetwork.data(), SLOT(onSinkAdded(QPoint,quint16,QWidget*)));
+    connect(this, SIGNAL(addNewCluster(quint16,quint16,QPoint,quint16,QWidget*)), m_sensorNetwork.data(), SLOT(onNewClusterAdded(quint16,quint16,QPoint,quint16,QWidget*)));
+    connect(this, SIGNAL(addNewSensor(quint16,quint16,QPoint,quint16,QWidget*)), m_sensorNetwork.data(), SLOT(onNewSensorAdded(quint16,quint16,QPoint,quint16,QWidget*)));
+    connect(this, SIGNAL(removeSink()), m_sensorNetwork.data(), SLOT(onSinkRemoved()));
+    connect(this, SIGNAL(removeNode(quint16,quint16)), m_sensorNetwork.data(), SLOT(onNodeRemoved(quint16,quint16)));
 }
 
 SensorWindow::~SensorWindow()
@@ -135,6 +142,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
                         emit removeSink();
                     }
                     emit addNewSink(newWidget->pos(), range, newWidget);
+
                     break;
                 case DragWidget::DragWidgetType::Cluster:
                     if(!isOldWidgetRootWidget)
@@ -153,7 +161,10 @@ void SensorWindow::dropEvent(QDropEvent *event)
                     newWidget->connectToNode(node_id, layer_id, range);
                     break;
             }
+            //update displayed paths - check all connections and edit linepaths
+            redrawConnections();
             m_dragWidgets.push_back(newWidget);
+            connect(newWidget, SIGNAL(sendWidgetReceivedData(DataFrame,quint16,quint16)), this, SLOT(onWidgetReceivedData(DataFrame,quint16,quint16)));
             if (event->source() == this)
             {
                 event->setDropAction(Qt::MoveAction);
@@ -293,13 +304,59 @@ void SensorWindow::pressedButton()
         for(QVector<NetworkLayer*>::const_iterator layer = m_sensorNetwork->getIteratorToFirstLayer(); i < m_sensorNetwork->getNumberOfLayers(); layer++)
         {
             ++i;
-            for(QVector<NetworkNode*>::const_iterator node = (*layer)->getIteratorToFirstNode(); i < (*layer)->getNumOfNodes(); node++)
+            m_logWindow->appendPlainText("\nLayer ID: " + QString::number((*layer)->getLayerId()) +
+                                         "\nNumber of Nodes: " + QString::number((*layer)->getNumOfNodes()));
+            quint16 j = 0;
+            for(QVector<NetworkNode*>::const_iterator node = (*layer)->getIteratorToFirstNode(); j < (*layer)->getNumOfNodes(); node++)
             {
                 //list all information about every layer and its nodes
+                ++j;
+                m_logWindow->appendPlainText("\nNode Type:" + (*node)->getNodeTypeName() +
+                                             "\nNode ID: " + QString::number((*node)->getNodeID()) +
+                                             "\nConnected To Nodes: \n");
+                for(auto && neighbour : (*node)->getNeighbours())
+                {
+                    NetworkNode *neighbourNode = (*layer)->getNode(neighbour.first);
+                    if(neighbourNode)
+                    {
+                        m_logWindow->appendPlainText("\nNode Type: " + neighbourNode->getNodeTypeName() +
+                                                     "\nNode ID: " + QString::number(neighbourNode->getNodeID()));
+                    }
+                }
+                //node sink path
+                if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
+                {
+                    ClusterNode *cluster = static_cast<ClusterNode*>((*node));
+                    if(cluster)
+                    {
+                        if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED ||
+                           cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
+                        {
+                            auto sinkPath = cluster->getSinkPath();
+                            if(!sinkPath.isEmpty())
+                            {
+                                m_logWindow->appendPlainText("\nSink Path: ");
+                                for(auto && pathNodeID : sinkPath)
+                                {
+                                    m_logWindow->appendPlainText("\nNode ID: " + QString::number(pathNodeID));
+                                }
+                            }
+                            if(cluster->getPathLength() != INIT_PATH_LENGTH)
+                            {
+                                m_logWindow->appendPlainText("\nPath Length: " + QString::number(cluster->getPathLength()));
+                            }
+                        }
+                        m_logWindow->appendPlainText("\nCluster State: " + cluster->getCurrentStateName());
+                    }
+                }
             }
         }
-
     }
+}
+
+void SensorWindow::onWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id)
+{
+    //handle displaying newly received data
 }
 
 void SensorWindow::initializeUiWidgets()
@@ -343,7 +400,13 @@ void SensorWindow::initializeUiWidgets()
 
 void SensorWindow::redrawConnections()
 {
+    //go through all SensorNetwork Nodes for each layer
+    //and draw them between coresponding nodes
+    m_networkConnectionLines.clear();
+    for(;;)
+    {
 
+    }
 }
 
 void SensorWindow::drawConnection()

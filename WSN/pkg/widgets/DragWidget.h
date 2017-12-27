@@ -32,6 +32,8 @@ public:
     void setConnectedToNode(bool connected);
 public slots:
     void onNodeReceivedData(const DataFrame &data);
+signals:
+    void sendWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id);
 private:
     QString m_imgName;
     bool m_rootWidget;

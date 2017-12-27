@@ -6,6 +6,14 @@
 #include "SensorNode.h"
 
 QVector<ClusterNode::SyncLayer> ClusterNode::m_networkClusterSyncNodes;
+const QVector<QString> clusterStateNames =
+{
+    "CREATED",
+    "PATH_SEEKING",
+    "CONNECTED",
+    "CONNECTED_TO_SINK",
+    "DISCONNECTED"
+};
 
 ClusterNode::ClusterNode(quint16 node_id) :
     NetworkNode(node_id),
@@ -74,6 +82,11 @@ bool ClusterNode::sendSinkPathReq()
 NetworkNode::NodeType ClusterNode::getNodeType() const
 {
     return NodeType::Cluster;
+}
+
+double ClusterNode::getPathLength() const
+{
+    return m_pathLength;
 }
 
 bool ClusterNode::removeFromSyncPath()
@@ -264,6 +277,11 @@ quint16 ClusterNode::getNumOfSensorPendingMsgs() const
 ClusterNode::ClusterStates ClusterNode::getCurrentState() const
 {
     return m_state;
+}
+
+QString ClusterNode::getCurrentStateName() const
+{
+    return clusterStateNames[static_cast<quint8>(getCurrentState())];
 }
 
 QVector<quint16> ClusterNode::getSinkPath() const

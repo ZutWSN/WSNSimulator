@@ -31,6 +31,7 @@ const QString DIRECT_CLUSTERS       = "DirectClusters";
 
 const quint8 NUM_OF_PATH_MESSAGE_PARAMS = 8;
 const quint8 NUM_OF_REMOVE_MESSAGE_PARAMS = 5;
+const double INIT_PATH_LENGTH = UINT64_MAX;
 
 class ClusterNode : public NetworkNode
 {
@@ -117,7 +118,10 @@ public:
     bool disconnectFromNetwork();
     bool addNode(NetworkNode *node);
     bool removeSensor(NetworkNode *sensor);
-    //those two methods will be deleted after completed testing
+    bool removeFromSyncPath();
+    static void resetBroadCastSyncVector(quint16 layer_id);
+    static void resetBroadCastAllLayers();
+
     bool setSinkPath(const QVector<quint16> &path);
     void setPathLength(double length);
     bool setConnectedToSink(SinkNode *sink);
@@ -125,14 +129,12 @@ public:
     quint16 getNumOfSensors() const;
     quint16 getNumOfSensorPendingMsgs() const;
     ClusterStates getCurrentState() const;
+    QString getCurrentStateName() const;
     QVector<quint16> getSinkPath() const;
     QVector<NetworkNode*>::const_iterator getIteratorToFirstSensor() const;
-
     bool checkIfConnectedToSensor(NetworkNode *sensor) const;
-    NetworkNode::NodeType getNodeType() const;
-    bool removeFromSyncPath();
-    static void resetBroadCastSyncVector(quint16 layer_id);
-    static void resetBroadCastAllLayers();
+    NetworkNode::NodeType getNodeType() const;    
+    double getPathLength() const;
 public slots:
     void onReceivedDataFromSensor(const QByteArray &data);
 signals:

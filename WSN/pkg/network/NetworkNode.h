@@ -50,6 +50,7 @@ public:
     double getDistanceFromNode(const QPoint &position) const;
     double getDistanceFromConnectedNode(double node_id) const;
     virtual NetworkNode::NodeType getNodeType() const;
+    QString getNodeTypeName() const;
     quint16 getNumOfPendingDataFrames() const;
 
     //flag checks

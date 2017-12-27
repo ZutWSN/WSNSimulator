@@ -76,7 +76,14 @@ double DragWidget::getNodeRange() const
 
 void DragWidget::onNodeReceivedData(const DataFrame &data)
 {
+    switch(data.getMsgType())
+    {
+        emit sendWidgetReceivedData(data, m_node_id, m_layer_id);
+    }
+
     //handle node received new data;
+    //notify sensorwindow parent widget
+    //signal its slot which later will call its paintevent update function
 }
 
 

@@ -2,6 +2,13 @@
 #include "DragWidget.h"
 #include <QPair>
 
+const QVector<QString> nodeTypeNames =
+{
+    "NoType",
+    "Sensor",
+    "Cluster"
+};
+
 NetworkNode::NetworkNode(quint16 node_id) :
     m_range(0),
     m_node_id(node_id),
@@ -307,6 +314,11 @@ bool NetworkNode::disconnectFromNetwork()
 NetworkNode::NodeType NetworkNode::getNodeType() const
 {
     return NodeType::NoType;
+}
+
+QString NetworkNode::getNodeTypeName() const
+{
+    return nodeTypeNames[static_cast<quint8>(getNodeType())];
 }
 
 bool NetworkNode::checkIfInRange(const QPoint &position) const

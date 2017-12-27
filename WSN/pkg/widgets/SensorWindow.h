@@ -33,6 +33,7 @@ protected:
     void paintEvent(QPaintEvent *e);
 public slots:
     void pressedButton();
+    void onWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id);
 signals:
     void addNewSink(const QPoint &position, quint16 range, QWidget *uiWidget);
     void addNewCluster(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
