@@ -1,4 +1,5 @@
 #include "dragwidget.h"
+#include "NetworkLayer.h"
 
 DragWidget::DragWidget(QWidget *parent, bool rootWidget):
     QLabel(parent),
@@ -27,6 +28,17 @@ void DragWidget::setConnectedToNode(bool connected)
     m_connectedToNode = connected;
 }
 
+bool DragWidget::connectToNode(quint16 node_id, quint16 layer_id, double range)
+{
+    if(NetworkLayer::checkIfIdAvailable(node_id))
+    {
+        m_connectedToNode = true;
+        m_node_id = node_id;
+        m_layer_id = layer_id;
+        m_range = range;
+    }
+}
+
 bool DragWidget::isRootWidget() const
 {
     return m_rootWidget;
@@ -45,6 +57,21 @@ QString DragWidget::getImageName() const
 bool DragWidget::isConnectedToNode() const
 {
     return m_connectedToNode;
+}
+
+quint16 DragWidget::getNodeID() const
+{
+    return m_node_id;
+}
+
+quint16 DragWidget::getLayerID() const
+{
+    return m_layer_id;
+}
+
+double DragWidget::getNodeRange() const
+{
+    return m_range;
 }
 
 void DragWidget::onNodeReceivedData(const DataFrame &data)

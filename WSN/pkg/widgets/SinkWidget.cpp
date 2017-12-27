@@ -10,3 +10,4 @@ DragWidget::DragWidgetType SinkWidget::getWidgetType() const
 {
     return DragWidgetType::Sink;
 }
+

@@ -18,6 +18,7 @@ public:
 
     quint16 getNumberOfLayers() const;
     NetworkLayer* getLayer(qint16 layer_id) const;
+    QVector<NetworkLayer*>::const_iterator getIteratorToFirstLayer();
     bool networkHasSink() const;
 public slots:
     void onSinkAdded(const QPoint &position, quint16 range, QWidget *uiWidget);
@@ -25,10 +26,8 @@ public slots:
     void onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void onSinkRemoved();
     void onNodeRemoved(quint16 node_id, quint16 layer_id);
-
 private:
     bool checkIfHasLayer(qint16 layer_id) const;
-    bool connectSensorToNearestCluster();
 private:
     QVector<NetworkLayer*> m_layers;
     SinkNode *m_sink;

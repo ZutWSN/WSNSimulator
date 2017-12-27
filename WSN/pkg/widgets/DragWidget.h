@@ -20,18 +20,25 @@ public:
     virtual ~DragWidget();
     void setWidgetImage(const QString &imgName);
     void setAsRootWidget();
-    void setConnectedToNode(bool connected);
+    bool connectToNode(quint16 node_id, quint16 layer_id, double range);
 
     bool isRootWidget() const;
     virtual DragWidget::DragWidgetType getWidgetType() const;
     QString getImageName() const;
     bool isConnectedToNode() const;
+    quint16 getNodeID() const;
+    quint16 getLayerID() const;
+    double getNodeRange() const;
+    void setConnectedToNode(bool connected);
 public slots:
     void onNodeReceivedData(const DataFrame &data);
 private:
     QString m_imgName;
     bool m_rootWidget;
     bool m_connectedToNode;
+    quint16 m_node_id;
+    quint16 m_layer_id;
+    double m_range;
 
 };
 

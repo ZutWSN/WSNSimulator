@@ -153,18 +153,26 @@ bool NetworkNode::connectToNodeWidget(QWidget *widget)
 bool NetworkNode::disconnectFromWidget()
 {
     bool disconnected = false;
-    if(m_connectedToWidget && m_Widget)
+    if(m_connectedToWidget)
     {
-        DragWidget *dragWidget = static_cast<DragWidget*>(m_Widget);
-        if(dragWidget->isConnectedToNode())
+        if(m_Widget)
         {
-            disconnected = disconnect(this, 0, m_Widget, 0);
+            DragWidget *dragWidget = static_cast<DragWidget*>(m_Widget);
+            if(dragWidget->isConnectedToNode())
+            {
+                disconnected = disconnect(this, 0, m_Widget, 0);
+            }
+            if(disconnected)
+            {
+                dragWidget->setConnectedToNode(false);
+                m_Widget = nullptr;
+                m_connectedToWidget = false;
+            }
         }
-        if(disconnected)
+        else
         {
-            dragWidget->setConnectedToNode(false);
-            m_Widget = nullptr;
-            m_connectedToWidget = false;           
+            m_connectedToWidget = false;
+            disconnected = true;
         }
     }
     return disconnected;

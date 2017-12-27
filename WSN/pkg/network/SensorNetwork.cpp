@@ -165,6 +165,11 @@ NetworkLayer* SensorNetwork::getLayer(qint16 layer_id) const
     return layerPtr;
 }
 
+QVector<NetworkLayer*>::const_iterator SensorNetwork::getIteratorToFirstLayer()
+{
+    return m_layers.constBegin();
+}
+
 void SensorNetwork::onSinkAdded(const QPoint &position, quint16 range, QWidget *uiWidget)
 {
     if(!networkHasSink())
@@ -180,7 +185,7 @@ void SensorNetwork::onSinkAdded(const QPoint &position, quint16 range, QWidget *
                 quint16 i = 0;
                 for(QVector<NetworkNode*>::const_iterator node = layer->getIteratorToFirstNode(); i < layer->getNumOfNodes(); node++)
                 {
-                    i++;
+                    ++i;
                     if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
                     {
                         double sinkDistance = (*node)->getDistanceFromNode(m_sink->getSinkPosition());
