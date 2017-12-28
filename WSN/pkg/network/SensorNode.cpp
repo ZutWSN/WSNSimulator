@@ -45,6 +45,7 @@ bool SensorNode::connectToNode(NetworkNode *node)
                         {
                             m_connectedToCluster = true;
                             m_cluster_id = node->getNodeID();
+                            m_connectedNodes.push_back(node);
                         }
                     }
                 }
@@ -71,6 +72,7 @@ bool SensorNode::disconnectFromNode(NetworkNode *node)
                     {
                         m_connectedToCluster = false;
                         m_cluster_id = 0;
+                        m_connectedNodes.remove(m_connectedNodes.indexOf(node));
                     }
                 }
             }

@@ -19,6 +19,7 @@ public:
     quint16 getNumberOfLayers() const;
     NetworkLayer* getLayer(qint16 layer_id) const;
     QVector<NetworkLayer*>::const_iterator getIteratorToFirstLayer();
+    QPoint getSinkPosition() const;
     bool networkHasSink() const;
 public slots:
     void onSinkAdded(const QPoint &position, quint16 range, QWidget *uiWidget);

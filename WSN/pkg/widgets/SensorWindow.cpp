@@ -19,6 +19,7 @@
 #include "NodeConfiguration.h"
 #include "SinkWidget.h"
 #include "ClusterNode.h"
+#include "SensorNode.h"
 
 const QString MIME_DATA_FORMAT = "text/plain";
 //Define widgets position - later create separate file containing wigets position configuration
@@ -26,7 +27,7 @@ const QPoint SENSOR_WIDGET_POS = QPoint(10, 10);
 const QPoint CLUSTER_WIDGET_POS = QPoint(10, 100);
 const QPoint SINK_WIDGET_POS = QPoint(10, 200);
 const QPoint BUTTON_POS = QPoint(400, 400);
-const QPoint LOG_WINDOW_POS = QPoint(600, 100);
+const QPoint LOG_WINDOW_POS = QPoint(450, 100);
 
 SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
     QMainWindow(parent),
@@ -141,7 +142,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
                     {
                         emit removeSink();
                     }
-                    emit addNewSink(newWidget->pos(), range, newWidget);
+                    emit addNewSink(newWidget->getPosition(), range, newWidget);
 
                     break;
                 case DragWidget::DragWidgetType::Cluster:
@@ -149,7 +150,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
                     {
                         emit removeNode(node_id, layer_id);
                     }
-                    emit addNewCluster(node_id, layer_id, newWidget->pos(), range, newWidget);
+                    emit addNewCluster(node_id, layer_id, newWidget->getPosition(), range, newWidget);
                     newWidget->connectToNode(node_id, layer_id, range);
                     break;
                 case DragWidget::DragWidgetType::Sensor:
@@ -157,13 +158,17 @@ void SensorWindow::dropEvent(QDropEvent *event)
                     {
                         emit removeNode(node_id, layer_id);
                     }
-                    emit addNewSensor(node_id, layer_id, newWidget->pos(), range, newWidget);
+                    emit addNewSensor(node_id, layer_id, newWidget->getPosition(), range, newWidget);
                     newWidget->connectToNode(node_id, layer_id, range);
                     break;
             }
             //update displayed paths - check all connections and edit linepaths
             redrawConnections();
             m_dragWidgets.push_back(newWidget);
+            if(isOldWidgetRootWidget)
+            {
+                ++m_id;
+            }
             connect(newWidget, SIGNAL(sendWidgetReceivedData(DataFrame,quint16,quint16)), this, SLOT(onWidgetReceivedData(DataFrame,quint16,quint16)));
             if (event->source() == this)
             {
@@ -191,7 +196,7 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
         bool drag = true;
         quint16 node_id = 0;
         quint16 layer_id = 0;
-        double range = 30; // later get from coresponding text edit
+        double range = 100; // later get from coresponding text edit
         if(child->isRootWidget())
         {
             if(isSink && m_sinkCreated)
@@ -229,7 +234,6 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
                     oldWidget->show();
                     oldWidget->setAttribute(Qt::WA_DeleteOnClose);
                 }
-                ++m_id;
             }
         }
         else
@@ -279,24 +283,24 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
 
 void SensorWindow::paintEvent(QPaintEvent *e)
 {
-    //draw test line
-    QLine line;
-    QPen pen;
     if(m_draw)
     {
-        line.setLine(0, 0, 100, 100);
-        pen.setColor(MESSAGE_RECEIVED_COLOR);
-
-        pen.setWidth(4);
         QPainter painter(this);
-        painter.setPen(pen);
-        painter.drawLine(line);
+        QPen pen;
+        pen.setWidth(3);
+        for(auto && connection : m_networkConnectionLines)
+        {
+            pen.setColor(connection.lineColor);
+            painter.setPen(pen);
+            painter.drawLine(connection.line);
+        }
         m_draw = false;
     }
 }
 
 void SensorWindow::pressedButton()
 {
+    QString log;
     QPushButton *button = static_cast<QPushButton*>(m_pressButton);
     if(button)
     {
@@ -304,14 +308,15 @@ void SensorWindow::pressedButton()
         for(QVector<NetworkLayer*>::const_iterator layer = m_sensorNetwork->getIteratorToFirstLayer(); i < m_sensorNetwork->getNumberOfLayers(); layer++)
         {
             ++i;
-            m_logWindow->appendPlainText("\nLayer ID: " + QString::number((*layer)->getLayerId()) +
+            log.append("\nLayer ID: " + QString::number((*layer)->getLayerId()) +
                                          "\nNumber of Nodes: " + QString::number((*layer)->getNumOfNodes()));
             quint16 j = 0;
             for(QVector<NetworkNode*>::const_iterator node = (*layer)->getIteratorToFirstNode(); j < (*layer)->getNumOfNodes(); node++)
             {
                 //list all information about every layer and its nodes
+                log.append("\n------------------------\n");
                 ++j;
-                m_logWindow->appendPlainText("\nNode Type:" + (*node)->getNodeTypeName() +
+                log.append("\nNode Type:" + (*node)->getNodeTypeName() +
                                              "\nNode ID: " + QString::number((*node)->getNodeID()) +
                                              "\nConnected To Nodes: \n");
                 for(auto && neighbour : (*node)->getNeighbours())
@@ -319,7 +324,7 @@ void SensorWindow::pressedButton()
                     NetworkNode *neighbourNode = (*layer)->getNode(neighbour.first);
                     if(neighbourNode)
                     {
-                        m_logWindow->appendPlainText("\nNode Type: " + neighbourNode->getNodeTypeName() +
+                        log.append("\nNode Type: " + neighbourNode->getNodeTypeName() +
                                                      "\nNode ID: " + QString::number(neighbourNode->getNodeID()));
                     }
                 }
@@ -335,22 +340,32 @@ void SensorWindow::pressedButton()
                             auto sinkPath = cluster->getSinkPath();
                             if(!sinkPath.isEmpty())
                             {
-                                m_logWindow->appendPlainText("\nSink Path: ");
+                                log.append("\nSink Path: ");
                                 for(auto && pathNodeID : sinkPath)
                                 {
-                                    m_logWindow->appendPlainText("\nNode ID: " + QString::number(pathNodeID));
+                                    log.append(" " + QString::number(pathNodeID));
                                 }
                             }
                             if(cluster->getPathLength() != INIT_PATH_LENGTH)
                             {
-                                m_logWindow->appendPlainText("\nPath Length: " + QString::number(cluster->getPathLength()));
+                                log.append("\nPath Length: " + QString::number(cluster->getPathLength()));
                             }
                         }
-                        m_logWindow->appendPlainText("\nCluster State: " + cluster->getCurrentStateName());
+                        log.append("\nCluster State: " + cluster->getCurrentStateName());
+                    }
+                }
+                else if((*node)->getNodeType() == NetworkNode::NodeType::Sensor)
+                {
+                    SensorNode *sensor = static_cast<SensorNode*>(*node);
+                    if(sensor)
+                    {
+                        QString connected = (sensor->isConnectedToCluster()) ?  "Connected to cluster: " + QString::number(sensor->getClusterID()) : "Disconnected";
+                        log.append(connected);
                     }
                 }
             }
         }
+        m_logWindow->setPlainText(log);
     }
 }
 
@@ -392,7 +407,7 @@ void SensorWindow::initializeUiWidgets()
 
     m_logWindow = new QPlainTextEdit(this);
     m_logWindow->setReadOnly(true);
-    m_logWindow->resize(100, 600);
+    m_logWindow->resize(300, 600);
     m_logWindow->move(LOG_WINDOW_POS);
     m_logWindow->show();
     m_logWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -400,13 +415,63 @@ void SensorWindow::initializeUiWidgets()
 
 void SensorWindow::redrawConnections()
 {
-    //go through all SensorNetwork Nodes for each layer
-    //and draw them between coresponding nodes
+    //check duplicates ? (does nothing bad and not have to create separate container for storing visited nodes
     m_networkConnectionLines.clear();
-    for(;;)
+    quint16 i = 0;
+    for(QVector<NetworkLayer*>::const_iterator layer = m_sensorNetwork->getIteratorToFirstLayer(); i < m_sensorNetwork->getNumberOfLayers(); layer++)
     {
-
+        ++i;
+        if(*layer)
+        {
+            quint16 j = 0;
+            for(QVector<NetworkNode*>::const_iterator node = (*layer)->getIteratorToFirstNode(); j < (*layer)->getNumOfNodes(); node++)
+            {
+                ++j;
+                if(*node)
+                {
+                    for(auto && neighbour : (*node)->getNeighbours())
+                    {
+                        NetworkNode *neighbourNode = (*layer)->getNode(neighbour.first);
+                        if(neighbourNode)
+                        {
+                            QLine line((*node)->getNodePosition(), neighbourNode->getNodePosition());
+                            QColor connectionTypeColor = QColor(0, 0, 0);
+                            if((*node)-> getNodeType() == NetworkNode::NodeType::Cluster && neighbourNode->getNodeType() == NetworkNode::NodeType::Cluster)
+                            {
+                                connectionTypeColor = MAPPED_CLUSTER_COLOR;
+                            }
+                            else if(((*node)-> getNodeType() == NetworkNode::NodeType::Cluster && neighbourNode->getNodeType() == NetworkNode::NodeType::Sensor) ||
+                                    ((*node)-> getNodeType() == NetworkNode::NodeType::Sensor && neighbourNode->getNodeType() == NetworkNode::NodeType::Cluster))
+                            {
+                                connectionTypeColor = SENSOR_COLOR;
+                            }
+                            LineConnection connection{line, connectionTypeColor};
+                            m_networkConnectionLines.push_back(connection);
+                        }
+                    }
+                    //check if connected to sink and then add line connection
+                    if(m_sensorNetwork->networkHasSink())
+                    {
+                        if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
+                        {
+                            ClusterNode *cluster = static_cast<ClusterNode*>(*node);
+                            if(cluster)
+                            {
+                                if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
+                                {
+                                    QLine line((*node)->getNodePosition(), m_sensorNetwork->getSinkPosition());
+                                    LineConnection sinkConnection{line, DIRECT_CLUSTER_COLOR};
+                                    m_networkConnectionLines.push_back(sinkConnection);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
+    m_draw = true;
+    update();
 }
 
 void SensorWindow::drawConnection()

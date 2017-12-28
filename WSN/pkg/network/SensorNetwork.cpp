@@ -170,6 +170,11 @@ QVector<NetworkLayer*>::const_iterator SensorNetwork::getIteratorToFirstLayer()
     return m_layers.constBegin();
 }
 
+QPoint SensorNetwork::getSinkPosition() const
+{
+    return m_sink->getSinkPosition();
+}
+
 void SensorNetwork::onSinkAdded(const QPoint &position, quint16 range, QWidget *uiWidget)
 {
     if(!networkHasSink())

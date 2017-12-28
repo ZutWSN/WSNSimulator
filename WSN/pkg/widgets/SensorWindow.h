@@ -23,7 +23,7 @@ public:
         QColor lineColor;
     };
 
-    SensorWindow(QWidget *parent = 0, const QSize &windowSize = QSize(800, 800));
+    SensorWindow(QWidget *parent = 0, const QSize &windowSize = QSize(1000, 1000));
     virtual ~SensorWindow();
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;

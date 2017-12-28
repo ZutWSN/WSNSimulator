@@ -29,6 +29,7 @@ public:
     quint16 getNodeID() const;
     quint16 getLayerID() const;
     double getNodeRange() const;
+    QPoint getPosition() const;
     void setConnectedToNode(bool connected);
 public slots:
     void onNodeReceivedData(const DataFrame &data);
@@ -38,6 +39,7 @@ private:
     QString m_imgName;
     bool m_rootWidget;
     bool m_connectedToNode;
+    QSize m_widgetSize;
     quint16 m_node_id;
     quint16 m_layer_id;
     double m_range;

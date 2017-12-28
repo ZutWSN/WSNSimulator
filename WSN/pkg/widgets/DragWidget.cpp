@@ -4,7 +4,8 @@
 DragWidget::DragWidget(QWidget *parent, bool rootWidget):
     QLabel(parent),
     m_rootWidget(rootWidget),
-    m_connectedToNode(false)
+    m_connectedToNode(false),
+    m_widgetSize(QSize(0, 0))
 {
 
 }
@@ -17,8 +18,10 @@ DragWidget::~DragWidget()
 void DragWidget::setWidgetImage(const QString &imgName)
 {
     QPixmap img(imgName);
+    img = img.scaled(img.size() / 2);
     setMinimumSize(QSize(img.width(), img.height()));
     setMaximumSize(QSize(img.width(), img.height()));
+    m_widgetSize = QSize(img.width(), img.height());
     QLabel::setPixmap(img);
     m_imgName = imgName;
 }
@@ -30,13 +33,10 @@ void DragWidget::setConnectedToNode(bool connected)
 
 bool DragWidget::connectToNode(quint16 node_id, quint16 layer_id, double range)
 {
-    if(NetworkLayer::checkIfIdAvailable(node_id))
-    {
-        m_connectedToNode = true;
-        m_node_id = node_id;
-        m_layer_id = layer_id;
-        m_range = range;
-    }
+    m_connectedToNode = true;
+    m_node_id = node_id;
+    m_layer_id = layer_id;
+    m_range = range;
 }
 
 bool DragWidget::isRootWidget() const
@@ -72,6 +72,14 @@ quint16 DragWidget::getLayerID() const
 double DragWidget::getNodeRange() const
 {
     return m_range;
+}
+
+QPoint DragWidget::getPosition() const
+{
+    QPoint widgetCenter = QWidget::pos();
+    widgetCenter.setX(widgetCenter.x() + (m_widgetSize.width() / 2));
+    widgetCenter.setY(widgetCenter.y() + (m_widgetSize.height() / 2));
+    return widgetCenter;
 }
 
 void DragWidget::onNodeReceivedData(const DataFrame &data)
