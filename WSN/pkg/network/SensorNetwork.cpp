@@ -170,6 +170,11 @@ QVector<NetworkLayer*>::const_iterator SensorNetwork::getIteratorToFirstLayer()
     return m_layers.constBegin();
 }
 
+QString SensorNetwork::getSinkLastMsg() const
+{
+    return m_sink->getLastMsg().getMsg();
+}
+
 QPoint SensorNetwork::getSinkPosition() const
 {
     return m_sink->getSinkPosition();

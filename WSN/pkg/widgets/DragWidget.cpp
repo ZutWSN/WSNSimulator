@@ -31,7 +31,28 @@ void DragWidget::setConnectedToNode(bool connected)
     m_connectedToNode = connected;
 }
 
-bool DragWidget::connectToNode(quint16 node_id, quint16 layer_id, double range)
+void DragWidget::setNodeID(quint16 node_id)
+{
+    if(NetworkLayer::checkIfIdAvailable(node_id))
+    {
+        m_node_id = node_id;
+    }
+}
+
+void DragWidget::setRange(double range)
+{
+    if(range > 0)
+    {
+        m_range = range;
+    }
+}
+
+void DragWidget::setNodeLayer(quint16 layer_id)
+{
+    m_layer_id = layer_id;
+}
+
+void DragWidget::connectToNode(quint16 node_id, quint16 layer_id, double range)
 {
     m_connectedToNode = true;
     m_node_id = node_id;

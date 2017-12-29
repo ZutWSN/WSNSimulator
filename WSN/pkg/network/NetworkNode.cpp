@@ -368,6 +368,7 @@ void NetworkNode::onReceivedData(const DataFrame &rxData)
             processNewData(rxData);
             break;
     }
+    m_lastReceivedMsg = rxData.getMsg();
 }
 
 void NetworkNode::processNewData(const DataFrame &rxData)
@@ -412,6 +413,11 @@ bool NetworkNode::checkIfConnectedToNode(const QPair<quint16, quint16> &node) co
 quint16 NetworkNode::getNumOfPendingDataFrames() const
 {
     return m_pendingSendDataFrames.size();
+}
+
+QString NetworkNode::getLastReceivedMsg() const
+{
+    return m_lastReceivedMsg;
 }
 
 

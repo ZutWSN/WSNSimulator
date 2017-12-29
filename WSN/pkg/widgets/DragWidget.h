@@ -20,7 +20,12 @@ public:
     virtual ~DragWidget();
     void setWidgetImage(const QString &imgName);
     void setAsRootWidget();
-    bool connectToNode(quint16 node_id, quint16 layer_id, double range);
+    void connectToNode(quint16 node_id, quint16 layer_id, double range);
+
+    void setConnectedToNode(bool connected);
+    void setNodeID(quint16 node_id);
+    void setRange(double range);
+    void setNodeLayer(quint16 layer_id);
 
     bool isRootWidget() const;
     virtual DragWidget::DragWidgetType getWidgetType() const;
@@ -30,7 +35,8 @@ public:
     quint16 getLayerID() const;
     double getNodeRange() const;
     QPoint getPosition() const;
-    void setConnectedToNode(bool connected);
+
+
 public slots:
     void onNodeReceivedData(const DataFrame &data);
 signals:

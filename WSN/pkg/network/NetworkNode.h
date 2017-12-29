@@ -52,6 +52,7 @@ public:
     virtual NetworkNode::NodeType getNodeType() const;
     QString getNodeTypeName() const;
     quint16 getNumOfPendingDataFrames() const;
+    QString getLastReceivedMsg() const;
 
     //flag checks
     bool checkIfInRange(const QPoint &position) const;   
@@ -78,6 +79,7 @@ protected:
     bool m_connectedToWidget;
     QVector<NetworkNode*> m_connectedNodes;
     QVector<DataFrame> m_pendingSendDataFrames;
+    QString m_lastReceivedMsg;
 };
 
 #endif // NETWORKNODE_H

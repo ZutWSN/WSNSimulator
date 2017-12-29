@@ -110,6 +110,8 @@ const QSize LAST_MSG_LABEL_SIZE = QSize(100, 20);
 const QPoint LAST_MSG_WINDOW_POS = QPoint(670, 590);
 const QSize LAST_MSG_WINDOW_SIZE = QSize(230, 80);
 //
+const QPoint BTN_SHOW_SINK_PATH_POS = QPoint(670, 690);
+const QSize BTN_SHOW_SINK_PATH_SIZE = QSize(230, 30);
 
 SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
     QMainWindow(parent),
@@ -218,6 +220,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
             //widget has been just moved, update the connected
             //widget to coresponding layer and node id
             //also alter the position of it
+            bool isSink = false;
             switch(widgetType)
             {
                 case DragWidget::DragWidgetType::Sink:
@@ -226,7 +229,8 @@ void SensorWindow::dropEvent(QDropEvent *event)
                         emit removeSink();
                     }
                     emit addNewSink(newWidget->getPosition(), range, newWidget);
-
+                    newWidget->setRange(range);
+                    isSink = true;
                     break;
                 case DragWidget::DragWidgetType::Cluster:
                     if(!isOldWidgetRootWidget)
@@ -248,10 +252,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
             //update displayed paths - check all connections and edit linepaths
             redrawConnections();
             m_dragWidgets.push_back(newWidget);
-            if(isOldWidgetRootWidget)
-            {
-                ++m_id;
-            }
+            setNodeInfo(node_id, layer_id, range, isSink);
             connect(newWidget, SIGNAL(sendWidgetReceivedData(DataFrame,quint16,quint16)), this, SLOT(onWidgetReceivedData(DataFrame,quint16,quint16)));
             if (event->source() == this)
             {
@@ -279,7 +280,7 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
         bool drag = true;
         quint16 node_id = 0;
         quint16 layer_id = 0;
-        double range = 100; // later get from coresponding text edit
+        double range = 0;
         if(child->isRootWidget())
         {
             if(isSink && m_sinkCreated)
@@ -289,23 +290,21 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
             if(!isSink || (isSink && !m_sinkCreated))
             {
                 bool createNode = true;
-
                 if(isSink)
                 {
                     m_sinkCreated = true;
-                }
-                else
-                {
-                    //temporary - later node id and layer will be taken here from
-                    //text edit widgets
-                    if(!NetworkLayer::checkIfIdAvailable(m_id))
+                    if(!getNodeRange(range))
                     {
                         createNode = false;
                         drag = false;
                     }
-                    else
+                }
+                else
+                {
+                    if(!getNodeIDAndRange(node_id, range))
                     {
-                        node_id = m_id;
+                        createNode = false;
+                        drag = false;
                     }
                 }
                 if(createNode)
@@ -329,6 +328,7 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
             {
                 m_dragWidgets.remove(index); //node is moved, this address will be no longer valid
             }
+            setNodeInfo(node_id, layer_id, range, isSink);
         }
         if(drag)
         {
@@ -382,6 +382,11 @@ void SensorWindow::paintEvent(QPaintEvent *e)
 }
 
 void SensorWindow::pressedButton()
+{
+
+}
+
+void SensorWindow::onPressedShowNetworkState()
 {
     QString log;
     QPushButton *button = static_cast<QPushButton*>(m_btnShowNetworkState);
@@ -452,11 +457,6 @@ void SensorWindow::pressedButton()
     }
 }
 
-void SensorWindow::onPressedShowNetworkState()
-{
-
-}
-
 void SensorWindow::onPressedSendMsg()
 {
 
@@ -468,6 +468,11 @@ void SensorWindow::onPressedRemoveNode()
 }
 
 void SensorWindow::onPressedSensorBroadcast()
+{
+
+}
+
+void SensorWindow::onPressedShowSinkPath()
 {
 
 }
@@ -600,7 +605,7 @@ void SensorWindow::initializeUiWidgets()
     m_etxSensorMsg->setAttribute(Qt::WA_DeleteOnClose);
 
     m_btnSendMsg = new QPushButton("Send Message", this);
-    m_etxSensorMsg->resize(BTN_SEND_MSG_SIZE);
+    m_btnSendMsg->resize(BTN_SEND_MSG_SIZE);
     m_btnSendMsg->move(BTN_SEND_MSG_POS);
     m_btnSendMsg->show();
     m_btnSendMsg->setAttribute(Qt::WA_DeleteOnClose);
@@ -672,6 +677,13 @@ void SensorWindow::initializeUiWidgets()
     m_etxLastRxMsg->show();
     m_etxLastRxMsg->setAttribute(Qt::WA_DeleteOnClose);
 
+    m_btnShowSinkPath = new QPushButton("Show Sink Path", this);
+    m_btnShowSinkPath->resize(BTN_SHOW_SINK_PATH_SIZE);
+    m_btnShowSinkPath->move(BTN_SHOW_SINK_PATH_POS);
+    m_btnShowSinkPath->show();
+    m_btnShowSinkPath->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_btnShowSinkPath, SIGNAL(pressed()), this, SLOT(onPressedShowSinkPath()));
+
 }
 
 void SensorWindow::redrawConnections()
@@ -738,6 +750,104 @@ void SensorWindow::redrawConnections()
 void SensorWindow::drawConnection()
 {
 
+}
+
+void SensorWindow::setNodeInfo(quint16 node_id, quint16 layer_id, quint16 range, bool isSink)
+{
+    //display clicked node status
+    QString nodeIDInfo, nodeRange, lastMsg, status;
+    if(isSink)
+    {
+        nodeIDInfo = "Sink Node";
+        nodeRange = QString::number(range);
+        lastMsg = m_sensorNetwork->getSinkLastMsg();
+    }
+    else
+    {
+        NetworkLayer *layer = m_sensorNetwork->getLayer(layer_id);
+        if(layer)
+        {
+            NetworkNode *node = layer->getNode(node_id);
+            if(node)
+            {
+                nodeIDInfo = QString::number(node_id);
+                nodeRange = QString::number(range);
+                lastMsg = node->getLastReceivedMsg();
+                if(node->getNodeType() == NetworkNode::NodeType::Cluster)
+                {
+                    ClusterNode *cluster = static_cast<ClusterNode*>(node);
+                    if(cluster)
+                    {
+                        status = QString("Cluster : ") + cluster->getCurrentStateName();
+                    }
+                }
+                else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
+                {
+                    SensorNode *sensor = static_cast<SensorNode*>(node);
+                    if(sensor)
+                    {
+                        QString sensorState = (sensor->isConnectedToCluster()) ? "Connected" : "Disconnected";
+                        status = QString("Sensor : ") + sensorState;
+                    }
+                }
+            }
+
+        }
+    }
+    m_etxNodeIDInfo->setPlainText(nodeIDInfo);
+    m_etxNodeRangeInfo->setPlainText(nodeRange);
+    m_etxLastRxMsg->setPlainText(lastMsg);
+    m_etxNodeStateInfo->setPlainText(status);
+}
+
+bool SensorWindow::getNodeIDAndRange(quint16 &node_id, double &node_range) const
+{
+    bool success = false;
+    bool noError = false;
+    quint16 id = m_etxInputNodeID->toPlainText().toUInt(&noError);
+    if(noError)
+    {
+        if(NetworkLayer::checkIfIdAvailable(id))
+        {
+            double range = m_etxInputNodeRange->toPlainText().toDouble(&noError);
+            if(noError && range > 0)
+            {
+                node_id = id;
+                node_range = range;
+                success = true;
+            }
+        }
+    }
+    return success;
+}
+
+bool SensorWindow::getNodeID(quint16 &node_id) const
+{
+    bool success = false;
+    bool noError = false;
+    quint16 id = m_etxInputNodeID->toPlainText().toUInt(&noError);
+    if(noError)
+    {
+        if(NetworkLayer::checkIfIdAvailable(id))
+        {
+            node_id = id;
+            success = true;
+        }
+    }
+    return success;
+}
+
+bool SensorWindow::getNodeRange(double &node_range) const
+{
+    bool success = false;
+    bool noError = false;
+    double range = m_etxInputNodeRange->toPlainText().toDouble(&noError);
+    if(noError && range > 0)
+    {
+        node_range = range;
+        success = true;
+    }
+    return success;
 }
 
 
