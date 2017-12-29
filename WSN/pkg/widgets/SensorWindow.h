@@ -7,6 +7,7 @@
 #include "SensorNetwork.h"
 #include <QPushButton>
 #include <QPlainTextEdit>
+#include <QComboBox>
 
 class SensorWindow : public QMainWindow
 {
@@ -23,7 +24,7 @@ public:
         QColor lineColor;
     };
 
-    SensorWindow(QWidget *parent = 0, const QSize &windowSize = QSize(1000, 1000));
+    SensorWindow(QWidget *parent = 0, const QSize &windowSize = QSize(1350, 825));
     virtual ~SensorWindow();
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
@@ -33,6 +34,10 @@ protected:
     void paintEvent(QPaintEvent *e);
 public slots:
     void pressedButton();
+    void onPressedShowNetworkState();
+    void onPressedSendMsg();
+    void onPressedRemoveNode();
+    void onPressedSensorBroadcast();
     void onWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id);
 signals:
     void addNewSink(const QPoint &position, quint16 range, QWidget *uiWidget);
@@ -48,8 +53,19 @@ protected:
     QVector<DragWidget*> m_dragWidgets;
     QScopedPointer<SensorNetwork> m_sensorNetwork;
     QVector<LineConnection> m_networkConnectionLines;
-    QPushButton *m_pressButton;
-    QPlainTextEdit *m_logWindow;
+    QPushButton *m_btnShowNetworkState;
+    QPushButton *m_btnSendMsg;
+    QPushButton *m_btnSensorBroadcast;
+    QPushButton *m_btnRemoveNode;
+    QPlainTextEdit *m_etxSensorMsg;
+    QPlainTextEdit *m_etxLogWindow;
+    QPlainTextEdit *m_etxInputNodeID;
+    QPlainTextEdit *m_etxInputNodeRange;
+    QPlainTextEdit *m_etxNodeIDInfo;
+    QPlainTextEdit *m_etxNodeRangeInfo;
+    QPlainTextEdit *m_etxNodeStateInfo;
+    QPlainTextEdit *m_etxLastRxMsg;
+    QComboBox *m_cbSensorList;
     bool m_sinkCreated;
     bool m_draw;
     quint16 m_id;
