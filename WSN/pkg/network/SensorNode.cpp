@@ -45,6 +45,7 @@ bool SensorNode::connectToNode(NetworkNode *node)
                         {
                             m_connectedToCluster = true;
                             m_cluster_id = node->getNodeID();
+                            m_clusterPosition = node->getNodePosition();
                             m_connectedNodes.push_back(node);
                         }
                     }
@@ -72,7 +73,9 @@ bool SensorNode::disconnectFromNode(NetworkNode *node)
                     {
                         m_connectedToCluster = false;
                         m_cluster_id = 0;
+                        m_clusterPosition = QPoint(0, 0);
                         m_connectedNodes.remove(m_connectedNodes.indexOf(node));
+                        static_cast<ClusterNode*>(node)->removeSensor(this);
                     }
                 }
             }
@@ -100,6 +103,11 @@ NetworkNode::NodeType SensorNode::getNodeType() const
 quint16 SensorNode::getClusterID() const
 {
     return m_cluster_id;
+}
+
+QPoint SensorNode::getClusterPosition() const
+{
+    return m_clusterPosition;
 }
 
 bool SensorNode::isConnectedToCluster() const

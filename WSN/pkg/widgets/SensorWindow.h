@@ -33,7 +33,6 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *e);
 public slots:
-    void pressedButton();
     void onPressedShowNetworkState();
     void onPressedSendMsg();
     void onPressedRemoveNode();
@@ -46,6 +45,7 @@ signals:
     void addNewSensor(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void removeSink();
     void removeNode(quint16 node_id, quint16 layer_id);
+    void moveNode(quint16 node_id, quint16 layer_id, QPoint position);
 private:
     void initializeUiWidgets();
     void redrawConnections();

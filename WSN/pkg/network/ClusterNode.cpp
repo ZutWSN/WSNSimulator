@@ -264,6 +264,11 @@ bool ClusterNode::setConnectedToSink(SinkNode *sink)
     return changedState;
 }
 
+bool ClusterNode::setStateDisconnected()
+{
+    m_state = ClusterStates::DISCONNECTED;
+}
+
 quint16 ClusterNode::getNumOfSensors() const
 {
     return m_sensors.size();

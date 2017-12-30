@@ -17,7 +17,7 @@ public:
     };
 
     NetworkNode(quint16 node_id = 0);
-    NetworkNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position);
+    NetworkNode(quint16 node_id, double range, qint16 layer_id, const QPoint node_position);
     NetworkNode(const NetworkNode &other);
     NetworkNode& operator=(const NetworkNode &rhs);
 
@@ -37,14 +37,14 @@ public:
     //setters
     void setNodeID(quint16 node_id);
     void setLayer(qint16 layer_id);
-    void setNodeRange(quint16 range);
+    void setNodeRange(double range);
     void setNodePosition(const QPoint &position);
 
     //getters
     quint16 getNodeID() const;
     qint16 getNodeLayer() const;
     QPoint getNodePosition() const;
-    quint16 getNodeRange() const;
+    double getNodeRange() const;
     quint16 getNumOfConnectedNodes() const;
     QVector<QPair<quint16, quint16> > getNeighbours() const;
     double getDistanceFromNode(const QPoint &position) const;
@@ -58,6 +58,7 @@ public:
     bool checkIfInRange(const QPoint &position) const;   
     bool checkIfConnectedToNode(NetworkNode *node) const;
     bool checkIfConnectedToNode(const QPair<quint16, quint16> &node) const;
+    bool checkIfCanConnect(NetworkNode *node) const;
 
 public slots:
     void onReceivedData(const DataFrame &rxData);
@@ -71,7 +72,7 @@ protected:
     bool processReceiveAcknowledged(const DataFrame &rxData);
 protected:
     //protected members - for child classes to access
-    quint16 m_range;
+    double m_range;
     quint16 m_node_id;
     qint16 m_layer_id;
     QPoint m_node_position;

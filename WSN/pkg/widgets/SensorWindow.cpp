@@ -23,6 +23,7 @@
 
 const QString MIME_DATA_FORMAT = "text/plain";
 //Define widgets position - later create separate file containing wigets position configuration
+const QString INFO_LABEL = "info label";
 //
 const QPoint SENSOR_WIDGET_LABEL_POS = QPoint(60, 30);
 const QSize SENSOR_WIDGET_LABEL_SIZE = QSize(50, 20);
@@ -128,10 +129,11 @@ SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
     m_sensorNetwork.reset(new SensorNetwork);
     //register for sensor network signals and slots
     connect(this, SIGNAL(addNewSink(QPoint,quint16,QWidget*)), m_sensorNetwork.data(), SLOT(onSinkAdded(QPoint,quint16,QWidget*)));
-    connect(this, SIGNAL(addNewCluster(quint16,quint16,QPoint,quint16,QWidget*)), m_sensorNetwork.data(), SLOT(onNewClusterAdded(quint16,quint16,QPoint,quint16,QWidget*)));
-    connect(this, SIGNAL(addNewSensor(quint16,quint16,QPoint,quint16,QWidget*)), m_sensorNetwork.data(), SLOT(onNewSensorAdded(quint16,quint16,QPoint,quint16,QWidget*)));
+    connect(this, SIGNAL(addNewCluster(quint16, quint16, QPoint, quint16, QWidget*)), m_sensorNetwork.data(), SLOT(onNewClusterAdded(quint16, quint16, QPoint, quint16, QWidget*)));
+    connect(this, SIGNAL(addNewSensor(quint16, quint16, QPoint, quint16, QWidget*)), m_sensorNetwork.data(), SLOT(onNewSensorAdded(quint16, quint16, QPoint, quint16, QWidget*)));
     connect(this, SIGNAL(removeSink()), m_sensorNetwork.data(), SLOT(onSinkRemoved()));
-    connect(this, SIGNAL(removeNode(quint16,quint16)), m_sensorNetwork.data(), SLOT(onNodeRemoved(quint16,quint16)));
+    connect(this, SIGNAL(removeNode(quint16, quint16)), m_sensorNetwork.data(), SLOT(onNodeRemoved(quint16, quint16)));
+    connect(this, SIGNAL(moveNode(quint16, quint16, QPoint)), m_sensorNetwork.data(), SLOT(onNodeMoved(quint16, quint16, QPoint)));
 }
 
 SensorWindow::~SensorWindow()
@@ -220,7 +222,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
             //widget has been just moved, update the connected
             //widget to coresponding layer and node id
             //also alter the position of it
-            bool isSink = false;
+            bool isSink = false;;
             switch(widgetType)
             {
                 case DragWidget::DragWidgetType::Sink:
@@ -233,19 +235,27 @@ void SensorWindow::dropEvent(QDropEvent *event)
                     isSink = true;
                     break;
                 case DragWidget::DragWidgetType::Cluster:
+                    //for now only moving later check if removal enabled then on click of the widget
+                    //remove it instead of move
                     if(!isOldWidgetRootWidget)
                     {
-                        emit removeNode(node_id, layer_id);
+                        emit moveNode(node_id, layer_id, newWidget->getPosition());
                     }
-                    emit addNewCluster(node_id, layer_id, newWidget->getPosition(), range, newWidget);
+                    else
+                    {
+                        emit addNewCluster(node_id, layer_id, newWidget->getPosition(), range, newWidget);
+                    }
                     newWidget->connectToNode(node_id, layer_id, range);
                     break;
                 case DragWidget::DragWidgetType::Sensor:
                     if(!isOldWidgetRootWidget)
                     {
-                        emit removeNode(node_id, layer_id);
+                        emit moveNode(node_id, layer_id, newWidget->getPosition());
                     }
-                    emit addNewSensor(node_id, layer_id, newWidget->getPosition(), range, newWidget);
+                    else
+                    {
+                        emit addNewSensor(node_id, layer_id, newWidget->getPosition(), range, newWidget);
+                    }
                     newWidget->connectToNode(node_id, layer_id, range);
                     break;
             }
@@ -274,7 +284,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
 void SensorWindow::mousePressEvent(QMouseEvent *event)
 {
     DragWidget *child = static_cast<DragWidget*>(childAt(event->pos()));
-    if (child)
+    if (child && child->whatsThis() != INFO_LABEL)
     {
         bool isSink = (child->getWidgetType() == DragWidget::DragWidgetType::Sink);
         bool drag = true;
@@ -292,11 +302,14 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
                 bool createNode = true;
                 if(isSink)
                 {
-                    m_sinkCreated = true;
                     if(!getNodeRange(range))
                     {
                         createNode = false;
                         drag = false;
+                    }
+                    else
+                    {
+                       m_sinkCreated = true;
                     }
                 }
                 else
@@ -366,23 +379,16 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
 
 void SensorWindow::paintEvent(QPaintEvent *e)
 {
-    if(m_draw)
-    {
-        QPainter painter(this);
-        QPen pen;
-        pen.setWidth(3);
-        for(auto && connection : m_networkConnectionLines)
-        {
-            pen.setColor(connection.lineColor);
-            painter.setPen(pen);
-            painter.drawLine(connection.line);
-        }
-        m_draw = false;
-    }
-}
 
-void SensorWindow::pressedButton()
-{
+    QPainter painter(this);
+    QPen pen;
+    pen.setWidth(3);
+    for(auto && connection : m_networkConnectionLines)
+    {
+        pen.setColor(connection.lineColor);
+        painter.setPen(pen);
+        painter.drawLine(connection.line);
+    }
 
 }
 
@@ -486,12 +492,14 @@ void SensorWindow::initializeUiWidgets()
 {
     //user input
     QLabel *lblInput = new QLabel("Input:", this);
+    lblInput->setWhatsThis(INFO_LABEL);
     lblInput->resize(INPUT_LABEL_SIZE);
     lblInput->move(INPUT_LABEL_POS);
     lblInput->show();
     lblInput->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblInputNodeID = new QLabel("Node ID:", this);
+    lblInputNodeID->setWhatsThis(INFO_LABEL);
     lblInputNodeID->resize(INPUT_NODE_ID_LABEL_SIZE);
     lblInputNodeID->move(INPUT_NODE_ID_LABEL_POS);
     lblInputNodeID->show();
@@ -504,6 +512,7 @@ void SensorWindow::initializeUiWidgets()
     m_etxInputNodeID->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblInputNodeRange = new QLabel("Node Range:", this);
+    lblInputNodeRange->setWhatsThis(INFO_LABEL);
     lblInputNodeRange->resize(INPUT_NODE_RANGE_LABEL_SIZE);
     lblInputNodeRange->move(INPUT_NODE_RANGE_LABEL_POS);
     lblInputNodeRange->show();
@@ -516,6 +525,7 @@ void SensorWindow::initializeUiWidgets()
     m_etxInputNodeRange->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblSensor = new QLabel("Sensor:", this);
+    lblSensor->setWhatsThis(INFO_LABEL);
     lblSensor->resize(SENSOR_WIDGET_LABEL_SIZE);
     lblSensor->move(SENSOR_WIDGET_LABEL_POS);
     lblSensor->show();
@@ -529,6 +539,7 @@ void SensorWindow::initializeUiWidgets()
     sensor->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblCluster = new QLabel("Cluster:", this);
+    lblCluster->setWhatsThis(INFO_LABEL);
     lblCluster->resize(CLUSTER_WIDGET_LABEL_SIZE);
     lblCluster->move(CLUSTER_WIDGET_LABEL_POS);
     lblCluster->show();
@@ -541,6 +552,7 @@ void SensorWindow::initializeUiWidgets()
     cluster->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblSink= new QLabel("Sink:", this);
+    lblSink->setWhatsThis(INFO_LABEL);
     lblSink->resize(SINK_WIDGET_LABEL_SIZE);
     lblSink->move(SINK_WIDGET_LABEL_POS);
     lblSink->show();
@@ -561,6 +573,7 @@ void SensorWindow::initializeUiWidgets()
     connect(m_btnShowNetworkState, SIGNAL(pressed()), this, SLOT(onPressedShowNetworkState()));
 
     QLabel *lblLogWindow = new QLabel("Network Log:", this);
+    lblLogWindow->setWhatsThis(INFO_LABEL);
     lblLogWindow->resize(LOG_WINDOW_LABEL_SIZE);
     lblLogWindow->move(LOG_WINDOW_LABEL_POS);
     lblLogWindow->show();
@@ -575,12 +588,14 @@ void SensorWindow::initializeUiWidgets()
 
     //data transfer
     QLabel *lblDataTransfer = new QLabel("Data Transfer:", this);
+    lblDataTransfer->setWhatsThis(INFO_LABEL);
     lblDataTransfer->resize(DATA_TRANSFER_LABEL_SIZE);
     lblDataTransfer->move(DATA_TRANSFER_LABEL_POS);
     lblDataTransfer->show();
     lblDataTransfer->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblSensorList = new QLabel("Sensor List:", this);
+    lblSensorList->setWhatsThis(INFO_LABEL);
     lblSensorList->resize(CB_SENSOR_LIST_LABEL_SIZE);
     lblSensorList->move(CB_SENSOR_LIST_LABEL_POS);
     lblSensorList->show();
@@ -593,6 +608,7 @@ void SensorWindow::initializeUiWidgets()
     m_cbSensorList->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblSensorMsg = new QLabel("Sensor Message:", this);
+    lblSensorMsg->setWhatsThis(INFO_LABEL);
     lblSensorMsg->resize(SENSOR_MESSAGE_WINDOW_LABEL_SIZE);
     lblSensorMsg->move(SENSOR_MESSAGE_WINDOW_LABEL_POS);
     lblSensorMsg->show();
@@ -620,12 +636,14 @@ void SensorWindow::initializeUiWidgets()
 
     //node info
     QLabel *lblNodeInfo = new QLabel("Node Info:", this);
+    lblNodeInfo->setWhatsThis(INFO_LABEL);
     lblNodeInfo->resize(NODE_INFO_LABEL_SIZE);
     lblNodeInfo->move(NODE_INFO_LABEL_POS);
     lblNodeInfo->show();
     lblNodeInfo->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblNodeIDInfo = new QLabel("Node ID:", this);
+    lblNodeIDInfo->setWhatsThis(INFO_LABEL);
     lblNodeIDInfo->resize(INFO_NODE_ID_LABEL_SIZE);
     lblNodeIDInfo->move(INFO_NODE_ID_LABEL_POS);
     lblNodeIDInfo->show();
@@ -639,6 +657,7 @@ void SensorWindow::initializeUiWidgets()
     m_etxNodeIDInfo->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblNodeRangeInfo = new QLabel("Node Range:", this);
+    lblNodeRangeInfo->setWhatsThis(INFO_LABEL);
     lblNodeRangeInfo->resize(INFO_NODE_RANGE_LABEL_SIZE);
     lblNodeRangeInfo->move(INFO_NODE_RANGE_LABEL_POS);
     lblNodeRangeInfo->show();
@@ -652,6 +671,7 @@ void SensorWindow::initializeUiWidgets()
     m_etxNodeRangeInfo->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblNodeStateInfo = new QLabel("Node State:", this);
+    lblNodeStateInfo->setWhatsThis(INFO_LABEL);
     lblNodeStateInfo->resize(INFO_NODE_STATE_LABEL_SIZE);
     lblNodeStateInfo->move(INFO_NODE_STATE_LABEL_POS);
     lblNodeStateInfo->show();
@@ -665,6 +685,7 @@ void SensorWindow::initializeUiWidgets()
     m_etxNodeStateInfo->setAttribute(Qt::WA_DeleteOnClose);
 
     QLabel *lblLastRxMsg = new QLabel("Last Received Data:", this);
+    lblLastRxMsg->setWhatsThis(INFO_LABEL);
     lblLastRxMsg->resize(LAST_MSG_LABEL_SIZE);
     lblLastRxMsg->move(LAST_MSG_LABEL_POS);
     lblLastRxMsg->show();
@@ -743,7 +764,6 @@ void SensorWindow::redrawConnections()
             }
         }
     }
-    m_draw = true;
     update();
 }
 

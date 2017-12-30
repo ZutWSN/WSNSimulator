@@ -125,6 +125,7 @@ public:
     bool setSinkPath(const QVector<quint16> &path);
     void setPathLength(double length);
     bool setConnectedToSink(SinkNode *sink);
+    bool setStateDisconnected();
 
     quint16 getNumOfSensors() const;
     quint16 getNumOfSensorPendingMsgs() const;

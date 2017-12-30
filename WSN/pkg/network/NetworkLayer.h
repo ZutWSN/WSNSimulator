@@ -18,6 +18,7 @@ public:
     bool connectNodeWidget(quint16 node_id, QWidget* widget);
     bool disconnectNodeWidget(quint16 node_id);
     bool removeNode(quint16 node_id);
+    bool moveNode(quint16 node_id, QPoint position);
 
     void setLayerId(quint16 id);
     qint16 getLayerId() const;
@@ -31,6 +32,7 @@ private:
     NetworkNode* copyNetworkNode(const NetworkNode *node) const;
     QByteArray createNodeRemovalMsg(quint16 node_id) const;
     void reassignSensorNodes(quint16 node_id);
+    bool sendRemovedMsg(NetworkNode *clusterNode);
 private:
     QVector<NetworkNode*> m_nodes;
     static QVector<quint16> m_usedIDPool;

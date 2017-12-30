@@ -17,6 +17,7 @@ public:
 
     NetworkNode::NodeType getNodeType() const;
     quint16 getClusterID() const;
+    QPoint getClusterPosition() const;
     bool isConnectedToCluster() const;
 public slots:
     void onReceivedDataFromCluster(const DataFrame &rxData);
@@ -26,6 +27,7 @@ private:
     void processNewData(const DataFrame &rxData);
 private:
     quint16 m_cluster_id;
+    QPoint m_clusterPosition;
     bool m_connectedToCluster;
 };
 

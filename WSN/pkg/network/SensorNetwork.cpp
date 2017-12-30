@@ -250,10 +250,36 @@ void SensorNetwork::onNewClusterAdded(quint16 cluster_id, quint16 layer_id, cons
                     {
                         if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
                         {
-                            double distance = (*node)->getDistanceFromNode(position);
-                            if(distance <= range)
+                            if(newCluster->checkIfCanConnect(*node))
                             {
                                 newCluster->connectToNode(*node);
+                            }
+                        }
+                        else if((*node)->getNodeType() == NetworkNode::NodeType::Sensor)
+                        {
+                            SensorNode *sensor = static_cast<SensorNode*>(*node);
+                            if(sensor->isConnectedToCluster())
+                            {
+                                double oldDistance = sensor->getDistanceFromNode(sensor->getClusterPosition());
+                                double newDistance = sensor->getDistanceFromNode(position);
+                                if(newDistance < oldDistance)
+                                {
+                                    NetworkNode *oldCluster = layer->getNode(sensor->getClusterID());
+                                    if(oldCluster)
+                                    {
+                                        if(sensor->disconnectFromNode(oldCluster))
+                                        {
+                                            sensor->connectToNode(newCluster);
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if(sensor->checkIfCanConnect(newCluster))
+                                {
+                                    sensor->connectToNode(newCluster);
+                                }
                             }
                         }
                     }
@@ -293,7 +319,8 @@ void SensorNetwork::onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const 
                 if((*node)->getNodeType() == NetworkNode::NodeType::Cluster)
                 {
                     double distance = (*node)->getDistanceFromNode(position);
-                    if(distance <= range && distance < minDistance)
+                    bool inRange = ((distance <= range) && (*node)->checkIfInRange(position));
+                    if(inRange && distance < minDistance)
                     {
                         minDistance = distance;
                         closestCluster = *node;
@@ -334,6 +361,16 @@ void SensorNetwork::onNodeRemoved(quint16 node_id, quint16 layer_id)
     if(layer)
     {
         layer->removeNode(node_id);
+    }
+}
+
+void SensorNetwork::onNodeMoved(quint16 node_id, quint16 layer_id, QPoint position)
+{
+    NetworkLayer *layer = getLayer(layer_id);
+    if(layer)
+    {
+        layer->moveNode(node_id, position);
+        m_sink->sendNewPaths(layer_id);
     }
 }
 

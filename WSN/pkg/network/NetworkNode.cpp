@@ -20,7 +20,7 @@ NetworkNode::NetworkNode(quint16 node_id) :
 
 }
 
-NetworkNode::NetworkNode(quint16 node_id, quint16 range, qint16 layer_id, const QPoint node_position):
+NetworkNode::NetworkNode(quint16 node_id, double range, qint16 layer_id, const QPoint node_position):
     m_range(range),
     m_node_id(node_id),
     m_layer_id(layer_id),
@@ -132,7 +132,7 @@ void NetworkNode::setLayer(qint16 layer_id)
     m_layer_id = layer_id;
 }
 
-void NetworkNode::setNodeRange(quint16 range)
+void NetworkNode::setNodeRange(double range)
 {
     m_range = range;
 }
@@ -205,7 +205,7 @@ QPoint NetworkNode::getNodePosition() const
     return m_node_position;
 }
 
-quint16 NetworkNode::getNodeRange() const
+double NetworkNode::getNodeRange() const
 {
     return m_range;
 }
@@ -408,6 +408,11 @@ bool NetworkNode::checkIfConnectedToNode(const QPair<quint16, quint16> &node) co
         }
     }
     return connected;
+}
+
+bool NetworkNode::checkIfCanConnect(NetworkNode *node) const
+{
+    return (checkIfInRange(node->getNodePosition()) && node->checkIfInRange(m_node_position));
 }
 
 quint16 NetworkNode::getNumOfPendingDataFrames() const

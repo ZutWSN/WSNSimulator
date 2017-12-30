@@ -231,61 +231,164 @@ bool NetworkLayer::removeNode(quint16 node_id)
     qint16 node_idx = checkIfHasNode(node_id);
     if(node_idx >= 0 && m_nodes[node_idx])
     {
-        QByteArray nodeRemovedMsg = createNodeRemovalMsg(node_id);
-        if(!nodeRemovedMsg.isEmpty())
+        if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Cluster)
         {
-            if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Cluster)
+            if(sendRemovedMsg(m_nodes[node_idx]))
             {
-                DataFrame frame;
-                ClusterNode *cluster = static_cast<ClusterNode*>(m_nodes[node_idx]);
-                frame.setMsg(nodeRemovedMsg);
-                frame.setSender(qMakePair(node_id, m_layer_id));
-                if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
-                {
-                    //broadcast to all nodes that this cluster is not available
-                    ClusterNode::resetBroadCastSyncVector(m_layer_id);
-                    frame.setMsgType(DataFrame::RxData::DIRECT_CLUSTER_REMOVED);
-                    cluster->sendData(frame);
-                    //sink sends new paths to all nodes that are connected
-                    //else it sets all of their states to disconnected
-                    frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
-                    cluster->sendDataToSink(frame);
-                }
-                else
-                {
-                    if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
-                    {
-                        frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
-                        frame.setPath(cluster->getSinkPath());
-                        frame.setDestination(qMakePair(cluster->getSinkPath()[0], m_layer_id));
-                        m_nodes[node_idx]->sendData(frame);
-                    }
-                }
-                //reasign all connected sensor nodes
+                //reassign all connected sensor nodes
                 reassignSensorNodes(node_id);
                 m_nodes[node_idx]->disconnectFromNetwork();
             }
-            else if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Sensor)
+        }
+        else if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Sensor)
+        {
+            SensorNode *sensor = static_cast<SensorNode*>(m_nodes[node_idx]);
+            if(sensor && sensor->isConnectedToCluster())
             {
-                SensorNode *sensor = static_cast<SensorNode*>(m_nodes[node_idx]);
-                if(sensor && sensor->isConnectedToCluster())
+                ClusterNode *cluster = static_cast<ClusterNode*>(getNode(sensor->getClusterID()));
+                if(cluster)
                 {
-                    ClusterNode *cluster = static_cast<ClusterNode*>(getNode(sensor->getClusterID()));
-                    if(cluster)
-                    {
-                        sensor->disconnectFromNode(cluster);
-                        cluster->removeSensor(sensor);
-                    }
+                    sensor->disconnectFromNode(cluster);
+                    cluster->removeSensor(sensor);
                 }
             }
-            m_nodes[node_idx]->disconnectFromWidget();
-            m_usedIDPool.remove(m_usedIDPool.indexOf(node_id));
-            delete m_nodes[node_idx];
-            m_nodes.remove(node_idx);
-            removedNode = true;
         }
+        m_nodes[node_idx]->disconnectFromWidget();
+        m_usedIDPool.remove(m_usedIDPool.indexOf(node_id));
+        delete m_nodes[node_idx];
+        m_nodes.remove(node_idx);
+        removedNode = true;
+
     }
     return removedNode;
+}
+
+bool NetworkLayer::moveNode(quint16 node_id, QPoint position)
+{
+    bool movedNode = false;
+    qint16 node_idx = checkIfHasNode(node_id);
+    if(node_idx >= 0 && m_nodes[node_idx])
+    {
+        m_nodes[node_idx]->setNodePosition(position);
+        if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Cluster)
+        {
+            ClusterNode *cluster = static_cast<ClusterNode*>((m_nodes[node_idx]));
+            if(cluster)
+            {
+                quint16 numOfLeftConnectedClusters = cluster->getNumOfConnectedNodes();
+                //before updating connections temporarly disconnect it from network
+                //and set other cluster node paths to be different
+                if(sendRemovedMsg(cluster))
+                {
+                    for(NetworkNode* node : m_nodes)
+                    {
+                        if(node->getNodeID() != node_id)
+                        {
+                            if(node->getNodeType() == NetworkNode::NodeType::Cluster)
+                            {
+                                if(cluster->checkIfInRange(node->getNodePosition()) && node->checkIfInRange(position))
+                                {
+                                    if(!cluster->checkIfConnectedToNode(node))
+                                    {
+                                        cluster->connectToNode(node);
+                                        ++numOfLeftConnectedClusters;
+                                    }
+                                }
+                                else
+                                {
+                                    if(cluster->checkIfConnectedToNode(node))
+                                    {
+                                        cluster->disconnectFromNode(node);
+                                        --numOfLeftConnectedClusters;
+                                    }
+                                }
+                            }
+                            else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
+                            {
+                                SensorNode *sensor = static_cast<SensorNode*>(node);
+                                if(sensor)
+                                {
+                                    double distance = node->getDistanceFromNode(position);
+                                    if(sensor->isConnectedToCluster())
+                                    {
+                                        if(distance < sensor->getDistanceFromNode(sensor->getClusterPosition()))
+                                        {
+                                            auto oldCluster = getNode(sensor->getClusterID());
+                                            if(oldCluster)
+                                            {
+                                                sensor->disconnectFromNode(oldCluster);
+                                                sensor->connectToNode(cluster);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if(sensor->checkIfInRange(position) && cluster->checkIfInRange(sensor->getNodePosition()))
+                                        {
+                                            sensor->connectToNode(cluster);
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    if(numOfLeftConnectedClusters == 0)
+                    {
+                        reassignSensorNodes(node_id);
+                    }
+                    else
+                    {
+                        cluster->sendSinkPathReq();
+                    }
+                    movedNode = true;
+                }
+            }
+        }
+        else if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Sensor)
+        {
+            SensorNode *sensor = static_cast<SensorNode*>((m_nodes[node_idx]));
+            if(sensor)
+            {
+                double minDistance = UINT64_MAX;
+                NetworkNode *closestCluster = nullptr;
+                for(NetworkNode* node : m_nodes)
+                {
+                    if(node->getNodeID() != node_id)
+                    {
+                        if(node->getNodeType() == NetworkNode::NodeType::Cluster)
+                        {
+                            double distance = node->getDistanceFromNode(position);
+                            bool inRange = ((distance <= sensor->getNodeRange()) && node->checkIfInRange(position));
+                            if(inRange && distance < minDistance)
+                            {
+                                minDistance = distance;
+                                closestCluster = node;
+                            }
+                        }
+                    }
+                }
+                auto oldCluster = getNode(sensor->getClusterID());
+                if(closestCluster)
+                {
+                    if(oldCluster)
+                    {
+                        sensor->disconnectFromNode(oldCluster);
+                    }
+                    sensor->connectToNode(closestCluster);
+                }
+                else
+                {
+                    if(oldCluster)
+                    {
+                        sensor->disconnectFromNode(oldCluster);
+                    }
+                }
+                movedNode = true;
+            }
+        }
+    }
+    return movedNode;
 }
 
 void NetworkLayer::setLayerId(quint16 id)
@@ -359,13 +462,16 @@ void NetworkLayer::reassignSensorNodes(quint16 node_id)
         (*sensor)->disconnectFromNode(cluster);
         for(auto && node : m_nodes)
         {
-            if(node->getNodeType() == NetworkNode::NodeType::Cluster && node->getNodeID() != node_id)
+            if(node->getNodeType() == NetworkNode::NodeType::Cluster)
             {
-                double distance = node->getDistanceFromNode((*sensor)->getNodePosition());
-                if(distance <= (*sensor)->getNodeRange() && distance < minDistance)
+                if(node->getNodeID() != node_id)
                 {
-                    minDistance = distance;
-                    closestCluster = node;
+                    double distance = node->getDistanceFromNode((*sensor)->getNodePosition());
+                    if(distance <= (*sensor)->getNodeRange() && distance < minDistance)
+                    {
+                        minDistance = distance;
+                        closestCluster = node;
+                    }
                 }
             }
         }
@@ -375,6 +481,43 @@ void NetworkLayer::reassignSensorNodes(quint16 node_id)
             (*sensor)->connectToNode(closestCluster);
         }
     }
+}
+
+bool NetworkLayer::sendRemovedMsg(NetworkNode *clusterNode)
+{
+    bool success = false;
+    ClusterNode *cluster = static_cast<ClusterNode*>(clusterNode);
+    if(cluster)
+    {
+        DataFrame frame;
+        QByteArray nodeRemovedMsg = createNodeRemovalMsg(cluster->getNodeID());
+        if(!nodeRemovedMsg.isEmpty())
+        {
+            frame.setMsg(nodeRemovedMsg);
+            frame.setSender(qMakePair(cluster->getNodeID(), m_layer_id));
+            if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
+            {
+                //broadcast to all nodes that this cluster is not available
+                ClusterNode::resetBroadCastSyncVector(m_layer_id);
+                frame.setMsgType(DataFrame::RxData::DIRECT_CLUSTER_REMOVED);
+                cluster->sendData(frame);
+                //sink sends new paths to all nodes that are connected
+                //else it sets all of their states to disconnected
+                frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
+                cluster->sendDataToSink(frame);
+            }
+            else if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
+            {
+                frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
+                frame.setPath(cluster->getSinkPath());
+                frame.setDestination(qMakePair(cluster->getSinkPath()[0], m_layer_id));
+                cluster->sendData(frame);
+            }
+            success = true;
+            cluster->setStateDisconnected();
+        }
+    }
+    return success;
 }
 
 bool NetworkLayer::checkIfIdAvailable(quint16 id)
