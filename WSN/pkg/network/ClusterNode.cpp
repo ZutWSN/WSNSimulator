@@ -70,6 +70,8 @@ bool ClusterNode::sendSinkPathReq()
     {
         DataFrame frame(QByteArray(), DataFrame::RxData::NEIGHBOUR_PATH_REQ, 0, m_layer_id, m_node_id);
         m_state = ClusterStates::PATH_SEEKING;
+        m_sinkPath.clear();
+        m_pathLength = UINT64_MAX;
         sendData(frame);
         if(m_state == ClusterStates::CONNECTED)
         {
@@ -134,7 +136,7 @@ void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
             m_sensorDataCounter = 0;
             emit sendDataToSink(frame);
         }
-        else if(!m_sinkPath.isEmpty() && m_pathLength > 0)
+        else if(!m_sinkPath.isEmpty() && m_state == ClusterStates::CONNECTED)
         {
             DataFrame frame(m_mesgData, DataFrame::RxData::NEW_DATA, m_sinkPath[0], m_layer_id, m_node_id);
             frame.setPath(m_sinkPath);
@@ -242,6 +244,12 @@ bool ClusterNode::setSinkPath(const QVector<quint16> &path)
         success = true;
     }
     return success;
+}
+
+void ClusterNode::resetSinkPath()
+{
+    m_sinkPath.clear();
+    m_pathLength = UINT64_MAX;
 }
 
 void ClusterNode::setPathLength(double length)
@@ -607,12 +615,14 @@ bool ClusterNode::extractPathFromMsg(const QByteArray &pathMsg)
                         }
                         if(m_node_id == node_id && m_layer_id == layer_id)
                         {
-                            //for now path can be only sent by neighbour but later can be send by sink
-                            //so it has to be checked and calculated differently
-                            m_sinkPath = std::move(nodePath);
-                            m_pathLength = pathLength;
-                            pathExtracted = true;
-                            break;
+                            if(!nodePath.isEmpty())
+                            {
+                                m_sinkPath = std::move(nodePath);
+                                m_pathLength = pathLength;
+                                pathExtracted = true;
+                                m_state = ClusterStates::CONNECTED;
+                                break;
+                            }
                         }
                     }
                 }
@@ -691,11 +701,14 @@ bool ClusterNode::setThisNodeVisited()
 {
     bool setVisited = false;
     int layer_idx = m_networkClusterSyncNodes.indexOf(SyncLayer(m_layer_id));
-    int nodeIndex = m_networkClusterSyncNodes[layer_idx].syncNodes.indexOf(SyncNode(this));
-    if(nodeIndex >= 0)
+    if(layer_idx >= 0)
     {
-        m_networkClusterSyncNodes[layer_idx].syncNodes[nodeIndex].visited = true;
-        setVisited = true;
+        int nodeIndex = m_networkClusterSyncNodes[layer_idx].syncNodes.indexOf(SyncNode(this));
+        if(nodeIndex >= 0)
+        {
+            m_networkClusterSyncNodes[layer_idx].syncNodes[nodeIndex].visited = true;
+            setVisited = true;
+        }
     }
     return setVisited;
 }

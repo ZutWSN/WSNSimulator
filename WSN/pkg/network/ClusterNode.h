@@ -123,6 +123,7 @@ public:
     static void resetBroadCastAllLayers();
 
     bool setSinkPath(const QVector<quint16> &path);
+    void resetSinkPath();
     void setPathLength(double length);
     bool setConnectedToSink(SinkNode *sink);
     bool setStateDisconnected();

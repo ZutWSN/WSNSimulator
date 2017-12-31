@@ -19,6 +19,7 @@ public:
     quint16 getNumberOfLayers() const;
     NetworkLayer* getLayer(qint16 layer_id) const;
     QVector<NetworkLayer*>::const_iterator getIteratorToFirstLayer();
+    NetworkNode *getNetworkNode(quint16 node_id) const;
     QString getSinkLastMsg() const;
     QPoint getSinkPosition() const;
     bool networkHasSink() const;

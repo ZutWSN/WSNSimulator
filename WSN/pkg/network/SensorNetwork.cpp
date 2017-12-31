@@ -170,6 +170,20 @@ QVector<NetworkLayer*>::const_iterator SensorNetwork::getIteratorToFirstLayer()
     return m_layers.constBegin();
 }
 
+NetworkNode *SensorNetwork::getNetworkNode(quint16 node_id) const
+{
+    NetworkNode *node = nullptr;
+    for(auto && layer : m_layers)
+    {
+        if(layer->checkIfNodeInLayer(node_id))
+        {
+            node = layer->getNode(node_id);
+            break;
+        }
+    }
+    return node;
+}
+
 QString SensorNetwork::getSinkLastMsg() const
 {
     return m_sink->getLastMsg().getMsg();
@@ -370,7 +384,37 @@ void SensorNetwork::onNodeMoved(quint16 node_id, quint16 layer_id, QPoint positi
     if(layer)
     {
         layer->moveNode(node_id, position);
-        m_sink->sendNewPaths(layer_id);
+        if(m_sink)
+        {
+            auto movedNode = layer->getNode(node_id);
+            if(movedNode)
+            {
+                if(movedNode->getNodeType() == NetworkNode::NodeType::Cluster)
+                {
+                    auto cluster = static_cast<ClusterNode*>(movedNode);
+                    double sinkDistance = movedNode->getDistanceFromNode(m_sink->getSinkPosition());
+                    if(cluster->getNodeRange() >= sinkDistance && m_sink->getSinkRange() >= sinkDistance)
+                    {
+                        cluster->resetSinkPath();
+                        if(m_sink->addDirectCluster(cluster))
+                        {
+                            m_sink->sendNewPaths(layer_id);
+                        }
+                    }
+                    else
+                    {
+                        if(movedNode->getNumOfConnectedNodes() > 0)
+                        {
+                            if(cluster)
+                            {
+                                cluster->sendSinkPathReq();
+                                m_sink->sendNewPaths(layer_id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

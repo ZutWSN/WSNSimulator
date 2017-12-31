@@ -150,6 +150,11 @@ QVector<NetworkNode*>::const_iterator NetworkLayer::getIteratorToFirstNode()
     return m_nodes.constBegin();
 }
 
+bool NetworkLayer::checkIfNodeInLayer(quint16 node_id) const
+{
+    return (checkIfHasNode(node_id) >= 0);
+}
+
 NetworkNode* NetworkLayer::createNode(NetworkNode::NodeType nodeType, quint16 node_id)
 {
     NetworkNode *new_node = nullptr;
@@ -229,35 +234,38 @@ bool NetworkLayer::removeNode(quint16 node_id)
 {
     bool removedNode = false;
     qint16 node_idx = checkIfHasNode(node_id);
-    if(node_idx >= 0 && m_nodes[node_idx])
+    if(node_idx >= 0)
     {
-        if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Cluster)
+        if(m_nodes[node_idx])
         {
-            if(sendRemovedMsg(m_nodes[node_idx]))
+            if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Cluster)
             {
-                //reassign all connected sensor nodes
-                reassignSensorNodes(node_id);
-                m_nodes[node_idx]->disconnectFromNetwork();
-            }
-        }
-        else if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Sensor)
-        {
-            SensorNode *sensor = static_cast<SensorNode*>(m_nodes[node_idx]);
-            if(sensor && sensor->isConnectedToCluster())
-            {
-                ClusterNode *cluster = static_cast<ClusterNode*>(getNode(sensor->getClusterID()));
-                if(cluster)
+                if(sendRemovedMsg(m_nodes[node_idx]))
                 {
-                    sensor->disconnectFromNode(cluster);
-                    cluster->removeSensor(sensor);
+                    //reassign all connected sensor nodes
+                    reassignSensorNodes(node_id);
+                    m_nodes[node_idx]->disconnectFromNetwork();
                 }
             }
+            else if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Sensor)
+            {
+                SensorNode *sensor = static_cast<SensorNode*>(m_nodes[node_idx]);
+                if(sensor && sensor->isConnectedToCluster())
+                {
+                    ClusterNode *cluster = static_cast<ClusterNode*>(getNode(sensor->getClusterID()));
+                    if(cluster)
+                    {
+                        sensor->disconnectFromNode(cluster);
+                        cluster->removeSensor(sensor);
+                    }
+                }
+            }
+            m_nodes[node_idx]->disconnectFromWidget();
+            m_usedIDPool.remove(m_usedIDPool.indexOf(node_id));
+            delete m_nodes[node_idx];
+            m_nodes.remove(node_idx);
+            removedNode = true;
         }
-        m_nodes[node_idx]->disconnectFromWidget();
-        m_usedIDPool.remove(m_usedIDPool.indexOf(node_id));
-        delete m_nodes[node_idx];
-        m_nodes.remove(node_idx);
-        removedNode = true;
 
     }
     return removedNode;
@@ -267,124 +275,138 @@ bool NetworkLayer::moveNode(quint16 node_id, QPoint position)
 {
     bool movedNode = false;
     qint16 node_idx = checkIfHasNode(node_id);
-    if(node_idx >= 0 && m_nodes[node_idx])
+    if(node_idx >= 0)
     {
-        m_nodes[node_idx]->setNodePosition(position);
-        if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Cluster)
+        if(m_nodes[node_idx])
         {
-            ClusterNode *cluster = static_cast<ClusterNode*>((m_nodes[node_idx]));
-            if(cluster)
+            m_nodes[node_idx]->setNodePosition(position);
+            if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Cluster)
             {
-                quint16 numOfLeftConnectedClusters = cluster->getNumOfConnectedNodes();
-                //before updating connections temporarly disconnect it from network
-                //and set other cluster node paths to be different
-                if(sendRemovedMsg(cluster))
+                ClusterNode *cluster = static_cast<ClusterNode*>((m_nodes[node_idx]));
+                if(cluster)
                 {
+                    quint16 numOfLeftConnectedClusters = cluster->getNumOfConnectedNodes();
+                    //before updating connections temporarly disconnect it from network
+                    //and set other cluster node paths to be different
+                    if(sendRemovedMsg(cluster))
+                    {
+                        for(NetworkNode* node : m_nodes)
+                        {
+                            if(node->getNodeID() != node_id)
+                            {
+                                if(node->getNodeType() == NetworkNode::NodeType::Cluster)
+                                {
+                                    if(cluster->checkIfCanConnect(node))
+                                    {
+                                        if(!cluster->checkIfConnectedToNode(node))
+                                        {
+                                            cluster->connectToNode(node);
+                                            ++numOfLeftConnectedClusters;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if(cluster->checkIfConnectedToNode(node))
+                                        {
+
+                                            cluster->disconnectFromNode(node);
+                                            //connectedCluster->sendSinkPathReq();
+                                            --numOfLeftConnectedClusters;
+                                        }
+                                    }
+                                }
+                                else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
+                                {
+                                    SensorNode *sensor = static_cast<SensorNode*>(node);
+                                    if(sensor)
+                                    {
+                                        double distance = node->getDistanceFromNode(position);
+                                        if(sensor->isConnectedToCluster())
+                                        {
+                                            auto oldCluster = getNode(sensor->getClusterID());
+                                            if(oldCluster)
+                                            {
+                                                if(oldCluster->getNodeID() == node_id)
+                                                {
+                                                    if(!sensor->checkIfCanConnect(cluster))
+                                                    {
+                                                        sensor->disconnectFromNode(cluster);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if(sensor->checkIfCanConnect(cluster))
+                                                    {
+                                                        if(distance < sensor->getDistanceFromNode(sensor->getClusterPosition()))
+                                                        {
+                                                            sensor->disconnectFromNode(oldCluster);
+                                                            sensor->connectToNode(cluster);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if(sensor->checkIfCanConnect(cluster))
+                                            {
+                                                sensor->connectToNode(cluster);
+                                            }
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                        if(numOfLeftConnectedClusters == 0)
+                        {
+                            reassignSensorNodes(node_id);
+                        }
+                        movedNode = true;
+                    }
+                }
+            }
+            else if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Sensor)
+            {
+                SensorNode *sensor = static_cast<SensorNode*>((m_nodes[node_idx]));
+                if(sensor)
+                {
+                    double minDistance = UINT64_MAX;
+                    NetworkNode *closestCluster = nullptr;
                     for(NetworkNode* node : m_nodes)
                     {
                         if(node->getNodeID() != node_id)
                         {
                             if(node->getNodeType() == NetworkNode::NodeType::Cluster)
                             {
-                                if(cluster->checkIfInRange(node->getNodePosition()) && node->checkIfInRange(position))
+                                double distance = node->getDistanceFromNode(position);
+                                bool inRange = ((distance <= sensor->getNodeRange()) && node->checkIfInRange(position));
+                                if(inRange && distance < minDistance)
                                 {
-                                    if(!cluster->checkIfConnectedToNode(node))
-                                    {
-                                        cluster->connectToNode(node);
-                                        ++numOfLeftConnectedClusters;
-                                    }
-                                }
-                                else
-                                {
-                                    if(cluster->checkIfConnectedToNode(node))
-                                    {
-                                        cluster->disconnectFromNode(node);
-                                        --numOfLeftConnectedClusters;
-                                    }
-                                }
-                            }
-                            else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
-                            {
-                                SensorNode *sensor = static_cast<SensorNode*>(node);
-                                if(sensor)
-                                {
-                                    double distance = node->getDistanceFromNode(position);
-                                    if(sensor->isConnectedToCluster())
-                                    {
-                                        if(distance < sensor->getDistanceFromNode(sensor->getClusterPosition()))
-                                        {
-                                            auto oldCluster = getNode(sensor->getClusterID());
-                                            if(oldCluster)
-                                            {
-                                                sensor->disconnectFromNode(oldCluster);
-                                                sensor->connectToNode(cluster);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if(sensor->checkIfInRange(position) && cluster->checkIfInRange(sensor->getNodePosition()))
-                                        {
-                                            sensor->connectToNode(cluster);
-                                        }
-                                    }
-
+                                    minDistance = distance;
+                                    closestCluster = node;
                                 }
                             }
                         }
                     }
-                    if(numOfLeftConnectedClusters == 0)
+                    auto oldCluster = getNode(sensor->getClusterID());
+                    if(closestCluster)
                     {
-                        reassignSensorNodes(node_id);
+                        if(oldCluster)
+                        {
+                            sensor->disconnectFromNode(oldCluster);
+                        }
+                        sensor->connectToNode(closestCluster);
                     }
                     else
                     {
-                        cluster->sendSinkPathReq();
+                        if(oldCluster)
+                        {
+                            sensor->disconnectFromNode(oldCluster);
+                        }
                     }
                     movedNode = true;
                 }
-            }
-        }
-        else if(m_nodes[node_idx]->getNodeType() == NetworkNode::NodeType::Sensor)
-        {
-            SensorNode *sensor = static_cast<SensorNode*>((m_nodes[node_idx]));
-            if(sensor)
-            {
-                double minDistance = UINT64_MAX;
-                NetworkNode *closestCluster = nullptr;
-                for(NetworkNode* node : m_nodes)
-                {
-                    if(node->getNodeID() != node_id)
-                    {
-                        if(node->getNodeType() == NetworkNode::NodeType::Cluster)
-                        {
-                            double distance = node->getDistanceFromNode(position);
-                            bool inRange = ((distance <= sensor->getNodeRange()) && node->checkIfInRange(position));
-                            if(inRange && distance < minDistance)
-                            {
-                                minDistance = distance;
-                                closestCluster = node;
-                            }
-                        }
-                    }
-                }
-                auto oldCluster = getNode(sensor->getClusterID());
-                if(closestCluster)
-                {
-                    if(oldCluster)
-                    {
-                        sensor->disconnectFromNode(oldCluster);
-                    }
-                    sensor->connectToNode(closestCluster);
-                }
-                else
-                {
-                    if(oldCluster)
-                    {
-                        sensor->disconnectFromNode(oldCluster);
-                    }
-                }
-                movedNode = true;
             }
         }
     }
@@ -509,9 +531,12 @@ bool NetworkLayer::sendRemovedMsg(NetworkNode *clusterNode)
             else if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
             {
                 frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
-                frame.setPath(cluster->getSinkPath());
-                frame.setDestination(qMakePair(cluster->getSinkPath()[0], m_layer_id));
-                cluster->sendData(frame);
+                if(!cluster->getSinkPath().isEmpty())
+                {
+                    frame.setPath(cluster->getSinkPath());
+                    frame.setDestination(qMakePair(cluster->getSinkPath()[0], m_layer_id));
+                    cluster->sendData(frame);
+                }
             }
             success = true;
             cluster->setStateDisconnected();

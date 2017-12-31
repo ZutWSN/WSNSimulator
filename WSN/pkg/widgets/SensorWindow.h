@@ -22,6 +22,11 @@ public:
     {
         QLine line;
         QColor lineColor;
+        bool operator==(const LineConnection &rhs) const
+        {
+            bool equal = ((line.p1() == rhs.line.p2()) && (line.p2() == rhs.line.p1()));
+            return ((line == rhs.line) || equal);
+        }
     };
 
     SensorWindow(QWidget *parent = 0, const QSize &windowSize = QSize(1350, 825));

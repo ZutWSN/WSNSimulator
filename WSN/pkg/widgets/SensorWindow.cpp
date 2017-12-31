@@ -264,6 +264,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
             m_dragWidgets.push_back(newWidget);
             setNodeInfo(node_id, layer_id, range, isSink);
             connect(newWidget, SIGNAL(sendWidgetReceivedData(DataFrame,quint16,quint16)), this, SLOT(onWidgetReceivedData(DataFrame,quint16,quint16)));
+            update();
             if (event->source() == this)
             {
                 event->setDropAction(Qt::MoveAction);
@@ -480,7 +481,57 @@ void SensorWindow::onPressedSensorBroadcast()
 
 void SensorWindow::onPressedShowSinkPath()
 {
-
+    //changes color of connection lines that form current node sink path
+    //make sure to change back to normal color previous node paths - redraw that bitch
+    bool success = false;
+    redrawConnections();
+    quint16 currentNodeID = m_etxNodeIDInfo->toPlainText().toUInt(&success);
+    if(success)
+    {
+        NetworkNode *currentNode = m_sensorNetwork->getNetworkNode(currentNodeID);
+        if(currentNode)
+        {
+            ClusterNode *cluster = nullptr;
+            if(currentNode->getNodeType() == NetworkNode::NodeType::Cluster)
+            {
+                cluster = static_cast<ClusterNode*>(currentNode);
+            }
+            else if(currentNode->getNodeType() == NetworkNode::NodeType::Sensor)
+            {
+                SensorNode *sensor = static_cast<SensorNode*>(currentNode);
+                if(sensor)
+                {
+                    if(sensor->isConnectedToCluster())
+                    {
+                        cluster = static_cast<ClusterNode*>(m_sensorNetwork->getNetworkNode(sensor->getClusterID()));
+                    }
+                }
+            }
+            if(cluster)
+            {
+                if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
+                {
+                    QPoint previousNodePosition = cluster->getNodePosition();
+                    for(auto && id : cluster->getSinkPath())
+                    {
+                        NetworkNode *sinkPathNode = m_sensorNetwork->getNetworkNode(id);
+                        if(sinkPathNode)
+                        {
+                            LineConnection connection;
+                            connection.line = QLine(previousNodePosition, sinkPathNode->getNodePosition());
+                            int lineIndex = m_networkConnectionLines.indexOf(connection);
+                            if(lineIndex >= 0)
+                            {
+                                m_networkConnectionLines[lineIndex].lineColor = MESSAGE_SENT_COLOR;
+                                previousNodePosition = sinkPathNode->getNodePosition();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    update();
 }
 
 void SensorWindow::onWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id)
@@ -728,19 +779,23 @@ void SensorWindow::redrawConnections()
                         NetworkNode *neighbourNode = (*layer)->getNode(neighbour.first);
                         if(neighbourNode)
                         {
-                            QLine line((*node)->getNodePosition(), neighbourNode->getNodePosition());
-                            QColor connectionTypeColor = QColor(0, 0, 0);
-                            if((*node)-> getNodeType() == NetworkNode::NodeType::Cluster && neighbourNode->getNodeType() == NetworkNode::NodeType::Cluster)
+                            LineConnection connection;
+                            connection.line = QLine((*node)->getNodePosition(), neighbourNode->getNodePosition());
+                            if(m_networkConnectionLines.indexOf(connection) < 0)
                             {
-                                connectionTypeColor = MAPPED_CLUSTER_COLOR;
+                                QColor connectionTypeColor = QColor(0, 0, 0);
+                                if((*node)-> getNodeType() == NetworkNode::NodeType::Cluster && neighbourNode->getNodeType() == NetworkNode::NodeType::Cluster)
+                                {
+                                    connectionTypeColor = MAPPED_CLUSTER_COLOR;
+                                }
+                                else if(((*node)-> getNodeType() == NetworkNode::NodeType::Cluster && neighbourNode->getNodeType() == NetworkNode::NodeType::Sensor) ||
+                                        ((*node)-> getNodeType() == NetworkNode::NodeType::Sensor && neighbourNode->getNodeType() == NetworkNode::NodeType::Cluster))
+                                {
+                                    connectionTypeColor = SENSOR_COLOR;
+                                }
+                                connection.lineColor = connectionTypeColor;
+                                m_networkConnectionLines.push_back(connection);
                             }
-                            else if(((*node)-> getNodeType() == NetworkNode::NodeType::Cluster && neighbourNode->getNodeType() == NetworkNode::NodeType::Sensor) ||
-                                    ((*node)-> getNodeType() == NetworkNode::NodeType::Sensor && neighbourNode->getNodeType() == NetworkNode::NodeType::Cluster))
-                            {
-                                connectionTypeColor = SENSOR_COLOR;
-                            }
-                            LineConnection connection{line, connectionTypeColor};
-                            m_networkConnectionLines.push_back(connection);
                         }
                     }
                     //check if connected to sink and then add line connection
@@ -764,7 +819,6 @@ void SensorWindow::redrawConnections()
             }
         }
     }
-    update();
 }
 
 void SensorWindow::drawConnection()
@@ -869,6 +923,7 @@ bool SensorWindow::getNodeRange(double &node_range) const
     }
     return success;
 }
+
 
 
 
