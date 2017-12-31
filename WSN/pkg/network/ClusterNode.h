@@ -108,7 +108,6 @@ public:
     {
         bool equal = (getNodeID() == rhs.getNodeID());
         equal &= (getNodeLayer() == rhs.getNodeLayer());
-        equal &= (getNodePosition() == rhs.getNodePosition());
         return equal;
     }
 

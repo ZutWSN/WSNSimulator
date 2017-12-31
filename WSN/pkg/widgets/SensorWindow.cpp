@@ -226,14 +226,21 @@ void SensorWindow::dropEvent(QDropEvent *event)
             switch(widgetType)
             {
                 case DragWidget::DragWidgetType::Sink:
-                    if(!isOldWidgetRootWidget)
+                {
+                    auto sinkWgt = static_cast<SinkWidget*>(newWidget);
+                    if(sinkWgt)
                     {
-                        emit removeSink();
+                        if(!isOldWidgetRootWidget)
+                        {
+                            emit removeSink();
+                        }
+                        emit addNewSink(sinkWgt->getPosition(), range, newWidget);
+                        sinkWgt->setRange(range);
+                        isSink = true;
+                        connect(sinkWgt, SIGNAL(sinkSendData(QByteArray)), this, SLOT(onSinkSendData(QByteArray)));
                     }
-                    emit addNewSink(newWidget->getPosition(), range, newWidget);
-                    newWidget->setRange(range);
-                    isSink = true;
                     break;
+                }
                 case DragWidget::DragWidgetType::Cluster:
                     //for now only moving later check if removal enabled then on click of the widget
                     //remove it instead of move
@@ -263,7 +270,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
             redrawConnections();
             m_dragWidgets.push_back(newWidget);
             setNodeInfo(node_id, layer_id, range, isSink);
-            connect(newWidget, SIGNAL(sendWidgetReceivedData(DataFrame,quint16,quint16)), this, SLOT(onWidgetReceivedData(DataFrame,quint16,quint16)));
+            connect(newWidget, SIGNAL(sendWidgetReceivedData(QByteArray,quint16,quint16)), this, SLOT(onWidgetReceivedData(QByteArray,quint16,quint16)));
             update();
             if (event->source() == this)
             {
@@ -285,94 +292,97 @@ void SensorWindow::dropEvent(QDropEvent *event)
 void SensorWindow::mousePressEvent(QMouseEvent *event)
 {
     DragWidget *child = static_cast<DragWidget*>(childAt(event->pos()));
-    if (child && child->whatsThis() != INFO_LABEL)
+    if(child)
     {
-        bool isSink = (child->getWidgetType() == DragWidget::DragWidgetType::Sink);
-        bool drag = true;
-        quint16 node_id = 0;
-        quint16 layer_id = 0;
-        double range = 0;
-        if(child->isRootWidget())
+        if(child->whatsThis() == DRAG_WIDGET_LABEL)
         {
-            if(isSink && m_sinkCreated)
+            bool isSink = (child->getWidgetType() == DragWidget::DragWidgetType::Sink);
+            bool drag = true;
+            quint16 node_id = 0;
+            quint16 layer_id = 0;
+            double range = 0;
+            if(child->isRootWidget())
             {
-                drag = false;
-            }
-            if(!isSink || (isSink && !m_sinkCreated))
-            {
-                bool createNode = true;
-                if(isSink)
+                if(isSink && m_sinkCreated)
                 {
-                    if(!getNodeRange(range))
+                    drag = false;
+                }
+                if(!isSink || (isSink && !m_sinkCreated))
+                {
+                    bool createNode = true;
+                    if(isSink)
                     {
-                        createNode = false;
-                        drag = false;
+                        if(!getNodeRange(range))
+                        {
+                            createNode = false;
+                            drag = false;
+                        }
+                        else
+                        {
+                           m_sinkCreated = true;
+                        }
                     }
                     else
                     {
-                       m_sinkCreated = true;
+                        if(!getNodeIDAndRange(node_id, range))
+                        {
+                            createNode = false;
+                            drag = false;
+                        }
                     }
-                }
-                else
-                {
-                    if(!getNodeIDAndRange(node_id, range))
+                    if(createNode)
                     {
-                        createNode = false;
-                        drag = false;
+                        WidgetFactory wFactory;
+                        DragWidget *oldWidget = wFactory.getNewDragWidget(child->getWidgetType(), this, true);
+                        oldWidget->setWidgetImage(child->getImageName());
+                        oldWidget->move(child->pos());
+                        oldWidget->show();
+                        oldWidget->setAttribute(Qt::WA_DeleteOnClose);
                     }
                 }
-                if(createNode)
-                {
-                    WidgetFactory wFactory;
-                    DragWidget *oldWidget = wFactory.getNewDragWidget(child->getWidgetType(), this, true);
-                    oldWidget->setWidgetImage(child->getImageName());
-                    oldWidget->move(child->pos());
-                    oldWidget->show();
-                    oldWidget->setAttribute(Qt::WA_DeleteOnClose);
-                }
-            }
-        }
-        else
-        {
-            node_id = child->getNodeID();
-            layer_id = child->getLayerID();
-            range = child->getNodeRange();
-            int index = m_dragWidgets.indexOf(child);
-            if(index >= 0)
-            {
-                m_dragWidgets.remove(index); //node is moved, this address will be no longer valid
-            }
-            setNodeInfo(node_id, layer_id, range, isSink);
-        }
-        if(drag)
-        {
-            quint8 type = static_cast<quint8>(child->getWidgetType());
-            QByteArray itemData;
-            QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-
-            dataStream << QPoint(event->pos() - child->pos())
-                       << child->getImageName()
-                       << child->isRootWidget() //is old widget a root widget or not
-                       << type
-                       << node_id
-                       << layer_id
-                       << range;
-            //change definition of mime data to be a drag widget getter
-            QMimeData *mimeData = new QMimeData;
-            mimeData->setData(MIME_DATA_FORMAT, itemData);
-
-            QDrag *drag = new QDrag(this);
-            drag->setPixmap(*child->pixmap()); //shows this during dragging of the object
-            drag->setMimeData(mimeData);
-            drag->setHotSpot(event->pos() - child->pos());
-
-            if (drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction) == Qt::MoveAction)
-            {
-               child->close();
             }
             else
             {
-               child->show();
+                node_id = child->getNodeID();
+                layer_id = child->getLayerID();
+                range = child->getNodeRange();
+                int index = m_dragWidgets.indexOf(child);
+                if(index >= 0)
+                {
+                    m_dragWidgets.remove(index); //node is moved, this address will be no longer valid
+                }
+                setNodeInfo(node_id, layer_id, range, isSink);
+            }
+            if(drag)
+            {
+                quint8 type = static_cast<quint8>(child->getWidgetType());
+                QByteArray itemData;
+                QDataStream dataStream(&itemData, QIODevice::WriteOnly);
+
+                dataStream << QPoint(event->pos() - child->pos())
+                           << child->getImageName()
+                           << child->isRootWidget() //is old widget a root widget or not
+                           << type
+                           << node_id
+                           << layer_id
+                           << range;
+                //change definition of mime data to be a drag widget getter
+                QMimeData *mimeData = new QMimeData;
+                mimeData->setData(MIME_DATA_FORMAT, itemData);
+
+                QDrag *drag = new QDrag(this);
+                drag->setPixmap(*child->pixmap()); //shows this during dragging of the object
+                drag->setMimeData(mimeData);
+                drag->setHotSpot(event->pos() - child->pos());
+
+                if (drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction) == Qt::MoveAction)
+                {
+                   child->close();
+                }
+                else
+                {
+                   child->show();
+                }
             }
         }
     }
@@ -534,9 +544,16 @@ void SensorWindow::onPressedShowSinkPath()
     update();
 }
 
-void SensorWindow::onWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id)
+void SensorWindow::onWidgetReceivedData(const QByteArray &data, quint16 node_id, quint16 layer_id)
 {
     //handle displaying newly received data
+}
+
+void SensorWindow::onSinkSendData(const QByteArray &data)
+{
+    m_etxLogWindow->appendPlainText("\n\n-----SINK SEND MESSAGE------\n\n");
+    m_etxLogWindow->appendPlainText(QString(data.data()));
+    m_etxLogWindow->appendPlainText("\n\n------END OF MESSAGE-------\n\n");
 }
 
 void SensorWindow::initializeUiWidgets()

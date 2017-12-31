@@ -7,7 +7,7 @@ DragWidget::DragWidget(QWidget *parent, bool rootWidget):
     m_connectedToNode(false),
     m_widgetSize(QSize(0, 0))
 {
-
+    QWidget::setWhatsThis(DRAG_WIDGET_LABEL);
 }
 
 DragWidget::~DragWidget()
@@ -103,16 +103,36 @@ QPoint DragWidget::getPosition() const
     return widgetCenter;
 }
 
-void DragWidget::onNodeReceivedData(const DataFrame &data)
+void DragWidget::processReceivedData(const DataFrame &data) const
 {
     switch(data.getMsgType())
     {
-        emit sendWidgetReceivedData(data, m_node_id, m_layer_id);
+        //change widget pixmap to indicate that message was received
+        //implement timer queue that will change it back to default image
+        //after it expires
+        emit sendWidgetReceivedData(data.getMsg(),  m_node_id, m_layer_id);
     }
+}
 
-    //handle node received new data;
-    //notify sensorwindow parent widget
-    //signal its slot which later will call its paintevent update function
+void DragWidget::processDataSend(const DataFrame &data) const
+{
+    switch(data.getMsgType())
+    {
+        //change widget pixmap to indicate that message was send
+        //implement timer queue that will change it back to default image
+        //after it expires
+        emit sendWidgetSendData(data.getMsg(), m_node_id, m_layer_id);
+    }
+}
+
+void DragWidget::onNodeReceivedData(const DataFrame &data)
+{
+    processReceivedData(data);
+}
+
+void DragWidget::onNodeSendData(const DataFrame &data)
+{
+    processDataSend(data);
 }
 
 

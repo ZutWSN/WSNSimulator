@@ -9,6 +9,12 @@ public:
     SinkWidget(QWidget *parent = 0, bool rootWidget = false);
 
     DragWidget::DragWidgetType getWidgetType() const;
+private:
+    void processReceivedData(const DataFrame &data) const;
+    void processDataSend(const DataFrame &data) const;
+    void getNewPathMsg(const QByteArray &serializedMsg, QByteArray &pathMsg) const;
+signals:
+    void sinkSendData(const QByteArray &data) const;
 };
 
 #endif // SINKWIDGET_H

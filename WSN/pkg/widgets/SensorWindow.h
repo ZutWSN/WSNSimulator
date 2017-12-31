@@ -43,7 +43,8 @@ public slots:
     void onPressedRemoveNode();
     void onPressedSensorBroadcast();
     void onPressedShowSinkPath();
-    void onWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id);
+    void onWidgetReceivedData(const QByteArray &data, quint16 node_id, quint16 layer_id);
+    void onSinkSendData(const QByteArray &data);
 signals:
     void addNewSink(const QPoint &position, quint16 range, QWidget *uiWidget);
     void addNewCluster(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);

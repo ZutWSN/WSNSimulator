@@ -304,7 +304,10 @@ void SensorNetwork::onNewClusterAdded(quint16 cluster_id, quint16 layer_id, cons
                 }
                 else
                 {
-                    m_sink->sendNewPaths(layer_id);
+                    if(m_sink->getNumOfMappedClusters() > 0)
+                    {
+                        m_sink->sendNewPaths(layer_id);
+                    }
                 }
             }
         }
@@ -398,7 +401,10 @@ void SensorNetwork::onNodeMoved(quint16 node_id, quint16 layer_id, QPoint positi
                         cluster->resetSinkPath();
                         if(m_sink->addDirectCluster(cluster))
                         {
-                            m_sink->sendNewPaths(layer_id);
+                            if(m_sink->getNumOfMappedClusters() > 0)
+                            {
+                                m_sink->sendNewPaths(layer_id);
+                            }
                         }
                     }
                     else

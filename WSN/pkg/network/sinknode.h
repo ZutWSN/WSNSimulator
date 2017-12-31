@@ -59,11 +59,13 @@ public:
     void setRange(quint16 range);
 
     quint16 getNumOfInRangeCusters() const;
+    quint16 getNumOfMappedClusters() const;
     quint16 getNumOfConnectedLayers() const;
     DataFrame getLastMsg() const;
     QPoint getSinkPosition() const;
     double getSinkRange() const;
     bool checkIfHasDirectCluster(NetworkNode *cluster) const;
+    bool checkIfHasDirectCluster(quint16 node_id, quint16 layer_id) const;
     bool checkIfHasMappedCluster(quint16 node_id, quint16 layer_id) const;
 private:
     //makes class not copyable
@@ -73,15 +75,16 @@ public slots:
     void onReceivedDataFromCluster(const DataFrame &data);
 signals:
     void receivedData(const DataFrame &data); //to widget
+    void sendData(const DataFrame &data);
     void broadCastDataToClusters(const DataFrame &data);
 private:
     bool calculateNetworkPaths(QByteArray &updateMsg);
     bool updateClusterPath(const DataFrame &data);
-    quint16 checkIfHasMappedCluster(const MappedClusterNode &node) const;
-    void removeNode(const QByteArray &msg);
     QVector<Vertice> createGraphAndFindPaths() const;
     bool updatePathsAndCreateSyncMsg(const QVector<Vertice> &vertices, QByteArray &updateMsg);
     void resetMappedSinkPaths();
+    void removeNode(const QByteArray &msg);
+    int checkIfHasMappedCluster(const MappedClusterNode &node) const;
     void extractNodeData(NetworkNode* node, Vertice &vertice) const;
     void extractMappedNodeData(const MappedClusterNode &node, Vertice &vertice) const;
 private:

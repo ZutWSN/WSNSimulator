@@ -4,6 +4,7 @@
 #include <QLabel>
 #include "DataFrame.h"
 
+const QString DRAG_WIDGET_LABEL = "dragWidget";
 class DragWidget : public QLabel
 {
     Q_OBJECT
@@ -35,13 +36,16 @@ public:
     quint16 getLayerID() const;
     double getNodeRange() const;
     QPoint getPosition() const;
-
-
+protected:
+    virtual void processReceivedData(const DataFrame &data) const;
+    virtual void processDataSend(const DataFrame &data) const;
 public slots:
     void onNodeReceivedData(const DataFrame &data);
+    void onNodeSendData(const DataFrame &data);
 signals:
-    void sendWidgetReceivedData(const DataFrame &data, quint16 node_id, quint16 layer_id);
-private:
+    void sendWidgetReceivedData(const QByteArray &data, quint16 node_id, quint16 layer_id) const;
+    void sendWidgetSendData(const QByteArray &data, quint16 node_id, quint16 layer_id) const;
+protected:
     QString m_imgName;
     bool m_rootWidget;
     bool m_connectedToNode;

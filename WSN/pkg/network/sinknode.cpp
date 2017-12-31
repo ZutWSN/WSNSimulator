@@ -67,16 +67,20 @@ bool SinkNode::connectToNodeWidget(QWidget *widget)
 {
     bool success = false;
     DragWidget *dragWidget = static_cast<DragWidget*>(widget);
-    if(dragWidget && !dragWidget->isConnectedToNode())
+    if(dragWidget->getWidgetType() == DragWidget::DragWidgetType::Sink)
     {
-        if(!m_connectedToWidget)
+        if(dragWidget && !dragWidget->isConnectedToNode())
         {
-            success = static_cast<bool>(connect(this, SIGNAL(receivedData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
-            m_connectedToWidget = success;
-            if(m_connectedToWidget)
+            if(!m_connectedToWidget)
             {
-                dragWidget->setConnectedToNode(true);
-                m_Widget = widget;
+                success = static_cast<bool>(connect(this, SIGNAL(receivedData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
+                success &= static_cast<bool>(connect(this, SIGNAL(sendData(DataFrame)), dragWidget, SLOT(onNodeSendData(DataFrame))));
+                m_connectedToWidget = success;
+                if(m_connectedToWidget)
+                {
+                    dragWidget->setConnectedToNode(true);
+                    m_Widget = widget;
+                }
             }
         }
     }
@@ -111,6 +115,7 @@ void SinkNode::sendNewPaths(quint16 senderLayer)
         DataFrame pathUpdate(msg, DataFrame::RxData::PATH_SYNC, 0, 0, 0);
         ClusterNode::resetBroadCastSyncVector(senderLayer);
         emit broadCastDataToClusters(pathUpdate);
+        emit sendData(pathUpdate);
     }
 }
 
@@ -136,6 +141,11 @@ quint16 SinkNode::getNumOfInRangeCusters() const
     return m_inRangeClusters.size();
 }
 
+quint16 SinkNode::getNumOfMappedClusters() const
+{
+    return m_clusterPathMap.size();
+}
+
 quint16 SinkNode::getNumOfConnectedLayers() const
 {
     return m_layers.size();
@@ -158,16 +168,24 @@ double SinkNode::getSinkRange() const
 
 bool SinkNode::checkIfHasDirectCluster(NetworkNode *cluster) const
 {
-    bool present = false;
-    for(NetworkNode* node : m_inRangeClusters)
+    return (m_inRangeClusters.indexOf(cluster) >= 0);
+}
+
+bool SinkNode::checkIfHasDirectCluster(quint16 node_id, quint16 layer_id) const
+{
+    bool hasCluster = false;
+    for(auto && directCluster : m_inRangeClusters)
     {
-        if(node == cluster)
+        if(node_id == directCluster->getNodeID())
         {
-            present = true;
-            break;
+            if(layer_id == directCluster->getNodeLayer())
+            {
+                hasCluster = true;
+                break;
+            }
         }
     }
-    return present;
+    return hasCluster;
 }
 
 bool SinkNode::checkIfHasMappedCluster(quint16 node_id, quint16 layer_id) const
@@ -185,6 +203,7 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
     {
         case DataFrame::RxData::CLUSTER_PATH:
             updateClusterPath(data);
+            receivedData(data);
             break;
         case DataFrame::RxData::NEW_DATA:
             emit receivedData(data);
@@ -204,6 +223,7 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
                 DataFrame noSinkConnection(QByteArray(), DataFrame::RxData::NO_SINK_CONNECTION, 0, 0, 0);
                 ClusterNode::resetBroadCastSyncVector(data.getSender().second);
                 emit broadCastDataToClusters(noSinkConnection);
+                emit sendData(noSinkConnection);
             }
             break;
         default:
@@ -322,7 +342,7 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
                                         neighbourIDs,
                                         neighbourDistances,
                                         nodePath};
-                qint16 index = checkIfHasMappedCluster(node);
+                int index = checkIfHasMappedCluster(node);
                 if(index >= 0)
                 {
                     //update the node path
@@ -333,6 +353,31 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
                     //map new node
                     m_clusterPathMap.push_back(node);
                 }
+                //update mapped neighbours paths
+                for(quint16 i = 0; i < neighbourIDs.size(); i++)
+                {
+                    MappedClusterNode neighbour{neighbourIDs[i], layer_id};
+                    int neighbourIndex = m_clusterPathMap.indexOf(neighbour);
+                    if(neighbourIndex >= 0)
+                    {
+                        m_clusterPathMap[neighbourIndex].neighbourIDs.push_back(node_id);
+                        m_clusterPathMap[neighbourIndex].neighbourDistances.push_back(neighbourDistances[i]);
+                    }
+                    else
+                    {
+                        //dont count the direct cluster connections, they are mapped in separate container
+                        if(!checkIfHasDirectCluster(neighbour.node_id, layer_id))
+                        {
+                            //neighbour not mapped add it
+                            neighbour.neighbourIDs.push_back(node_id);
+                            neighbour.neighbourDistances.push_back(neighbourDistances[i]);
+                            neighbour.sinkPath = nodePath;
+                            neighbour.sinkPath.insert(neighbour.sinkPath.begin(), node_id);
+                            neighbour.pathLength = pathLength + neighbourDistances[i];
+                            m_clusterPathMap.push_back(neighbour);
+                        }
+                    }
+                }
                 pathUpdated = true;
             }
         }
@@ -340,20 +385,9 @@ bool SinkNode::updateClusterPath(const DataFrame &data)
     return pathUpdated;
 }
 
-quint16 SinkNode::checkIfHasMappedCluster(const MappedClusterNode &node) const
+int SinkNode::checkIfHasMappedCluster(const MappedClusterNode &node) const
 {
-    quint16 index = -1;
-    quint16 i = 0;
-    for(auto && mappedNode : m_clusterPathMap)
-    {
-        if(mappedNode == node)
-        {
-            index = i;
-            break;
-        }
-        ++i;
-    }
-    return index;
+    return m_clusterPathMap.indexOf(node);
 }
 
 void SinkNode::removeNode(const QByteArray &msg)
@@ -412,23 +446,35 @@ void SinkNode::removeNode(const QByteArray &msg)
                         //and all mapped nodes neighbours.
                         for(auto && neighbourNode : cluster->getNeighbours())
                         {
-                            for(MappedClusterNode &mappedNode : m_clusterPathMap)
+                            quint16 i = 0;
+                            while(i < m_clusterPathMap.size())
                             {
-                                if(mappedNode.layer_id == cluster->getNodeLayer())
+                                bool nextIndex = true;
+                                if(m_clusterPathMap[i].layer_id == cluster->getNodeLayer())
                                 {
-                                    if(neighbourNode.first == mappedNode.node_id)
+                                    if(neighbourNode.first == m_clusterPathMap[i].node_id)
                                     {
-                                        int idx = mappedNode.neighbourIDs.indexOf(cluster->getNodeID());
+                                        int idx = m_clusterPathMap[i].neighbourIDs.indexOf(cluster->getNodeID());
                                         if(idx >= 0)
                                         {
-                                            mappedNode.neighbourIDs.remove(idx);
-                                            mappedNode.neighbourDistances.remove(idx);
+                                            m_clusterPathMap[i].neighbourIDs.remove(idx);
+                                            m_clusterPathMap[i].neighbourDistances.remove(idx);
+                                            if(m_clusterPathMap[i].neighbourIDs.isEmpty())
+                                            {
+                                                m_clusterPathMap.remove(i);
+                                                nextIndex = false;
+                                            }
                                         }
                                     }
+                                }
+                                if(nextIndex)
+                                {
+                                    ++i;
                                 }
                             }
                         }
                         m_inRangeClusters.remove(m_inRangeClusters.indexOf(directCluster));
+                        break;
                     }
                 }
             }
@@ -440,7 +486,8 @@ void SinkNode::removeNode(const QByteArray &msg)
                 int idxNodeToRemove = m_clusterPathMap.indexOf(nodeToRemove);
                 if(idxNodeToRemove >= 0)
                 {
-                    for(auto && neighbourID: m_clusterPathMap[idxNodeToRemove].neighbourIDs)
+                    nodeToRemove = m_clusterPathMap[idxNodeToRemove];
+                    for(auto && neighbourID : nodeToRemove.neighbourIDs)
                     {
                         MappedClusterNode currentNode;
                         currentNode.node_id = neighbourID;
@@ -453,9 +500,14 @@ void SinkNode::removeNode(const QByteArray &msg)
                             {
                                 m_clusterPathMap[currentIndex].neighbourIDs.remove(index);
                                 m_clusterPathMap[currentIndex].neighbourDistances.remove(index);
+                                if(m_clusterPathMap[currentIndex].neighbourIDs.isEmpty())
+                                {
+                                    m_clusterPathMap.remove(currentIndex);
+                                }
                             }
                         }
                     }
+                    idxNodeToRemove = m_clusterPathMap.indexOf(nodeToRemove);
                     m_clusterPathMap.remove(idxNodeToRemove);
                 }
             }
