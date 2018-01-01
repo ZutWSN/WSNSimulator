@@ -13,17 +13,11 @@ DragWidget::DragWidgetType ClusterWidget::getWidgetType() const
 
 void ClusterWidget::processReceivedData(const DataFrame &data)
 {
-    switch(data.getMsgType())
-    {
-
-    }
+    DragWidget::processReceivedData(data);
 }
 
 void ClusterWidget::processDataSend(const DataFrame &data)
 {
-    switch(data.getMsgType())
-    {
-
-    }
+    DragWidget::processDataSend(data);
 }
 

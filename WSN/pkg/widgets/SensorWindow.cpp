@@ -60,7 +60,11 @@ const QSize LOG_WINDOW_SIZE = QSize(300, 500);
 const QPoint NETWORK_AREA_LABEL_POS = QPoint(200, 10);
 const QSize NETWORK_AREA_LABEL_SIZE = QSize(80, 20);
 const QPoint NETWORK_AREA_WINDOW_POS = QPoint(200, 30);
-const QSize NETWORK_AREA_WINDOW_SIZE = QSize(300, 500);
+const QSize NETWORK_AREA_WINDOW_SIZE = QSize(800, 500);
+const QPoint NETWORK_AREA_MAX_X = NETWORK_AREA_WINDOW_POS.x() + NETWORK_AREA_WINDOW_SIZE.width();
+const QPoint NETWORK_AREA_MIN_X = NETWORK_AREA_WINDOW_POS.x();
+const QPoint NETWORK_AREA_MAX_Y = NETWORK_AREA_WINDOW_POS.y() + NETWORK_AREA_WINDOW_SIZE.height();
+const QPoint NETWORK_AREA_MIN_Y = NETWORK_AREA_WINDOW_POS.y();
 //
 const QPoint INPUT_LABEL_POS = QPoint(60, 330);
 const QSize INPUT_LABEL_SIZE = QSize(50, 20);
@@ -211,75 +215,79 @@ void SensorWindow::dropEvent(QDropEvent *event)
                     >> range;
 
         widgetType = static_cast<DragWidget::DragWidgetType>(wType);
+        QPoint widgetPosition = event->pos() - offset;
         if(widgetType != DragWidget::DragWidgetType::NoType)
         {
             WidgetFactory wFactory;
             DragWidget *newWidget = wFactory.getNewDragWidget(widgetType, this, false);
             newWidget->setWidgetImage(imgName);
-            newWidget->move(event->pos() - offset);
-            newWidget->show();
-            newWidget->setAttribute(Qt::WA_DeleteOnClose);
-            //widget has been just moved, update the connected
-            //widget to coresponding layer and node id
-            //also alter the position of it
-            bool isSink = false;;
-            switch(widgetType)
+            if(isInNetworkArea(newWidget->getWidgetSize(), widgetPosition))
             {
-                case DragWidget::DragWidgetType::Sink:
+                newWidget->move(widgetPosition);
+                newWidget->show();
+                newWidget->setAttribute(Qt::WA_DeleteOnClose);
+
+                bool isSink = false;;
+                switch(widgetType)
                 {
-                    auto sinkWgt = static_cast<SinkWidget*>(newWidget);
-                    if(sinkWgt)
+                    case DragWidget::DragWidgetType::Sink:
                     {
+                        auto sinkWgt = static_cast<SinkWidget*>(newWidget);
+                        if(sinkWgt)
+                        {
+                            //later alter this to call move not remove + add
+                            if(!isOldWidgetRootWidget)
+                            {
+                                emit removeSink();
+                            }
+                            emit addNewSink(sinkWgt->getPosition(), range, newWidget);
+                            sinkWgt->setRange(range);
+                            isSink = true;
+                            connect(sinkWgt, SIGNAL(sinkSendData(QByteArray)), this, SLOT(onSinkSendData(QByteArray)));
+                            connect(sinkWgt, SIGNAL(sinkReceivedData(QByteArray)), this, SLOT(onSinkReceivedData(QByteArray)));
+                        }
+                        break;
+                    }
+                    case DragWidget::DragWidgetType::Cluster:
+                        //for now only moving later check if removal enabled then on click of the widget
+                        //remove it instead of move
                         if(!isOldWidgetRootWidget)
                         {
-                            emit removeSink();
+                            emit moveNode(node_id, layer_id, newWidget->getPosition());
                         }
-                        emit addNewSink(sinkWgt->getPosition(), range, newWidget);
-                        sinkWgt->setRange(range);
-                        isSink = true;
-                        connect(sinkWgt, SIGNAL(sinkSendData(QByteArray)), this, SLOT(onSinkSendData(QByteArray)));
-                    }
-                    break;
+                        else
+                        {
+                            emit addNewCluster(node_id, layer_id, newWidget->getPosition(), range, newWidget);
+                        }
+                        newWidget->connectToNode(node_id, layer_id, range);
+                        break;
+                    case DragWidget::DragWidgetType::Sensor:
+                        if(!isOldWidgetRootWidget)
+                        {
+                            emit moveNode(node_id, layer_id, newWidget->getPosition());
+                        }
+                        else
+                        {
+                            emit addNewSensor(node_id, layer_id, newWidget->getPosition(), range, newWidget);
+                            m_cbSensorList->addItem("Sensor " + QString::number(node_id), QVariant(node_id));
+                        }
+                        newWidget->connectToNode(node_id, layer_id, range);
+                        break;
                 }
-                case DragWidget::DragWidgetType::Cluster:
-                    //for now only moving later check if removal enabled then on click of the widget
-                    //remove it instead of move
-                    if(!isOldWidgetRootWidget)
-                    {
-                        emit moveNode(node_id, layer_id, newWidget->getPosition());
-                    }
-                    else
-                    {
-                        emit addNewCluster(node_id, layer_id, newWidget->getPosition(), range, newWidget);
-                    }
-                    newWidget->connectToNode(node_id, layer_id, range);
-                    break;
-                case DragWidget::DragWidgetType::Sensor:
-                    if(!isOldWidgetRootWidget)
-                    {
-                        emit moveNode(node_id, layer_id, newWidget->getPosition());
-                    }
-                    else
-                    {
-                        emit addNewSensor(node_id, layer_id, newWidget->getPosition(), range, newWidget);
-                    }
-                    newWidget->connectToNode(node_id, layer_id, range);
-                    break;
-            }
-            //update displayed paths - check all connections and edit linepaths
-            redrawConnections();
-            m_dragWidgets.push_back(newWidget);
-            setNodeInfo(node_id, layer_id, range, isSink);
-            connect(newWidget, SIGNAL(sendWidgetReceivedData(QByteArray,quint16,quint16)), this, SLOT(onWidgetReceivedData(QByteArray,quint16,quint16)));
-            update();
-            if (event->source() == this)
-            {
-                event->setDropAction(Qt::MoveAction);
-                event->accept();
-            }
-            else
-            {
-                event->acceptProposedAction();
+                //update displayed paths - check all connections and edit linepaths
+                redrawConnections();
+                m_dragWidgets.push_back(newWidget);
+                setNodeInfo(node_id, layer_id, range, isSink);
+                update();
+                if (event->source() == this)
+                {
+                    event->setDropAction(Qt::MoveAction);
+                    event->accept();
+                }
+                else
+                {
+                    event->acceptProposedAction();
+                }
             }
         }
     }
@@ -392,8 +400,12 @@ void SensorWindow::paintEvent(QPaintEvent *e)
 {
 
     QPainter painter(this);
-    QPen pen;
+    QPen pen(QColor(0, 0, 0));
     pen.setWidth(3);
+    //draw background
+    QRect networkArea(NETWORK_AREA_WINDOW_POS, NETWORK_AREA_WINDOW_SIZE);
+    //painter.drawRect(networkArea);
+    painter.fillRect(networkArea, QBrush(Qt::white));
     for(auto && connection : m_networkConnectionLines)
     {
         pen.setColor(connection.lineColor);
@@ -476,7 +488,21 @@ void SensorWindow::onPressedShowNetworkState()
 
 void SensorWindow::onPressedSendMsg()
 {
-
+    //get sensor id from combobox
+    bool success = false;
+    quint16 sensor_id = m_cbSensorList->currentData().toUInt(&success);
+    if(success)
+    {
+        SensorNode *sensor = static_cast<SensorNode*>(m_sensorNetwork->getNetworkNode(sensor_id));
+        if(sensor)
+        {
+            auto newMsg = QByteArray(m_etxSensorMsg->toPlainText().toStdString().c_str());
+            if(!newMsg.isEmpty())
+            {
+                sensor->sendDataToCluster(newMsg);
+            }
+        }
+    }
 }
 
 void SensorWindow::onPressedRemoveNode()
@@ -552,6 +578,13 @@ void SensorWindow::onWidgetReceivedData(const QByteArray &data, quint16 node_id,
 void SensorWindow::onSinkSendData(const QByteArray &data)
 {
     m_etxLogWindow->appendPlainText("\n-----SINK SEND MESSAGE------\n");
+    m_etxLogWindow->appendPlainText(QString(data.data()));
+    m_etxLogWindow->appendPlainText("\n------END OF MESSAGE-------\n");
+}
+
+void SensorWindow::onSinkReceivedData(const QByteArray &data)
+{
+    m_etxLogWindow->appendPlainText("\n-----SINK RECEIVED MESSAGE------\n");
     m_etxLogWindow->appendPlainText(QString(data.data()));
     m_etxLogWindow->appendPlainText("\n------END OF MESSAGE-------\n");
 }
@@ -887,7 +920,14 @@ void SensorWindow::setNodeInfo(quint16 node_id, quint16 layer_id, quint16 range,
     }
     m_etxNodeIDInfo->setPlainText(nodeIDInfo);
     m_etxNodeRangeInfo->setPlainText(nodeRange);
-    m_etxLastRxMsg->setPlainText(lastMsg);
+    if(!lastMsg.isEmpty())
+    {
+        m_etxLastRxMsg->setPlainText(lastMsg);
+    }
+    else
+    {
+        m_etxLastRxMsg->clear();
+    }
     m_etxNodeStateInfo->setPlainText(status);
 }
 
@@ -939,6 +979,23 @@ bool SensorWindow::getNodeRange(double &node_range) const
         success = true;
     }
     return success;
+}
+
+bool SensorWindow::isInNetworkArea(const QSize &widgetSize, const QPoint &position) const
+{
+    bool inConstraints = false;
+    int upperLeft_X = position.x();
+    int upperLeft_Y = position.y();
+    int downRigh_X = position.x + widgetSize.width();
+    int downRigh_Y = position.y + widgetSize.height();
+    if(upperLeft_X >= NETWORK_AREA_MIN_X)
+    {
+        if(upperLeft_Y >= NETWORK_AREA_MIN_Y)
+        {
+
+        }
+    }
+    return inConstraints;
 }
 
 

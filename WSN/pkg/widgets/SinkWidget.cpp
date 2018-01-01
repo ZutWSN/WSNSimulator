@@ -17,8 +17,17 @@ DragWidget::DragWidgetType SinkWidget::getWidgetType() const
 
 void SinkWidget::processReceivedData(const DataFrame &data) const
 {
-    //for now use the old one
+    QByteArray logMsg;
     DragWidget::processReceivedData(data);
+    logMsg.append(data.getMsgInfo());
+    if(!data.getMsg().isEmpty())
+    {
+        if(data.getMsgType() == DataFrame::RxData::NEW_DATA)
+        {
+            logMsg.append("\nMESSAGE CONTENT: \n" + data.getMsg() + "\n");
+        }
+    }
+    emit sinkReceivedData(logMsg);
 }
 
 void SinkWidget::processDataSend(const DataFrame &data) const

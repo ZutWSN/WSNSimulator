@@ -203,10 +203,6 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
     {
         case DataFrame::RxData::CLUSTER_PATH:
             updateClusterPath(data);
-            receivedData(data);
-            break;
-        case DataFrame::RxData::NEW_DATA:
-            emit receivedData(data);
             break;
         case DataFrame::RxData::REMOVED_NODE:
             removeNode(data.getMsg());
@@ -214,12 +210,11 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
             {
                 sendNewPaths(data.getSender().second);
             }
-            else    //node removed was last in range cluster
+            else//node removed was last in range cluster
             {
                 //reset mapped network sinkpaths
                 resetMappedSinkPaths();
-                //send message to network about last direct cluster disconnection
-                //before it gets removed
+                //send message to network about last direct cluster disconnection before it gets removed
                 DataFrame noSinkConnection(QByteArray(), DataFrame::RxData::NO_SINK_CONNECTION, 0, 0, 0);
                 ClusterNode::resetBroadCastSyncVector(data.getSender().second);
                 emit broadCastDataToClusters(noSinkConnection);
@@ -229,6 +224,7 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
         default:
             break;
     }
+    emit receivedData(data);
 }
 
 bool SinkNode::calculateNetworkPaths(QByteArray &updateMsg)

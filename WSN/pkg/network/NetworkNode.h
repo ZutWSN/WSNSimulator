@@ -81,6 +81,7 @@ protected:
     QVector<NetworkNode*> m_connectedNodes;
     QVector<DataFrame> m_pendingSendDataFrames;
     QString m_lastReceivedMsg;
+    QString m_lastSendMsg;
 };
 
 #endif // NETWORKNODE_H

@@ -103,26 +103,20 @@ QPoint DragWidget::getPosition() const
     return widgetCenter;
 }
 
+QSize DragWidget::getWidgetSize() const
+{
+    return m_widgetSize;
+}
+
 void DragWidget::processReceivedData(const DataFrame &data) const
 {
-    switch(data.getMsgType())
-    {
-        //change widget pixmap to indicate that message was received
-        //implement timer queue that will change it back to default image
-        //after it expires
-        emit sendWidgetReceivedData(data.getMsg(),  m_node_id, m_layer_id);
-    }
+    // dont , just change the pixmap emit sendWidgetReceivedData(data.getMsgInfo(), m_node_id, m_layer_id);
 }
 
 void DragWidget::processDataSend(const DataFrame &data) const
 {
-    switch(data.getMsgType())
-    {
-        //change widget pixmap to indicate that message was send
-        //implement timer queue that will change it back to default image
-        //after it expires
-        emit sendWidgetSendData(data.getMsg(), m_node_id, m_layer_id);
-    }
+
+    // emit dont , just change the pixmap sendWidgetSendData(data.getMsgInfo(), m_node_id, m_layer_id);
 }
 
 void DragWidget::onNodeReceivedData(const DataFrame &data)

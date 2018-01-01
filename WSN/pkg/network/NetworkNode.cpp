@@ -92,6 +92,14 @@ bool NetworkNode::sendData(const DataFrame &txData)
             m_pendingSendDataFrames.push_back(txData);
         }
         emit dataSend(txData);
+        m_lastSendMsg = txData.getMsgInfo();
+        if(txData.getMsgType() == DataFrame::RxData::NEW_DATA)
+        {
+            if(!txData.getMsg().isEmpty())
+            {
+                m_lastSendMsg.append("\nMESSAGE CONTENT: \n" + txData.getMsg() + "\n");
+            }
+        }
     }
     return result;
 }
@@ -146,6 +154,7 @@ bool NetworkNode::connectToNodeWidget(QWidget *widget)
         if(!m_connectedToWidget)
         {
             success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
+            success &= static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), dragWidget, SLOT(onNodeSendData(DataFrame))));
             m_connectedToWidget = success;
             if(m_connectedToWidget)
             {
@@ -368,7 +377,14 @@ void NetworkNode::onReceivedData(const DataFrame &rxData)
             processNewData(rxData);
             break;
     }
-    m_lastReceivedMsg = rxData.getMsg();
+    m_lastReceivedMsg = rxData.getMsgInfo();
+    if(rxData.getMsgType() == DataFrame::RxData::NEW_DATA)
+    {
+        if(!rxData.getMsg().isEmpty())
+        {
+            m_lastReceivedMsg.append("\nMESSAGE CONTENT: \n" + rxData.getMsg() + "\n");
+        }
+    }
 }
 
 void NetworkNode::processNewData(const DataFrame &rxData)

@@ -13,18 +13,12 @@ DragWidget::DragWidgetType SensorWidget::getWidgetType() const
 
 void SensorWidget::processReceivedData(const DataFrame &data)
 {
-    switch(data.getMsgType())
-    {
-
-    }
+    DragWidget::processReceivedData(data);
 }
 
 void SensorWidget::processDataSend(const DataFrame &data)
 {
-    switch(data.getMsgType())
-    {
-
-    }
+    DragWidget::processDataSend(data);
 }
 
 

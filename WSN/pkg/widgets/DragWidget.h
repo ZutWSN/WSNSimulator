@@ -36,6 +36,7 @@ public:
     quint16 getLayerID() const;
     double getNodeRange() const;
     QPoint getPosition() const;
+    QSize getWidgetSize() const;
 protected:
     virtual void processReceivedData(const DataFrame &data) const;
     virtual void processDataSend(const DataFrame &data) const;

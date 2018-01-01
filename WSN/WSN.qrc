@@ -1,7 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-    <file>res/sensor.jpg</file>
-    <file>res/cluster.jpg</file>
-	<file>res/sink.jpg</file>
+    <file>res/sensor.png</file>
+	<file>res/cluster.png</file>
+	<file>res/sink.png</file>
 </qresource>
 </RCC>

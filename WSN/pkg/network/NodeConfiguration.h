@@ -7,9 +7,9 @@
  * range
  * vendor name and additional information
  */
-const QString SENSOR_IMG_FILE = ":/res/sensor.jpg";
-const QString CLUSTER_IMG_FILE = ":/res/cluster.jpg";
-const QString SINK_IMG_FILE = ":/res/sink.jpg";
+const QString SENSOR_IMG_FILE = ":/res/sensor.png";
+const QString CLUSTER_IMG_FILE = ":/res/cluster.png";
+const QString SINK_IMG_FILE = ":/res/sink.png";
 
 class NodeConfiguration
 {

@@ -45,14 +45,15 @@ public:
 
     QByteArray getMsg() const;
     DataFrame::RxData getMsgType() const;
+    QString getMsgTypeString() const;
     QPair<quint16, quint16> getDestination() const;
     QPair<quint16, quint16> getSender() const;
+    QVector<quint16> getPath() const;
+    QByteArray getMsgInfo() const;
     QPair<quint16, quint16> getNextChainNode(quint16 currentNodeID, quint16 currentNodeLayer) const;
     bool hasVisitedNode(const QPair<quint16, quint16> &node) const;
     bool frameEmpty() const;
     bool isFinalDestination(const QPair<quint16, quint16> &nodeLayerAndID) const;
-
-    // later add compress data, maybe parsing a hex msg not just saving and reading a string
 private:
     QByteArray m_Msg;
     DataFrame::RxData m_Type;

@@ -186,7 +186,19 @@ NetworkNode *SensorNetwork::getNetworkNode(quint16 node_id) const
 
 QString SensorNetwork::getSinkLastMsg() const
 {
-    return m_sink->getLastMsg().getMsg();
+    QString lastMsg;
+    if(m_sink->getLastMsg().getSender() != m_sink->getLastMsg().getDestination())
+    {
+        lastMsg = m_sink->getLastMsg().getMsgInfo();
+        if(!m_sink->getLastMsg().getMsg().isEmpty())
+        {
+            if(m_sink->getLastMsg().getMsgType() == DataFrame::RxData::NEW_DATA)
+            {
+                lastMsg.append("\nMESSAGE CONTENT: \n" + m_sink->getLastMsg().getMsg() + "\n");
+            }
+        }
+    }
+    return lastMsg;
 }
 
 QPoint SensorNetwork::getSinkPosition() const

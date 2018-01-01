@@ -1,6 +1,22 @@
 #include "DataFrame.h"
 #include <utility>
 
+const QVector<QString> widgetStateNames =
+{
+    "NO_DATA",
+    "NEW_DATA",
+    "RECEIVED_DATA",
+    "PATH_SYNC",
+    "SENSOR_BROADCAST",
+    "NEIGHBOUR_PATH_REQ",
+    "NEIGHBOUR_PATH",
+    "CLUSTER_PATH",
+    "SENSOR_RESPONSE",
+    "REMOVED_NODE",
+    "DIRECT_CLUSTER_REMOVED",
+    "NO_SINK_CONNECTION"
+};
+
 DataFrame::DataFrame():
     m_Msg(QByteArray()),
     m_Type(RxData::NO_DATA),
@@ -134,9 +150,36 @@ DataFrame::RxData DataFrame::getMsgType() const
     return m_Type;
 }
 
+QString DataFrame::getMsgTypeString() const
+{
+    return widgetStateNames[m_Type];
+}
+
 QPair<quint16, quint16> DataFrame::getSender() const
 {
     return m_sender;
+}
+
+QVector<quint16> DataFrame::getPath() const
+{
+    return m_path;
+}
+
+QByteArray DataFrame::getMsgInfo() const
+{
+    QByteArray log;
+    log.append("SENDER ID: " + QString::number(m_sender.first) + "\n");
+    log.append("SENDER LAYER: " + QString::number(m_sender.second) + "\n");
+    log.append("MESSAGE TYPE: " + getMsgTypeString() + "\n");
+    log.append("DESTINATION ID: " + QString::number(m_desination.first) + "\n");
+    log.append("DESTINATION LAYER: " + QString::number(m_desination.second) + "\n");
+    log.append("MESSAGE PATH: ");
+    for(auto && id : m_path)
+    {
+        log.append(QString::number(id) +  " ");
+    }
+    log.append("\n");
+    return log;
 }
 
 QPair<quint16, quint16> DataFrame::getNextChainNode(quint16 currentNodeID, quint16 currentNodeLayer) const

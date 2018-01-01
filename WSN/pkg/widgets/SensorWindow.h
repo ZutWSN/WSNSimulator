@@ -45,6 +45,7 @@ public slots:
     void onPressedShowSinkPath();
     void onWidgetReceivedData(const QByteArray &data, quint16 node_id, quint16 layer_id);
     void onSinkSendData(const QByteArray &data);
+    void onSinkReceivedData(const QByteArray &data);
 signals:
     void addNewSink(const QPoint &position, quint16 range, QWidget *uiWidget);
     void addNewCluster(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
@@ -60,6 +61,7 @@ private:
     bool getNodeIDAndRange(quint16 &node_id, double &node_range) const;
     bool getNodeID(quint16 &node_id) const;
     bool getNodeRange(double &node_range) const;
+    bool isInNetworkArea(const QPoint &position) const;
 protected:
     QVector<DragWidget*> m_dragWidgets;
     QScopedPointer<SensorNetwork> m_sensorNetwork;

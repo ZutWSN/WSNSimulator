@@ -15,6 +15,7 @@ private:
     void getNewPathMsg(const QByteArray &serializedMsg, QByteArray &pathMsg) const;
 signals:
     void sinkSendData(const QByteArray &data) const;
+    void sinkReceivedData(const QByteArray &data) const;
 };
 
 #endif // SINKWIDGET_H
