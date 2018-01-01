@@ -53,7 +53,7 @@ void SinkWidget::getNewPathMsg(const QByteArray &serializedMsg, QByteArray &path
         {
             if(key == PATHS)
             {
-                pathMsg.append(key + "\n");
+                pathMsg.append("\n" + key + ":\n");
                 if(jsonObj[key].isArray())
                 {
                     auto listOfPaths = jsonObj[key].toArray();
@@ -63,22 +63,24 @@ void SinkWidget::getNewPathMsg(const QByteArray &serializedMsg, QByteArray &path
                         {
                             auto pathObj = path.toObject();
                             auto pathKeys = pathObj.keys();
+                            pathMsg.append("\n/////\n");
                             for(auto && pKey : pathKeys)
                             {
                                 if(pKey == PATH)
                                 {
-                                    pathMsg.append("\n" + pKey + ":\n");
+                                    pathMsg.append("\n" + pKey + ": ");
                                     for(auto && id: pathObj[pKey].toArray())
                                     {
                                         if(id.isDouble())
                                         {
-                                            pathMsg.append(id.toString() + " ");
+                                            pathMsg.append(QString::number(id.toDouble()) + " ");
                                         }
                                     }
+                                    pathMsg.append("\n");
                                 }
                                 else
                                 {
-                                    pathMsg.append(pKey + pathObj[pKey].toString() + "\n");
+                                    pathMsg.append("\n" + pKey + " = " +QString::number(pathObj[pKey].toDouble()) + "\n");
                                 }
                             }
                         }

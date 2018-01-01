@@ -551,9 +551,9 @@ void SensorWindow::onWidgetReceivedData(const QByteArray &data, quint16 node_id,
 
 void SensorWindow::onSinkSendData(const QByteArray &data)
 {
-    m_etxLogWindow->appendPlainText("\n\n-----SINK SEND MESSAGE------\n\n");
+    m_etxLogWindow->appendPlainText("\n-----SINK SEND MESSAGE------\n");
     m_etxLogWindow->appendPlainText(QString(data.data()));
-    m_etxLogWindow->appendPlainText("\n\n------END OF MESSAGE-------\n\n");
+    m_etxLogWindow->appendPlainText("\n------END OF MESSAGE-------\n");
 }
 
 void SensorWindow::initializeUiWidgets()
