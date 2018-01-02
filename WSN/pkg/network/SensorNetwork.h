@@ -22,6 +22,7 @@ public:
     NetworkNode *getNetworkNode(quint16 node_id) const;
     QString getSinkLastMsg() const;
     QPoint getSinkPosition() const;
+    double getSinkRange() const;
     bool networkHasSink() const;
 public slots:
     void onSinkAdded(const QPoint &position, quint16 range, QWidget *uiWidget);

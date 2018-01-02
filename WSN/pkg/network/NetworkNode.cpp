@@ -389,12 +389,15 @@ void NetworkNode::onReceivedData(const DataFrame &rxData)
 
 void NetworkNode::processNewData(const DataFrame &rxData)
 {
-    //notify corresponding widget about received data
-    emit receivedNewData(rxData);
-    //send back that data received
-    DataFrame txData(rxData);
-    txData.setMsgType(DataFrame::RxData::RECEIVED_DATA);
-    sendData(txData);
+    if(rxData.getDestination().first == m_node_id && rxData.getDestination().second == m_layer_id)
+    {
+        //notify corresponding widget about received data
+        emit receivedNewData(rxData);
+        //send back that data received
+        DataFrame txData(rxData);
+        txData.setMsgType(DataFrame::RxData::RECEIVED_DATA);
+        sendData(txData);
+    }
 }
 
 bool NetworkNode::checkIfConnectedToNode(NetworkNode *node) const

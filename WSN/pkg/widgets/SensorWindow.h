@@ -40,10 +40,8 @@ protected:
 public slots:
     void onPressedShowNetworkState();
     void onPressedSendMsg();
-    void onPressedRemoveNode();
-    void onPressedSensorBroadcast();
     void onPressedShowSinkPath();
-    void onWidgetReceivedData(const QByteArray &data, quint16 node_id, quint16 layer_id);
+    void onPressedNodeInfo();
     void onSinkSendData(const QByteArray &data);
     void onSinkReceivedData(const QByteArray &data);
 signals:
@@ -56,7 +54,6 @@ signals:
 private:
     void initializeUiWidgets();
     void redrawConnections();
-    void drawConnection();
     void setNodeInfo(quint16 node_id, quint16 layer_id, quint16 range, bool isSink);
     bool getNodeIDAndRange(quint16 &node_id, double &node_range) const;
     bool getNodeID(quint16 &node_id) const;
@@ -71,6 +68,7 @@ protected:
     QPushButton *m_btnSensorBroadcast;
     QPushButton *m_btnRemoveNode;
     QPushButton *m_btnShowSinkPath;
+    QPushButton *m_btnNodeInfo;
     QPlainTextEdit *m_etxSensorMsg;
     QPlainTextEdit *m_etxLogWindow;
     QPlainTextEdit *m_etxInputNodeID;
@@ -80,6 +78,7 @@ protected:
     QPlainTextEdit *m_etxNodeStateInfo;
     QPlainTextEdit *m_etxLastRxMsg;
     QComboBox *m_cbSensorList;
+    QComboBox *m_cbNodeList;
     bool m_sinkCreated;
     bool m_draw;
     quint16 m_id;

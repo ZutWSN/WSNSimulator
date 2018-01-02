@@ -204,6 +204,7 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
         case DataFrame::RxData::CLUSTER_PATH:
             updateClusterPath(data);
             break;
+        case DataFrame::RxData::MOVED_NODE:
         case DataFrame::RxData::REMOVED_NODE:
             removeNode(data.getMsg());
             if(!m_inRangeClusters.isEmpty())

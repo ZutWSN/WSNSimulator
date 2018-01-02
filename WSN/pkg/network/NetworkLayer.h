@@ -21,11 +21,12 @@ public:
     bool moveNode(quint16 node_id, QPoint position);
 
     void setLayerId(quint16 id);
+
     qint16 getLayerId() const;
     quint16 getNumOfNodes() const;
     NetworkNode *getNode(quint16 id) const;
+    QVector<NetworkNode*>::const_iterator getIteratorToFirstNode() const;
     static bool checkIfIdAvailable(quint16 id);
-    QVector<NetworkNode*>::const_iterator getIteratorToFirstNode();
     bool checkIfNodeInLayer(quint16 node_id) const;
     //make sensor network a friend so it can access layer nodes via private getter or directly from vector m_nodes
 private:
@@ -33,7 +34,7 @@ private:
     NetworkNode* copyNetworkNode(const NetworkNode *node) const;
     QByteArray createNodeRemovalMsg(quint16 node_id) const;
     void reassignSensorNodes(quint16 node_id);
-    bool sendRemovedMsg(NetworkNode *clusterNode);
+    bool sendRemovedMsg(NetworkNode *clusterNode = nullptr, bool moved = false);
 private:
     QVector<NetworkNode*> m_nodes;
     static QVector<quint16> m_usedIDPool;

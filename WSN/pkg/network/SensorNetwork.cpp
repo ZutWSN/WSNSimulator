@@ -187,7 +187,7 @@ NetworkNode *SensorNetwork::getNetworkNode(quint16 node_id) const
 QString SensorNetwork::getSinkLastMsg() const
 {
     QString lastMsg;
-    if(m_sink->getLastMsg().getSender() != m_sink->getLastMsg().getDestination())
+    if(m_sink->getLastMsg().getSender().first != 0xFF)
     {
         lastMsg = m_sink->getLastMsg().getMsgInfo();
         if(!m_sink->getLastMsg().getMsg().isEmpty())
@@ -204,6 +204,11 @@ QString SensorNetwork::getSinkLastMsg() const
 QPoint SensorNetwork::getSinkPosition() const
 {
     return m_sink->getSinkPosition();
+}
+
+double SensorNetwork::getSinkRange() const
+{
+    return m_sink->getSinkRange();
 }
 
 void SensorNetwork::onSinkAdded(const QPoint &position, quint16 range, QWidget *uiWidget)

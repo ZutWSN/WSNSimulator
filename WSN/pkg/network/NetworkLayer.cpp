@@ -145,7 +145,7 @@ NetworkNode *NetworkLayer::getNode(quint16 id) const
     return retNode;
 }
 
-QVector<NetworkNode*>::const_iterator NetworkLayer::getIteratorToFirstNode()
+QVector<NetworkNode*>::const_iterator NetworkLayer::getIteratorToFirstNode() const
 {
     return m_nodes.constBegin();
 }
@@ -288,7 +288,7 @@ bool NetworkLayer::moveNode(quint16 node_id, QPoint position)
                     quint16 numOfLeftConnectedClusters = cluster->getNumOfConnectedNodes();
                     //before updating connections temporarly disconnect it from network
                     //and set other cluster node paths to be different
-                    if(sendRemovedMsg(cluster))
+                    if(sendRemovedMsg(cluster, true))
                     {
                         for(NetworkNode* node : m_nodes)
                         {
@@ -505,7 +505,7 @@ void NetworkLayer::reassignSensorNodes(quint16 node_id)
     }
 }
 
-bool NetworkLayer::sendRemovedMsg(NetworkNode *clusterNode)
+bool NetworkLayer::sendRemovedMsg(NetworkNode *clusterNode, bool moved)
 {
     bool success = false;
     ClusterNode *cluster = static_cast<ClusterNode*>(clusterNode);
@@ -517,6 +517,7 @@ bool NetworkLayer::sendRemovedMsg(NetworkNode *clusterNode)
         {
             frame.setMsg(nodeRemovedMsg);
             frame.setSender(qMakePair(cluster->getNodeID(), m_layer_id));
+            DataFrame::RxData mType = (moved) ? DataFrame::RxData::MOVED_NODE : DataFrame::RxData::REMOVED_NODE;
             if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED_TO_SINK)
             {
                 //broadcast to all nodes that this cluster is not available
@@ -525,12 +526,12 @@ bool NetworkLayer::sendRemovedMsg(NetworkNode *clusterNode)
                 cluster->sendData(frame);
                 //sink sends new paths to all nodes that are connected
                 //else it sets all of their states to disconnected
-                frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
+                frame.setMsgType(mType);
                 cluster->sendDataToSink(frame);
             }
             else if(cluster->getCurrentState() == ClusterNode::ClusterStates::CONNECTED)
             {
-                frame.setMsgType(DataFrame::RxData::REMOVED_NODE);
+                frame.setMsgType(mType);
                 if(!cluster->getSinkPath().isEmpty())
                 {
                     frame.setPath(cluster->getSinkPath());

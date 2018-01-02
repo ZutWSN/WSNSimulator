@@ -58,7 +58,7 @@ const QPoint LOG_WINDOW_POS = QPoint(1030, 30);
 const QSize LOG_WINDOW_SIZE = QSize(300, 500);
 //
 const QPoint NETWORK_AREA_LABEL_POS = QPoint(200, 10);
-const QSize NETWORK_AREA_LABEL_SIZE = QSize(80, 20);
+const QSize NETWORK_AREA_LABEL_SIZE = QSize(120, 20);
 const QPoint NETWORK_AREA_WINDOW_POS = QPoint(200, 30);
 const QSize NETWORK_AREA_WINDOW_SIZE = QSize(800, 500);
 const int NETWORK_AREA_MAX_X = NETWORK_AREA_WINDOW_POS.x() + NETWORK_AREA_WINDOW_SIZE.width();
@@ -114,6 +114,14 @@ const QPoint LAST_MSG_LABEL_POS = QPoint(670, 570);
 const QSize LAST_MSG_LABEL_SIZE = QSize(100, 20);
 const QPoint LAST_MSG_WINDOW_POS = QPoint(670, 590);
 const QSize LAST_MSG_WINDOW_SIZE = QSize(230, 80);
+//
+const QPoint CB_NODE_LIST_LABEL_POS = QPoint(920, 570);
+const QSize CB_NODE_LIST_LABEL_SIZE = QSize(70, 20);
+const QPoint CB_NODE_LIST_POS = QPoint(920, 590);
+const QSize CB_NODE_LIST_SIZE = QSize(80, 30);
+//
+const QPoint BTN_NODE_INFO_POS = QPoint(920, 640);
+const QSize BTN_NODE_INFO_SIZE = QSize(80, 30);
 //
 const QPoint BTN_SHOW_SINK_PATH_POS = QPoint(670, 690);
 const QSize BTN_SHOW_SINK_PATH_SIZE = QSize(230, 30);
@@ -246,6 +254,15 @@ void SensorWindow::dropEvent(QDropEvent *event)
                                 emit removeSink();
                             }
                             emit addNewSink(sinkWgt->getPosition(), range, newWidget);
+                            int index = m_cbNodeList->findData(QVariant(static_cast<quint8>(DragWidget::DragWidgetType::Sink)));
+                            if(index < 0)
+                            {
+                                m_cbNodeList->addItem("Sink", QVariant(static_cast<quint8>(DragWidget::DragWidgetType::Sink)));
+                            }
+                            else
+                            {
+                                m_cbNodeList->setCurrentIndex(index);
+                            }
                             sinkWgt->setRange(range);
                             isSink = true;
                             m_sinkCreated = static_cast<bool>(connect(sinkWgt, SIGNAL(sinkSendData(QByteArray)), this, SLOT(onSinkSendData(QByteArray))));
@@ -259,10 +276,16 @@ void SensorWindow::dropEvent(QDropEvent *event)
                         if(!isOldWidgetRootWidget)
                         {
                             emit moveNode(node_id, layer_id, newWidget->getPosition(), newWidget);
+                            int index = m_cbNodeList->findData(QVariant(node_id));
+                            if(index > 0)
+                            {
+                                m_cbNodeList->setCurrentIndex(index);
+                            }
                         }
                         else
                         {
                             emit addNewCluster(node_id, layer_id, newWidget->getPosition(), range, newWidget);
+                            m_cbNodeList->addItem("Cluster " + QString::number(node_id), QVariant(node_id));
                         }
                         newWidget->connectToNode(node_id, layer_id, range);
                         break;
@@ -270,11 +293,17 @@ void SensorWindow::dropEvent(QDropEvent *event)
                         if(!isOldWidgetRootWidget)
                         {
                             emit moveNode(node_id, layer_id, newWidget->getPosition(), newWidget);
+                            int index = m_cbNodeList->findData(QVariant(node_id));
+                            if(index > 0)
+                            {
+                                m_cbNodeList->setCurrentIndex(index);
+                            }
                         }
                         else
                         {
                             emit addNewSensor(node_id, layer_id, newWidget->getPosition(), range, newWidget);
                             m_cbSensorList->addItem("Sensor " + QString::number(node_id), QVariant(node_id));
+                            m_cbNodeList->addItem("Sensor " + QString::number(node_id), QVariant(node_id));
                         }
                         newWidget->connectToNode(node_id, layer_id, range);
                         break;
@@ -511,16 +540,6 @@ void SensorWindow::onPressedSendMsg()
     }
 }
 
-void SensorWindow::onPressedRemoveNode()
-{
-
-}
-
-void SensorWindow::onPressedSensorBroadcast()
-{
-
-}
-
 void SensorWindow::onPressedShowSinkPath()
 {
     //changes color of connection lines that form current node sink path
@@ -576,9 +595,26 @@ void SensorWindow::onPressedShowSinkPath()
     update();
 }
 
-void SensorWindow::onWidgetReceivedData(const QByteArray &data, quint16 node_id, quint16 layer_id)
+void SensorWindow::onPressedNodeInfo()
 {
-    //handle displaying newly received data
+    bool isSink = (m_cbNodeList->currentText().compare("Sink") == 0) ? true : false;
+    if(isSink)
+    {
+        setNodeInfo(0, 0, m_sensorNetwork->getSinkRange(), true);
+    }
+    else
+    {
+        bool success = false;
+        quint16 node_id = m_cbNodeList->currentData().toUInt(&success);
+        if(success)
+        {
+            auto node = m_sensorNetwork->getNetworkNode(node_id);
+            if(node)
+            {
+                setNodeInfo(node_id, node->getNodeLayer(), node->getNodeRange(), isSink);
+            }
+        }
+    }
 }
 
 void SensorWindow::onSinkSendData(const QByteArray &data)
@@ -692,6 +728,13 @@ void SensorWindow::initializeUiWidgets()
     lblLogWindow->show();
     lblLogWindow->setAttribute(Qt::WA_DeleteOnClose);
 
+    QLabel *lblNetworkArea = new QLabel("WSN Network Window:", this);
+    lblNetworkArea->setWhatsThis(INFO_LABEL);
+    lblNetworkArea->resize(NETWORK_AREA_LABEL_SIZE);
+    lblNetworkArea->move(NETWORK_AREA_LABEL_POS);
+    lblNetworkArea->show();
+    lblNetworkArea->setAttribute(Qt::WA_DeleteOnClose);
+
     m_etxLogWindow = new QPlainTextEdit(this);
     m_etxLogWindow->setReadOnly(true);
     m_etxLogWindow->resize(LOG_WINDOW_SIZE);
@@ -739,13 +782,6 @@ void SensorWindow::initializeUiWidgets()
     m_btnSendMsg->show();
     m_btnSendMsg->setAttribute(Qt::WA_DeleteOnClose);
     connect(m_btnSendMsg, SIGNAL(pressed()), this, SLOT(onPressedSendMsg()));
-
-    m_btnSensorBroadcast = new QPushButton("Start Sensor Broadcast", this);
-    m_btnSensorBroadcast->resize(BTN_SENSOR_BROADCAST_SIZE);
-    m_btnSensorBroadcast->move(BTN_SENSOR_BROADCAST_POS);
-    m_btnSensorBroadcast->show();
-    m_btnSensorBroadcast->setAttribute(Qt::WA_DeleteOnClose);
-    connect(m_btnSensorBroadcast, SIGNAL(pressed()), this, SLOT(onPressedSensorBroadcast()));
 
     //node info
     QLabel *lblNodeInfo = new QLabel("Node Info:", this);
@@ -810,6 +846,27 @@ void SensorWindow::initializeUiWidgets()
     m_etxLastRxMsg->move(LAST_MSG_WINDOW_POS);
     m_etxLastRxMsg->show();
     m_etxLastRxMsg->setAttribute(Qt::WA_DeleteOnClose);
+
+    QLabel *lblNodeList = new QLabel("Node List:", this);
+    lblNodeList->setWhatsThis(INFO_LABEL);
+    lblNodeList->resize(CB_NODE_LIST_LABEL_SIZE);
+    lblNodeList->move(CB_NODE_LIST_LABEL_POS);
+    lblNodeList->show();
+    lblNodeList->setAttribute(Qt::WA_DeleteOnClose);
+
+    m_cbNodeList = new QComboBox(this);
+    m_cbNodeList->resize(CB_NODE_LIST_SIZE);
+    m_cbNodeList->move(CB_NODE_LIST_POS);
+    m_cbNodeList->show();
+    m_cbNodeList->setAttribute(Qt::WA_DeleteOnClose);
+
+    m_btnNodeInfo;
+    m_btnNodeInfo = new QPushButton("Node Info", this);
+    m_btnNodeInfo->resize(BTN_NODE_INFO_SIZE);
+    m_btnNodeInfo->move(BTN_NODE_INFO_POS);
+    m_btnNodeInfo->show();
+    m_btnNodeInfo->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_btnNodeInfo, SIGNAL(pressed()), this, SLOT(onPressedNodeInfo()));
 
     m_btnShowSinkPath = new QPushButton("Show Sink Path", this);
     m_btnShowSinkPath->resize(BTN_SHOW_SINK_PATH_SIZE);
@@ -883,11 +940,6 @@ void SensorWindow::redrawConnections()
     }
 }
 
-void SensorWindow::drawConnection()
-{
-
-}
-
 void SensorWindow::setNodeInfo(quint16 node_id, quint16 layer_id, quint16 range, bool isSink)
 {
     //display clicked node status
@@ -914,7 +966,7 @@ void SensorWindow::setNodeInfo(quint16 node_id, quint16 layer_id, quint16 range,
                     ClusterNode *cluster = static_cast<ClusterNode*>(node);
                     if(cluster)
                     {
-                        status = QString("Cluster : ") + cluster->getCurrentStateName();
+                        status = cluster->getCurrentStateName();
                     }
                 }
                 else if(node->getNodeType() == NetworkNode::NodeType::Sensor)
@@ -923,7 +975,7 @@ void SensorWindow::setNodeInfo(quint16 node_id, quint16 layer_id, quint16 range,
                     if(sensor)
                     {
                         QString sensorState = (sensor->isConnectedToCluster()) ? "Connected" : "Disconnected";
-                        status = QString("Sensor : ") + sensorState;
+                        status = sensorState;
                     }
                 }
             }

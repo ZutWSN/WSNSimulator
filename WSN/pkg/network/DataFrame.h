@@ -19,6 +19,7 @@ public:
         NEIGHBOUR_PATH,
         CLUSTER_PATH,
         SENSOR_RESPONSE,
+        MOVED_NODE,
         REMOVED_NODE,
         DIRECT_CLUSTER_REMOVED,
         NO_SINK_CONNECTION
