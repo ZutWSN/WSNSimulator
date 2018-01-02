@@ -61,10 +61,10 @@ const QPoint NETWORK_AREA_LABEL_POS = QPoint(200, 10);
 const QSize NETWORK_AREA_LABEL_SIZE = QSize(80, 20);
 const QPoint NETWORK_AREA_WINDOW_POS = QPoint(200, 30);
 const QSize NETWORK_AREA_WINDOW_SIZE = QSize(800, 500);
-const QPoint NETWORK_AREA_MAX_X = NETWORK_AREA_WINDOW_POS.x() + NETWORK_AREA_WINDOW_SIZE.width();
-const QPoint NETWORK_AREA_MIN_X = NETWORK_AREA_WINDOW_POS.x();
-const QPoint NETWORK_AREA_MAX_Y = NETWORK_AREA_WINDOW_POS.y() + NETWORK_AREA_WINDOW_SIZE.height();
-const QPoint NETWORK_AREA_MIN_Y = NETWORK_AREA_WINDOW_POS.y();
+const int NETWORK_AREA_MAX_X = NETWORK_AREA_WINDOW_POS.x() + NETWORK_AREA_WINDOW_SIZE.width();
+const int NETWORK_AREA_MIN_X = NETWORK_AREA_WINDOW_POS.x();
+const int NETWORK_AREA_MAX_Y = NETWORK_AREA_WINDOW_POS.y() + NETWORK_AREA_WINDOW_SIZE.height();
+const int NETWORK_AREA_MIN_Y = NETWORK_AREA_WINDOW_POS.y();
 //
 const QPoint INPUT_LABEL_POS = QPoint(60, 330);
 const QSize INPUT_LABEL_SIZE = QSize(50, 20);
@@ -137,7 +137,7 @@ SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
     connect(this, SIGNAL(addNewSensor(quint16, quint16, QPoint, quint16, QWidget*)), m_sensorNetwork.data(), SLOT(onNewSensorAdded(quint16, quint16, QPoint, quint16, QWidget*)));
     connect(this, SIGNAL(removeSink()), m_sensorNetwork.data(), SLOT(onSinkRemoved()));
     connect(this, SIGNAL(removeNode(quint16, quint16)), m_sensorNetwork.data(), SLOT(onNodeRemoved(quint16, quint16)));
-    connect(this, SIGNAL(moveNode(quint16, quint16, QPoint)), m_sensorNetwork.data(), SLOT(onNodeMoved(quint16, quint16, QPoint)));
+    connect(this, SIGNAL(moveNode(quint16, quint16, QPoint, QWidget*)), m_sensorNetwork.data(), SLOT(onNodeMoved(quint16, quint16, QPoint, QWidget*)));
 }
 
 SensorWindow::~SensorWindow()
@@ -200,14 +200,17 @@ void SensorWindow::dropEvent(QDropEvent *event)
         QDataStream dataStream(&itemData, QIODevice::ReadOnly);
 
         QPoint offset;
-        QString imgName;
+        QString imgName, rxImgName, txImgName;
         bool isOldWidgetRootWidget = false;
         DragWidget::DragWidgetType widgetType;
         quint8 wType;
         quint16 node_id, layer_id;
-        double range;
+        double range, imgScale;
         dataStream  >> offset
                     >> imgName
+                    >> rxImgName
+                    >> txImgName
+                    >> imgScale
                     >> isOldWidgetRootWidget
                     >> wType
                     >> node_id
@@ -220,9 +223,11 @@ void SensorWindow::dropEvent(QDropEvent *event)
         {
             WidgetFactory wFactory;
             DragWidget *newWidget = wFactory.getNewDragWidget(widgetType, this, false);
-            newWidget->setWidgetImage(imgName);
+            newWidget->setWidgetImage(imgName, DragWidget::ImageType::DEFAULT, imgScale);
             if(isInNetworkArea(newWidget->getWidgetSize(), widgetPosition))
             {
+                newWidget->setWidgetImage(rxImgName, DragWidget::ImageType::RECEIVED_DATA, imgScale);
+                newWidget->setWidgetImage(txImgName, DragWidget::ImageType::SEND_DATA, imgScale);
                 newWidget->move(widgetPosition);
                 newWidget->show();
                 newWidget->setAttribute(Qt::WA_DeleteOnClose);
@@ -243,8 +248,8 @@ void SensorWindow::dropEvent(QDropEvent *event)
                             emit addNewSink(sinkWgt->getPosition(), range, newWidget);
                             sinkWgt->setRange(range);
                             isSink = true;
-                            connect(sinkWgt, SIGNAL(sinkSendData(QByteArray)), this, SLOT(onSinkSendData(QByteArray)));
-                            connect(sinkWgt, SIGNAL(sinkReceivedData(QByteArray)), this, SLOT(onSinkReceivedData(QByteArray)));
+                            m_sinkCreated = static_cast<bool>(connect(sinkWgt, SIGNAL(sinkSendData(QByteArray)), this, SLOT(onSinkSendData(QByteArray))));
+                            m_sinkCreated &= static_cast<bool>(connect(sinkWgt, SIGNAL(sinkReceivedData(QByteArray)), this, SLOT(onSinkReceivedData(QByteArray))));
                         }
                         break;
                     }
@@ -253,7 +258,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
                         //remove it instead of move
                         if(!isOldWidgetRootWidget)
                         {
-                            emit moveNode(node_id, layer_id, newWidget->getPosition());
+                            emit moveNode(node_id, layer_id, newWidget->getPosition(), newWidget);
                         }
                         else
                         {
@@ -264,7 +269,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
                     case DragWidget::DragWidgetType::Sensor:
                         if(!isOldWidgetRootWidget)
                         {
-                            emit moveNode(node_id, layer_id, newWidget->getPosition());
+                            emit moveNode(node_id, layer_id, newWidget->getPosition(), newWidget);
                         }
                         else
                         {
@@ -325,10 +330,6 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
                             createNode = false;
                             drag = false;
                         }
-                        else
-                        {
-                           m_sinkCreated = true;
-                        }
                     }
                     else
                     {
@@ -342,7 +343,9 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
                     {
                         WidgetFactory wFactory;
                         DragWidget *oldWidget = wFactory.getNewDragWidget(child->getWidgetType(), this, true);
-                        oldWidget->setWidgetImage(child->getImageName());
+                        oldWidget->setWidgetImage(child->getImageName(DragWidget::ImageType::DEFAULT), DragWidget::ImageType::DEFAULT, child->getImgScale());
+                        oldWidget->setWidgetImage(child->getImageName(DragWidget::ImageType::RECEIVED_DATA), DragWidget::ImageType::RECEIVED_DATA, child->getImgScale());
+                        oldWidget->setWidgetImage(child->getImageName(DragWidget::ImageType::SEND_DATA), DragWidget::ImageType::SEND_DATA, child->getImgScale());
                         oldWidget->move(child->pos());
                         oldWidget->show();
                         oldWidget->setAttribute(Qt::WA_DeleteOnClose);
@@ -368,7 +371,10 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
                 QDataStream dataStream(&itemData, QIODevice::WriteOnly);
 
                 dataStream << QPoint(event->pos() - child->pos())
-                           << child->getImageName()
+                           << child->getImageName(DragWidget::ImageType::DEFAULT)
+                           << child->getImageName(DragWidget::ImageType::RECEIVED_DATA)
+                           << child->getImageName(DragWidget::ImageType::SEND_DATA)
+                           << child->getImgScale()
                            << child->isRootWidget() //is old widget a root widget or not
                            << type
                            << node_id
@@ -476,7 +482,7 @@ void SensorWindow::onPressedShowNetworkState()
                     SensorNode *sensor = static_cast<SensorNode*>(*node);
                     if(sensor)
                     {
-                        QString connected = (sensor->isConnectedToCluster()) ?  "Connected to cluster: " + QString::number(sensor->getClusterID()) : "Disconnected";
+                        QString connected = (sensor->isConnectedToCluster()) ?  "\nConnected to cluster: " + QString::number(sensor->getClusterID()) : "\nDisconnected";
                         log.append(connected);
                     }
                 }
@@ -634,7 +640,9 @@ void SensorWindow::initializeUiWidgets()
 
     WidgetFactory wFactory;
     DragWidget *sensor = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sensor, this, true);
-    sensor->setWidgetImage(SENSOR_IMG_FILE);
+    sensor->setWidgetImage(SENSOR_IMG_FILE, DragWidget::ImageType::DEFAULT, IMG_SCALE);
+    sensor->setWidgetImage(SENSOR_RX_IMG_FILE, DragWidget::ImageType::RECEIVED_DATA, IMG_SCALE);
+    sensor->setWidgetImage(SENSOR_TX_IMG_FILE, DragWidget::ImageType::SEND_DATA, IMG_SCALE);
     sensor->move(SENSOR_WIDGET_POS);
     sensor->show();
     sensor->setAttribute(Qt::WA_DeleteOnClose);
@@ -647,7 +655,9 @@ void SensorWindow::initializeUiWidgets()
     lblCluster->setAttribute(Qt::WA_DeleteOnClose);
 
     DragWidget *cluster = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Cluster, this, true);
-    cluster->setWidgetImage(CLUSTER_IMG_FILE);
+    cluster->setWidgetImage(CLUSTER_IMG_FILE, DragWidget::ImageType::DEFAULT, IMG_SCALE);
+    cluster->setWidgetImage(CLUSTER_RX_IMG_FILE, DragWidget::ImageType::RECEIVED_DATA, IMG_SCALE);
+    cluster->setWidgetImage(CLUSTER_TX_IMG_FILE, DragWidget::ImageType::SEND_DATA, IMG_SCALE);
     cluster->move(CLUSTER_WIDGET_POS);
     cluster->show();
     cluster->setAttribute(Qt::WA_DeleteOnClose);
@@ -660,7 +670,9 @@ void SensorWindow::initializeUiWidgets()
     lblSink->setAttribute(Qt::WA_DeleteOnClose);
 
     DragWidget *sink = wFactory.getNewDragWidget(DragWidget::DragWidgetType::Sink, this, true);
-    sink->setWidgetImage(SINK_IMG_FILE);
+    sink->setWidgetImage(SINK_IMG_FILE, DragWidget::ImageType::DEFAULT, IMG_SCALE);
+    sink->setWidgetImage(SINK_RX_IMG_FILE, DragWidget::ImageType::RECEIVED_DATA, IMG_SCALE);
+    sink->setWidgetImage(SINK_TX_IMG_FILE, DragWidget::ImageType::SEND_DATA, IMG_SCALE);
     sink->move(SINK_WIDGET_POS);
     sink->show();
     sink->setAttribute(Qt::WA_DeleteOnClose);
@@ -986,13 +998,19 @@ bool SensorWindow::isInNetworkArea(const QSize &widgetSize, const QPoint &positi
     bool inConstraints = false;
     int upperLeft_X = position.x();
     int upperLeft_Y = position.y();
-    int downRigh_X = position.x + widgetSize.width();
-    int downRigh_Y = position.y + widgetSize.height();
+    int downRight_X = position.x() + widgetSize.width();
+    int downRight_Y = position.y() + widgetSize.height();
     if(upperLeft_X >= NETWORK_AREA_MIN_X)
     {
         if(upperLeft_Y >= NETWORK_AREA_MIN_Y)
         {
-
+            if(downRight_X <= NETWORK_AREA_MAX_X)
+            {
+                if(downRight_Y <= NETWORK_AREA_MAX_Y)
+                {
+                    inConstraints = true;
+                }
+            }
         }
     }
     return inConstraints;

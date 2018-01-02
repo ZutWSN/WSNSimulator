@@ -171,14 +171,12 @@ QByteArray DataFrame::getMsgInfo() const
     log.append("SENDER ID: " + QString::number(m_sender.first) + "\n");
     log.append("SENDER LAYER: " + QString::number(m_sender.second) + "\n");
     log.append("MESSAGE TYPE: " + getMsgTypeString() + "\n");
-    log.append("DESTINATION ID: " + QString::number(m_desination.first) + "\n");
-    log.append("DESTINATION LAYER: " + QString::number(m_desination.second) + "\n");
     log.append("MESSAGE PATH: ");
     for(auto && id : m_path)
     {
         log.append(QString::number(id) +  " ");
     }
-    log.append("\n");
+    log.append("Sink\n");
     return log;
 }
 

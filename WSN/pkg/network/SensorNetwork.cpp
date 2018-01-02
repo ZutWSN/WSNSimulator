@@ -393,16 +393,18 @@ void SensorNetwork::onNodeRemoved(quint16 node_id, quint16 layer_id)
     }
 }
 
-void SensorNetwork::onNodeMoved(quint16 node_id, quint16 layer_id, QPoint position)
+void SensorNetwork::onNodeMoved(quint16 node_id, quint16 layer_id, QPoint position, QWidget *uiWidget)
 {
     NetworkLayer *layer = getLayer(layer_id);
     if(layer)
     {
-        layer->moveNode(node_id, position);
-        if(m_sink)
+        auto movedNode = layer->getNode(node_id);
+        if(movedNode)
         {
-            auto movedNode = layer->getNode(node_id);
-            if(movedNode)
+            movedNode->disconnectFromWidget();
+            movedNode->connectToNodeWidget(uiWidget);
+            layer->moveNode(node_id, position);
+            if(m_sink)
             {
                 if(movedNode->getNodeType() == NetworkNode::NodeType::Cluster)
                 {

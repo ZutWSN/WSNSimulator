@@ -10,8 +10,8 @@ public:
 
     DragWidget::DragWidgetType getWidgetType() const;
 private:
-    void processReceivedData(const DataFrame &data) const;
-    void processDataSend(const DataFrame &data) const;
+    void processReceivedData(const DataFrame &data);
+    void processDataSend(const DataFrame &data);
     void getNewPathMsg(const QByteArray &serializedMsg, QByteArray &pathMsg) const;
 signals:
     void sinkSendData(const QByteArray &data) const;

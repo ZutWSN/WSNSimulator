@@ -112,6 +112,7 @@ public:
     }
 
     bool connectToNode(NetworkNode *node);
+    bool connectToNodeWidget(QWidget *widget);
     bool sendSinkPathReq();
     bool disconnectFromNode(NetworkNode *node);
     bool disconnectFromNetwork();

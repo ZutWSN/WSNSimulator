@@ -52,7 +52,7 @@ signals:
     void addNewSensor(quint16 cluster_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void removeSink();
     void removeNode(quint16 node_id, quint16 layer_id);
-    void moveNode(quint16 node_id, quint16 layer_id, QPoint position);
+    void moveNode(quint16 node_id, quint16 layer_id, QPoint position, QWidget *uiWidget);
 private:
     void initializeUiWidgets();
     void redrawConnections();
@@ -61,7 +61,7 @@ private:
     bool getNodeIDAndRange(quint16 &node_id, double &node_range) const;
     bool getNodeID(quint16 &node_id) const;
     bool getNodeRange(double &node_range) const;
-    bool isInNetworkArea(const QPoint &position) const;
+    bool isInNetworkArea(const QSize &widgetSize, const QPoint &position) const;
 protected:
     QVector<DragWidget*> m_dragWidgets;
     QScopedPointer<SensorNetwork> m_sensorNetwork;

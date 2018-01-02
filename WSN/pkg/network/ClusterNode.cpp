@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QList>
 #include "SensorNode.h"
+#include "DragWidget.h"
 
 QVector<ClusterNode::SyncLayer> ClusterNode::m_networkClusterSyncNodes;
 const QVector<QString> clusterStateNames =
@@ -61,6 +62,28 @@ bool ClusterNode::connectToNode(NetworkNode *node)
         }
     }
     return connected;
+}
+
+bool ClusterNode::connectToNodeWidget(QWidget *widget)
+{
+    bool success = false;
+    DragWidget *dragWidget = static_cast<DragWidget*>(widget);
+    if(dragWidget && !dragWidget->isConnectedToNode())
+    {
+        if(!m_connectedToWidget)
+        {
+            success = static_cast<bool>(connect(this, SIGNAL(receivedNewData(DataFrame)), dragWidget, SLOT(onNodeReceivedData(DataFrame))));
+            success &= static_cast<bool>(connect(this, SIGNAL(dataSend(DataFrame)), dragWidget, SLOT(onNodeSendData(DataFrame))));
+            success &= static_cast<bool>(connect(this, SIGNAL(sendDataToSink(DataFrame)), dragWidget, SLOT(onNodeSendData(DataFrame))));
+            m_connectedToWidget = success;
+            if(m_connectedToWidget)
+            {
+                dragWidget->setConnectedToNode(true);
+                m_Widget = widget;
+            }
+        }
+    }
+    return success;
 }
 
 bool ClusterNode::sendSinkPathReq()
@@ -128,6 +151,7 @@ void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
 {
     m_mesgData += data;
     ++m_sensorDataCounter;
+    emit receivedNewData(DataFrame());
     if(m_sensorDataCounter >= m_sensors.size())
     {
         if(m_state == ClusterStates::CONNECTED_TO_SINK)
@@ -135,6 +159,7 @@ void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
             DataFrame frame(m_mesgData, DataFrame::RxData::NEW_DATA, 0, 0, 0);
             m_sensorDataCounter = 0;
             emit sendDataToSink(frame);
+            m_mesgData.clear();
         }
         else if(!m_sinkPath.isEmpty() && m_state == ClusterStates::CONNECTED)
         {
@@ -142,6 +167,7 @@ void ClusterNode::onReceivedDataFromSensor(const QByteArray &data)
             frame.setPath(m_sinkPath);
             m_sensorDataCounter = 0;
             sendData(frame);
+            m_mesgData.clear();
         }
     }
 }

@@ -15,7 +15,7 @@ DragWidget::DragWidgetType SinkWidget::getWidgetType() const
     return DragWidgetType::Sink;
 }
 
-void SinkWidget::processReceivedData(const DataFrame &data) const
+void SinkWidget::processReceivedData(const DataFrame &data)
 {
     QByteArray logMsg;
     DragWidget::processReceivedData(data);
@@ -30,9 +30,10 @@ void SinkWidget::processReceivedData(const DataFrame &data) const
     emit sinkReceivedData(logMsg);
 }
 
-void SinkWidget::processDataSend(const DataFrame &data) const
+void SinkWidget::processDataSend(const DataFrame &data)
 {
     QByteArray logMsg;
+    DragWidget::processDataSend(data);
     switch(data.getMsgType())
     {
         case DataFrame::RxData::NO_SINK_CONNECTION:

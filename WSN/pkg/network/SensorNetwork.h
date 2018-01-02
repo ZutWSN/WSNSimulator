@@ -29,7 +29,7 @@ public slots:
     void onNewSensorAdded(quint16 sensor_id, quint16 layer_id, const QPoint &position, quint16 range, QWidget *uiWidget);
     void onSinkRemoved();
     void onNodeRemoved(quint16 node_id, quint16 layer_id);
-    void onNodeMoved(quint16 node_id, quint16 layer_id, QPoint position);
+    void onNodeMoved(quint16 node_id, quint16 layer_id, QPoint position, QWidget *uiWidget);
 private:
     bool checkIfHasLayer(qint16 layer_id) const;
 private:
