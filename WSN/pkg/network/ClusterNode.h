@@ -126,7 +126,7 @@ public:
     void resetSinkPath();
     void setPathLength(double length);
     bool setConnectedToSink(SinkNode *sink);
-    bool setStateDisconnected();
+    void setStateDisconnected();
 
     quint16 getNumOfSensors() const;
     quint16 getNumOfSensorPendingMsgs() const;

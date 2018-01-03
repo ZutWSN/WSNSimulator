@@ -60,7 +60,7 @@ private:
     bool getNodeRange(double &node_range) const;
     bool isInNetworkArea(const QSize &widgetSize, const QPoint &position) const;
 protected:
-    QVector<DragWidget*> m_dragWidgets;
+    QVector<DragWidget*> m_DragWidgets;
     QScopedPointer<SensorNetwork> m_sensorNetwork;
     QVector<LineConnection> m_networkConnectionLines;
     QPushButton *m_btnShowNetworkState;

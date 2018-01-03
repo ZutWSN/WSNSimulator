@@ -1,6 +1,6 @@
 #ifndef WIDGETFACTORY_H
 #define WIDGETFACTORY_H
-#include "dragwidget.h"
+#include "DragWidget.h"
 
 class WidgetFactory
 {

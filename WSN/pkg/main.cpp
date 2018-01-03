@@ -1,4 +1,4 @@
-#include "sensorwindow.h"
+#include "SensorWindow.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])

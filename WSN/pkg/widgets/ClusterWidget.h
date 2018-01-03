@@ -1,6 +1,6 @@
-#ifndef CLUSTERWIDGET_H
-#define CLUSTERWIDGET_H
-#include "dragwidget.h"
+#ifndef ClusterWidget_H
+#define ClusterWidget_H
+#include "DragWidget.h"
 
 class ClusterWidget : public DragWidget
 {
@@ -14,4 +14,4 @@ private:
     void processDataSend(const DataFrame &data);
 };
 
-#endif // CLUSTERWIDGET_H
+#endif // ClusterWidget_H

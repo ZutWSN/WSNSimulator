@@ -1,6 +1,6 @@
-#ifndef SENSORWIDGET_H
-#define SENSORWIDGET_H
-#include "dragwidget.h"
+#ifndef SensorWidget_H
+#define SensorWidget_H
+#include "DragWidget.h"
 
 class SensorWidget : public DragWidget
 {
@@ -14,4 +14,4 @@ private:
     void processDataSend(const DataFrame &data);
 };
 
-#endif // SENSORWIDGET_H
+#endif // SensorWidget_H

@@ -1,6 +1,6 @@
 #include "widgetfactory.h"
-#include "sensorwidget.h"
-#include "clusterwidget.h"
+#include "SensorWidget.h"
+#include "ClusterWidget.h"
 #include "SinkWidget.h"
 
 WidgetFactory::WidgetFactory()

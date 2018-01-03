@@ -1,4 +1,4 @@
-#include "dragwidget.h"
+#include "DragWidget.h"
 #include "NetworkLayer.h"
 #include <QTimer>
 

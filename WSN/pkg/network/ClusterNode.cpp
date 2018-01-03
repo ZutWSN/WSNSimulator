@@ -298,7 +298,7 @@ bool ClusterNode::setConnectedToSink(SinkNode *sink)
     return changedState;
 }
 
-bool ClusterNode::setStateDisconnected()
+void ClusterNode::setStateDisconnected()
 {
     m_state = ClusterStates::DISCONNECTED;
 }

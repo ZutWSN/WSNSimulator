@@ -1,4 +1,4 @@
-#include "clusterwidget.h"
+#include "ClusterWidget.h"
 
 ClusterWidget::ClusterWidget(QWidget *parent, bool rootWidget):
     DragWidget(parent, rootWidget)

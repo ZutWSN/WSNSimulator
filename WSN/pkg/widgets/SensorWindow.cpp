@@ -128,7 +128,7 @@ const QSize BTN_SHOW_SINK_PATH_SIZE = QSize(230, 30);
 
 SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
     QMainWindow(parent),
-    m_dragWidgets(QVector<DragWidget*>()),
+    m_DragWidgets(QVector<DragWidget*>()),
     m_sinkCreated(false),
     m_draw(false),
     m_id(0)
@@ -136,6 +136,7 @@ SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
     setMinimumSize(windowSize);
     setAcceptDrops(true);
     setWindowTitle("WSN Simulator");
+    setWindowIcon(QIcon(CLUSTER_IMG_FILE));
 
     initializeUiWidgets();
     m_sensorNetwork.reset(new SensorNetwork);
@@ -150,7 +151,7 @@ SensorWindow::SensorWindow(QWidget *parent, const QSize &windowSize) :
 
 SensorWindow::~SensorWindow()
 {
-    for(DragWidget *widget : m_dragWidgets)
+    for(DragWidget *widget : m_DragWidgets)
     {
         if(widget)
         {
@@ -310,7 +311,7 @@ void SensorWindow::dropEvent(QDropEvent *event)
                 }
                 //update displayed paths - check all connections and edit linepaths
                 redrawConnections();
-                m_dragWidgets.push_back(newWidget);
+                m_DragWidgets.push_back(newWidget);
                 setNodeInfo(node_id, layer_id, range, isSink);
                 update();
                 if (event->source() == this)
@@ -386,10 +387,10 @@ void SensorWindow::mousePressEvent(QMouseEvent *event)
                 node_id = child->getNodeID();
                 layer_id = child->getLayerID();
                 range = child->getNodeRange();
-                int index = m_dragWidgets.indexOf(child);
+                int index = m_DragWidgets.indexOf(child);
                 if(index >= 0)
                 {
-                    m_dragWidgets.remove(index); //node is moved, this address will be no longer valid
+                    m_DragWidgets.remove(index); //node is moved, this address will be no longer valid
                 }
                 setNodeInfo(node_id, layer_id, range, isSink);
             }

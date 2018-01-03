@@ -1,10 +1,10 @@
-#ifndef DRAGWIDGET_H
-#define DRAGWIDGET_H
+#ifndef DragWidget_H
+#define DragWidget_H
 #include <QWidget>
 #include <QLabel>
 #include "DataFrame.h"
 
-const QString DRAG_WIDGET_LABEL = "dragWidget";
+const QString DRAG_WIDGET_LABEL = "DragWidget";
 class DragWidget : public QLabel
 {
     Q_OBJECT
@@ -72,4 +72,4 @@ protected:
     QVector<bool> m_events;
 };
 
-#endif // DRAGWIDGET_H
+#endif // DragWidget_H
