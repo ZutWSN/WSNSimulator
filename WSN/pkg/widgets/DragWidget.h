@@ -24,6 +24,17 @@ public:
         SEND_DATA
     };
 
+    struct WidgetNodeState
+    {
+        quint16 node_id;
+        bool nodeTransferingReceiving;
+
+        bool operator==(const WidgetNodeState &other)
+        {
+            return (node_id == other.node_id);
+        }
+    };
+
     DragWidget(QWidget *parent = 0, bool rootWidget = false);
     virtual ~DragWidget();
     void setAsRootWidget();
@@ -48,6 +59,7 @@ public:
 protected:
     virtual void processReceivedData(const DataFrame &data);
     virtual void processDataSend(const DataFrame &data);
+    void setNodeState(bool active);
 public slots:
     void onNodeReceivedData(const DataFrame &data);
     void onNodeSendData(const DataFrame &data);
@@ -64,12 +76,14 @@ protected:
     QSize m_widgetSize;
     quint16 m_node_id;
     quint16 m_layer_id;
+    quint16 m_prev_node_id;
     double m_range;
     double m_imgScale;
     QTimer *m_rxStateTimer;
     QTimer *m_txStateTimer;
     QTimer *m_stateResetTimer;
-    QVector<bool> m_events;
+    QVector<QPair<quint16 ,bool> > m_events;
+    static QVector<WidgetNodeState> m_widgetStates;
 };
 
 #endif // DRAGWIDGET_H

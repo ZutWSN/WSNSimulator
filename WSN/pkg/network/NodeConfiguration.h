@@ -17,6 +17,8 @@ const QString SINK_IMG_FILE = ":/res/sink.png";
 const QString SINK_RX_IMG_FILE = ":/res/sink_rx.png";
 const QString SINK_TX_IMG_FILE = ":/res/sink_tx.png";
 
+const quint16 SINK_ID = UINT16_MAX;
+
 const double IMG_SCALE = 0.5;
 
 class NodeConfiguration

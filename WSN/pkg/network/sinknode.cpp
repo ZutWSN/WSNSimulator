@@ -5,8 +5,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <algorithm>
+#include "NodeConfiguration.h"
 
-const quint16 SINK_ID = UINT16_MAX;
 
 SinkNode::SinkNode()
 {
@@ -112,7 +112,7 @@ void SinkNode::sendNewPaths(quint16 senderLayer)
     QByteArray msg;
     if(calculateNetworkPaths(msg))
     {
-        DataFrame pathUpdate(msg, DataFrame::RxData::PATH_SYNC, 0, 0, 0);
+        DataFrame pathUpdate(msg, DataFrame::RxData::PATH_SYNC, 0, 0, SINK_ID);
         ClusterNode::resetBroadCastSyncVector(senderLayer);
         emit broadCastDataToClusters(pathUpdate);
         emit sendData(pathUpdate);
@@ -216,7 +216,7 @@ void SinkNode::onReceivedDataFromCluster(const DataFrame &data)
                 //reset mapped network sinkpaths
                 resetMappedSinkPaths();
                 //send message to network about last direct cluster disconnection before it gets removed
-                DataFrame noSinkConnection(QByteArray(), DataFrame::RxData::NO_SINK_CONNECTION, 0, 0, 0);
+                DataFrame noSinkConnection(QByteArray(), DataFrame::RxData::NO_SINK_CONNECTION, 0, 0, SINK_ID);
                 ClusterNode::resetBroadCastSyncVector(data.getSender().second);
                 emit broadCastDataToClusters(noSinkConnection);
                 emit sendData(noSinkConnection);

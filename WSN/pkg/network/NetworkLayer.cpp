@@ -7,8 +7,9 @@
 #include <QJsonArray>
 #include <QList>
 #include <memory>
+#include "NodeConfiguration.h"
 
-QVector<quint16> NetworkLayer::m_usedIDPool;
+QVector<quint16> NetworkLayer::m_usedIDPool{SINK_ID};
 
 NetworkLayer::NetworkLayer(qint16 layer_id):
     m_layer_id(layer_id)

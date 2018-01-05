@@ -5,6 +5,13 @@
 const quint16 STATE_TIMER_TIMEOUT = 500;
 const quint16 STATE_TIMER_RESET_TIMEOUT = 2000;
 
+enum State
+{
+    IDLE = 0,
+    RECEIVE,
+    SEND
+};
+
 DragWidget::DragWidget(QWidget *parent, bool rootWidget):
     QLabel(parent),
     m_rootWidget(rootWidget),
@@ -25,12 +32,21 @@ DragWidget::DragWidget(QWidget *parent, bool rootWidget):
     m_stateResetTimer = new QTimer(this);
     m_stateResetTimer->setSingleShot(true);
     connect(m_stateResetTimer, SIGNAL(timeout()), this, SLOT(onStateUpdate()));
-    m_events = QVector<bool>{true, false, false};
+    WidgetNodeState state{m_node_id, false};
+    int index = m_widgetStates.indexOf(state);
+    if(index < 0)
+    {
+        m_widgetStates.push_back(state);
+    }
 }
 
 DragWidget::~DragWidget()
 {
-
+    int index = m_widgetStates.indexOf(WidgetNodeState{m_node_id, false});
+    if(index >= 0)
+    {
+        m_widgetStates.remove(index);
+    }
 }
 
 void DragWidget::setWidgetImage(const QString &imgName, ImageType imgType, double scale)
@@ -103,6 +119,7 @@ void DragWidget::connectToNode(quint16 node_id, quint16 layer_id, double range)
     m_node_id = node_id;
     m_layer_id = layer_id;
     m_range = range;
+    m_events = QVector<QPair<quint16 ,bool> >{qMakePair(m_node_id, true), qMakePair(m_node_id, false), qMakePair(m_node_id, false)};
 }
 
 bool DragWidget::isRootWidget() const
@@ -173,14 +190,25 @@ double DragWidget::getImgScale() const
 
 void DragWidget::processReceivedData(const DataFrame &data)
 {
-    m_events[1] = true;
+    m_events[1] = qMakePair(data.getSender().first, true);
+    setNodeState(true);
     m_rxStateTimer->start(STATE_TIMER_TIMEOUT);
 }
 
 void DragWidget::processDataSend(const DataFrame &data)
 {
-    m_events[2] = true;
+    m_events[2] = qMakePair(data.getSender().first, true);
+    setNodeState(true);
     m_txStateTimer->start(STATE_TIMER_TIMEOUT);
+}
+
+void DragWidget::setNodeState(bool active)
+{
+    int index = m_widgetStates.indexOf(WidgetNodeState{m_node_id, false});
+    if(index >= 0)
+    {
+        m_widgetStates[index].nodeTransferingReceiving = active;
+    }
 }
 
 void DragWidget::onNodeReceivedData(const DataFrame &data)
@@ -195,8 +223,45 @@ void DragWidget::onNodeSendData(const DataFrame &data)
 
 void DragWidget::onStateUpdate()
 {
-    if(m_events[1] && !m_events[2])
+    if(m_events[RECEIVE] && !m_events[SEND])
     {
+        bool changeState = false;
+        int prevNodeIndex = m_widgetStates.indexOf(m_events[RECEIVE].first);
+        if(prevNodeIndex >= 0)
+        {
+//            //if this is the start of the transfer
+//            if(m_widgetStates[prevNodeIndex].node_id == m_node_id)
+//            {
+//                changeState = true;
+//            }
+//            else
+//            {
+                //check if previous node state is not sending or receiving
+                if(!m_widgetStates[prevNodeIndex].nodeTransferingReceiving)
+                {
+                    changeState = true;
+                }
+                else
+                {
+                    m_rxStateTimer->start(STATE_TIMER_TIMEOUT);
+                }
+
+
+            if(changeState)
+            {
+                QPixmap img(m_rxDataImgName);
+                if(!img.isNull())
+                {
+                    img = img.scaled(img.size() * m_imgScale);
+                    setMinimumSize(QSize(img.width(), img.height()));
+                    setMaximumSize(QSize(img.width(), img.height()));
+                    QLabel::setPixmap(img);
+                }
+                m_events[RECEIVE] = qMakePair{m_node_id};
+            }
+
+            m_stateResetTimer->start(STATE_TIMER_RESET_TIMEOUT);
+        }
         QPixmap img(m_rxDataImgName);
         if(!img.isNull())
         {
@@ -205,11 +270,16 @@ void DragWidget::onStateUpdate()
             setMaximumSize(QSize(img.width(), img.height()));
             QLabel::setPixmap(img);
         }
-        m_events[1] = false;
+        m_events[RECEIVE] = false;
         m_stateResetTimer->start(STATE_TIMER_RESET_TIMEOUT);
     }
-    else if(m_events[2] && !m_events[1])
+    else if(m_events[SEND] && !m_events[RECEIVE])
     {
+    //    if(m_widgetStates[prevNodeIndex].node_id == m_node_id)
+    //    //            {
+    //    //                changeState = true;
+    //    //            }
+    //    //            else
         QPixmap img(m_txDataImgName);
         if(!img.isNull())
         {
@@ -218,10 +288,10 @@ void DragWidget::onStateUpdate()
             setMaximumSize(QSize(img.width(), img.height()));
             QLabel::setPixmap(img);
         }
-        m_events[2] = false;
+        m_events[SEND] = false;
         m_stateResetTimer->start(STATE_TIMER_RESET_TIMEOUT);
     }
-    else if(m_events[1] && m_events[2])
+    else if(m_events[RECEIVE] && m_events[SEND])
     {
         if(m_txStateTimer->isActive())
         {
@@ -234,7 +304,7 @@ void DragWidget::onStateUpdate()
                 setMaximumSize(QSize(img.width(), img.height()));
                 QLabel::setPixmap(img);
             }
-            m_events[1] = false;
+            m_events[RECEIVE] = false;
             m_txStateTimer->start(STATE_TIMER_TIMEOUT);
             m_stateResetTimer->start(STATE_TIMER_RESET_TIMEOUT);
         }
@@ -249,12 +319,12 @@ void DragWidget::onStateUpdate()
                 setMaximumSize(QSize(img.width(), img.height()));
                 QLabel::setPixmap(img);
             }
-            m_events[2] = false;
+            m_events[SEND] = false;
             m_rxStateTimer->start(STATE_TIMER_TIMEOUT);
             m_stateResetTimer->start(STATE_TIMER_RESET_TIMEOUT);
         }
     }
-    else if(!m_events[1] && !m_events[2])
+    else if(!m_events[RECEIVE] && !m_events[SEND])
     {
         QPixmap img(m_defaultImgName);
         if(!img.isNull())
@@ -264,6 +334,7 @@ void DragWidget::onStateUpdate()
             setMaximumSize(QSize(img.width(), img.height()));
             QLabel::setPixmap(img);
         }
+        setNodeState(false);
         m_stateResetTimer->start(STATE_TIMER_RESET_TIMEOUT);
     }
 
